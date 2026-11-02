@@ -18,6 +18,7 @@ The prefix is `ctrl+b` (the byte Ghostty's `ctrl+shift` chords send). `ctrl+spac
 
 | Option | Value |
 | --- | --- |
+| `default-command` | `exec fish -l`, or the login shell (`$SHELL -l`) where fish is missing. `default-shell` stays the login shell (bash), so `run-shell`, `if-shell` and `#()` jobs keep running under a POSIX shell |
 | `default-terminal` | `tmux-256color`; `RGB` override for every terminal; `clipboard` and `hyperlinks` (OSC 8) features; `extkeys` for xterm-kitty. Features apply after `tmux kill-server` |
 | `extended-keys` | `on`, format `csi-u` |
 | `base-index` / `pane-base-index` | `1` / `1`; `renumber-windows on` |
