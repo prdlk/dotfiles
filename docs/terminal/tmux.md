@@ -50,7 +50,8 @@ These settings are what [yazi](../tools/yazi.md) needs inside tmux. `allow-passt
 | `S-Enter` (no prefix) | Sends `ESC[13;2u` to the pane unchanged. With `extended-keys on`, tmux would otherwise turn Shift+Enter into plain Enter for apps that never requested extended keys, and coding agents (omp, Claude Code) would submit instead of inserting a newline |
 | `C-MouseDown1Pane` (ctrl+click) | Opens the OSC 8 hyperlink under the mouse (`#{mouse_hyperlink}`) with `xdg-open`; without one, the click goes to the pane. Plain-text URLs: `ctrl+shift+click`, handled by Ghostty |
 | `M-Enter` / `M-S-Enter` / `M-Escape` (no prefix) | Split below / split right / kill pane |
-| `C-h` / `C-j` / `C-k` / `C-l` (no prefix) | Vim-aware pane focus. In an nvim/vim/fzf pane (`@pane-is-vim`, set by smart-splits, or the pane's command), the key goes to nvim. nvim's `config.pane_nav` moves between its own splits and, at its outer edge, runs `tmux select-pane -t $TMUX_PANE`. Elsewhere tmux moves directly. Also bound in copy mode |
+| `C-h` / `C-j` / `C-k` / `C-l` (no prefix) | Vim-aware pane focus. In an nvim/vim/fzf pane (`@pane-is-vim`, set by smart-splits.nvim, or the pane's command), the key goes to nvim. nvim's `config.pane_nav` hands tmux to smart-splits, which moves between nvim splits and, at its outer edge, runs `tmux select-pane`. Elsewhere tmux moves directly; both wrap at the outer edge. Also bound in copy mode |
+| `M-h` / `M-j` / `M-k` / `M-l` (no prefix) | Vim-aware resize. In an `@pane-is-vim` pane the key goes to smart-splits, which resizes nvim splits and, when nvim has no split on that axis, the tmux pane. Elsewhere `resize-pane` by 3, so shells and other programs never see these keys |
 | `prefix C-l` | Send `C-l` (clear screen) |
 | `C-M-arrows` / `C-M-S-arrows` (no prefix) | Focus pane / resize pane by 5 |
 | `prefix c` / `prefix k` / `prefix r` | New window in pane cwd / kill window / rename window |
