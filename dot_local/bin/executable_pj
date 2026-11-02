@@ -1,0 +1,450 @@
+#!/usr/bin/env bash
+# pj — task runner across every task source in the project, picked with the
+# television `pj` cable (~/.config/television/cable/pj.toml).
+#
+# Sources: package.json scripts, Makefile targets, justfile recipes, mise
+# tasks, devbox scripts, and pyproject.toml task tables (poe, pdm, rye,
+# taskipy, hatch envs, console scripts).
+#
+# Scanning: cwd upward to the git toplevel (inclusive); outside a repo it
+# stops at the nearest directory that holds a task source. A source is only
+# listed when its runner is actually installed, so the list is never dead.
+# Tasks from the most recently modified manifest come first.
+#
+# Usage: pj [extra args…]   extra args are forwarded to the picked task
+#
+# Env:
+#   PJ_QUIET=1   suppress the "no task sources" error — the down-arrow
+#                bindings use this, where an empty tree is the normal case.
+#   PJ_STATE=FILE  key bindings pass a path; pj writes `open` to it when the
+#                  picker opens and `pj --run` writes `ran`, so the binding
+#                  can tell "no tasks" / "cancelled" / "task printed output"
+#                  apart and redraw the prompt accordingly (tv --inline).
+#
+# Cable entry points (tab-separated record fields, see `--list`):
+#   pj --list                          print one record per task
+#   pj --preview KIND TARGET ROOT FILE render a task's body
+#   pj --run KIND TARGET ROOT RUNNER   run a task ($PJ_EXTRA holds extra args)
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# ── pyproject.toml reader ──────────────────────────────────────────
+# `list FILE` prints "tool<TAB>target" per task; `show FILE TARGET TOOL`
+# prints one task's body. tomllib is stdlib on python 3.11+.
+py_toml() {
+    python3 - "$@" <<'PY' 2>/dev/null
+import json, sys, tomllib
+
+mode, path = sys.argv[1], sys.argv[2]
+try:
+    with open(path, "rb") as fh:
+        data = tomllib.load(fh)
+except Exception:
+    sys.exit(0)
+
+
+def table(obj, *keys):
+    for key in keys:
+        if not isinstance(obj, dict):
+            return {}
+        obj = obj.get(key) or {}
+    return obj if isinstance(obj, dict) else {}
+
+
+def tasks():
+    """(tool, target, body) for every supported pyproject task table."""
+    out = []
+    for tool, tbl in (
+        ("poe", table(data, "tool", "poe", "tasks")),
+        ("pdm", table(data, "tool", "pdm", "scripts")),
+        ("rye", table(data, "tool", "rye", "scripts")),
+        ("taskipy", table(data, "tool", "taskipy", "tasks")),
+    ):
+        for name, body in tbl.items():
+            if tool == "pdm" and (name.startswith("_") or name.startswith("post_")):
+                continue  # pdm's shared/hook keys are not runnable targets
+            out.append((tool, name, body))
+
+    for env, cfg in table(data, "tool", "hatch", "envs").items():
+        for name, body in table(cfg, "scripts").items():
+            out.append(("hatch", f"{env}:{name}", body))
+
+    seen = set()
+    for tbl in (table(data, "tool", "poetry", "scripts"), table(data, "project", "scripts")):
+        for name, body in tbl.items():
+            if name in seen:
+                continue
+            seen.add(name)
+            out.append(("script", name, body))
+    return out
+
+
+def render(body):
+    if isinstance(body, str):
+        return body
+    if isinstance(body, list):
+        return "\n".join(x if isinstance(x, str) else json.dumps(x) for x in body)
+    if isinstance(body, dict):
+        for key in ("cmd", "shell", "script", "expr", "ref"):
+            if isinstance(body.get(key), str):
+                return body[key]
+        if isinstance(body.get("sequence"), list):
+            return render(body["sequence"])
+        return json.dumps(body, indent=2)
+    return str(body)
+
+
+if mode == "list":
+    for tool, name, _ in tasks():
+        print(f"{tool}\t{name}")
+else:
+    target, tool = sys.argv[3], sys.argv[4]
+    for t, name, body in tasks():
+        if name == target and t == tool:
+            print(render(body))
+            break
+PY
+}
+
+# ── Preview ────────────────────────────────────────────────────────
+if [ "${1-}" = --preview ]; then
+    kind=${2-} target=${3-} root=${4-} file=${5-}
+    cd "$root" 2>/dev/null || exit 0
+    case $kind in
+        npm)
+            jq -r --arg s "$target" '.scripts[$s] // "(no such script)"' "$file"
+            ;;
+        make)
+            awk -v t="$target" '
+                !hit && /^[^\t]/ {
+                    ci = index($0, ":")
+                    if (ci > 0) {
+                        rest = substr($0, ci)
+                        if (rest !~ /^::?=/) {
+                            n = split(substr($0, 1, ci - 1), p, /[ \t]+/)
+                            for (i = 1; i <= n; i++)
+                                if (p[i] == t) { hit = 1; print; next }
+                        }
+                    }
+                }
+                hit && (/^\t/ || /^ +[^ ]/) { print; next }
+                hit { exit }
+                END { if (!hit) print "(no recipe — declared target only)" }
+            ' "$file"
+            ;;
+        just)
+            just --justfile "$file" --working-directory "$root" --show "$target" 2>&1
+            ;;
+        mise)
+            mise tasks info "$target" 2>&1
+            ;;
+        devbox)
+            jq -r --arg s "$target" \
+                '.shell.scripts[$s] | if type == "array" then join("\n") else (. // "(no such script)") end' \
+                "$file"
+            ;;
+        *)
+            py_toml show "$file" "$target" "$kind"
+            ;;
+    esac
+    exit 0
+fi
+
+# ── Run (the cable's enter action) ────────────────────────────────
+if [ "${1-}" = --run ]; then
+    kind=${2-} target=${3-} root=${4-} runner=${5-}
+    cd "$root" || exit 1
+    # Tell the key binding a task ran (its output now sits below the prompt).
+    [ -n "${PJ_STATE-}" ] && echo ran >"$PJ_STATE"
+
+    # Extra args from `pj a b …`, shell-quoted into $PJ_EXTRA by the picker.
+    extra=()
+    [ -n "${PJ_EXTRA-}" ] && eval "extra=($PJ_EXTRA)"
+    # Runners that need `--` to forward extra args to the task itself.
+    if [ ${#extra[@]} -gt 0 ]; then
+        case "$kind:$runner" in
+            npm:'npm run' | mise:* | devbox:*) extra=(-- "${extra[@]}") ;;
+        esac
+    fi
+
+    # shellcheck disable=SC2206 # word splitting is how the runner prefix is built
+    cmd=(${runner} "$target" "${extra[@]}")
+
+    # Wrap long-running server tasks in openlogs (live log tail for agents).
+    # Matches dev/start/serve/watch and namespaced variants like dev:web.
+    wrapper=""
+    if [[ $target =~ ^(dev|start|serve|watch)(:.*)?$ ]]; then
+        # Resolve the binary: PATH → mise resolution → mise installs glob
+        ol=$(command -v openlogs || true)
+        if [ -z "$ol" ] && have mise; then
+            ol=$(mise which openlogs 2>/dev/null || true)
+        fi
+        if [ -z "$ol" ]; then
+            for cand in "$HOME"/.local/share/mise/installs/node/*/bin/openlogs; do
+                [ -x "$cand" ] && { ol=$cand; break; }
+            done
+        fi
+
+        if [ -n "$ol" ] && [ -x "$ol" ]; then
+            wrapper=$ol
+        else
+            echo "pj: openlogs not found, running unwrapped" >&2
+        fi
+    fi
+
+    if [ -n "$wrapper" ]; then
+        echo "→ $wrapper ${cmd[*]}" >&2
+        exec "$wrapper" "${cmd[@]}"
+    else
+        echo "→ ${cmd[*]}" >&2
+        exec "${cmd[@]}"
+    fi
+fi
+
+# ── Collect targets ────────────────────────────────────────────────
+mise_config() {
+    local d=$1 c
+    for c in mise.toml .mise.toml mise/config.toml .mise/config.toml .config/mise/config.toml; do
+        [ -f "$d/$c" ] && { echo "$d/$c"; return 0; }
+    done
+    for c in mise-tasks .mise/tasks mise/tasks; do
+        [ -d "$d/$c" ] && { echo "$d/$c"; return 0; }
+    done
+    return 1
+}
+
+# Record layout (tab separated): kind, target, root, manifest, runner.
+recs=()
+add() { recs+=("$1"$'\t'"$2"$'\t'"$3"$'\t'"$4"$'\t'"$5"); }
+
+collect_npm() {
+    local dir=$1 pm d s
+    local pkg=$dir/package.json
+    [ -f "$pkg" ] || return
+
+    # Priority: packageManager field (corepack) → lockfiles (walking up past
+    # $dir to catch monorepo-root locks) → npm fallback
+    pm=$(jq -r '.packageManager // empty' "$pkg" 2>/dev/null)
+    pm=${pm%%@*}
+    if [ -z "$pm" ]; then
+        d=$dir
+        while [ -z "$pm" ]; do
+            if [ -f "$d/bun.lockb" ] || [ -f "$d/bun.lock" ]; then
+                pm=bun
+            elif [ -f "$d/pnpm-lock.yaml" ]; then
+                pm=pnpm
+            elif [ -f "$d/yarn.lock" ]; then
+                pm=yarn
+            elif [ -f "$d/package-lock.json" ]; then
+                pm=npm
+            fi
+            [ "$d" = / ] && break
+            d=$(dirname "$d")
+        done
+        [ -n "$pm" ] || pm=npm
+    fi
+    have "$pm" || pm=npm
+    have "$pm" || return
+
+    while IFS= read -r s; do
+        [ -n "$s" ] && add npm "$s" "$dir" "$pkg" "$pm run"
+    done < <(jq -r '.scripts // {} | keys[]' "$pkg" 2>/dev/null)
+}
+
+collect_make() {
+    local dir=$1 f="" c t
+    have make || return
+    for c in GNUmakefile makefile Makefile; do
+        [ -f "$dir/$c" ] && { f=$dir/$c; break; }
+    done
+    [ -n "$f" ] || return
+
+    # Text parse: explicit rules plus .PHONY operands (targets built from
+    # variables only show up in .PHONY). `make -p` is not used — it expands
+    # $(shell ...) and would run code just to list names.
+    local -A seen=()
+    while IFS= read -r t; do
+        [ -n "$t" ] && [ -z "${seen[$t]-}" ] || continue
+        seen[$t]=1
+        add make "$t" "$dir" "$f" make
+    done < <(awk '
+        /^\t/ { next }
+        /^[ \t]*#/ { next }
+        {
+            line = $0
+            sub(/#.*/, "", line)
+            ci = index(line, ":")
+            if (ci == 0) next
+            lhs = substr(line, 1, ci - 1)
+            rest = substr(line, ci + 1)
+            if (substr(rest, 1, 1) == "=") next        # := assignment
+            if (lhs ~ /[$%=]/) next                    # variables, pattern rules
+            n = split(lhs, parts, /[ \t]+/)
+            if (parts[1] == ".PHONY") {
+                sub(/^:+/, "", rest)
+                n = split(rest, parts, /[ \t]+/)
+                for (i = 1; i <= n; i++)
+                    if (parts[i] != "" && parts[i] !~ /[$%]/) print parts[i]
+                next
+            }
+            for (i = 1; i <= n; i++)
+                if (parts[i] != "" && parts[i] !~ /^\./) print parts[i]
+        }
+    ' "$f")
+}
+
+collect_just() {
+    local dir=$1 f="" c t
+    have just || return
+    for c in justfile .justfile Justfile JUSTFILE; do
+        [ -f "$dir/$c" ] && { f=$dir/$c; break; }
+    done
+    [ -n "$f" ] || return
+
+    for t in $(just --justfile "$f" --working-directory "$dir" --summary --unsorted 2>/dev/null); do
+        add just "$t" "$dir" "$f" just
+    done
+}
+
+collect_mise() {
+    local dir=$1 cfg t
+    have mise || return
+    cfg=$(mise_config "$dir") || return
+
+    # mise also inherits parent-directory configs; filter to tasks defined
+    # under $dir so parents are not duplicated as we walk up.
+    while IFS= read -r t; do
+        [ -n "$t" ] && add mise "$t" "$dir" "$cfg" "mise run"
+    done < <(mise -C "$dir" tasks ls --json 2>/dev/null |
+        jq -r --arg dir "$dir/" '
+            .[]
+            | select((.hide // false) | not)
+            | select((.source // "") | startswith($dir))
+            | .name' 2>/dev/null)
+}
+
+collect_devbox() {
+    local dir=$1 s
+    local f=$dir/devbox.json
+    [ -f "$f" ] || return
+    have devbox || return
+
+    while IFS= read -r s; do
+        [ -n "$s" ] && add devbox "$s" "$dir" "$f" "devbox run"
+    done < <(jq -r '.shell.scripts // {} | keys[]' "$f" 2>/dev/null)
+}
+
+# Runner prefix for a pyproject task table, or empty when nothing can run it.
+# Tools that live in the project venv (poe, taskipy) fall back to `uv run`.
+py_runner() {
+    case $1 in
+        poe) have poe && echo poe || { have uv && echo "uv run poe"; } ;;
+        taskipy) have task && echo task || { have uv && echo "uv run task"; } ;;
+        pdm) have pdm && echo "pdm run" ;;
+        rye) have rye && echo "rye run" ;;
+        hatch) have hatch && echo "hatch run" ;;
+        script)
+            if have poetry && grep -q '^\[tool\.poetry' "$2"; then
+                echo "poetry run"
+            elif have uv; then
+                echo "uv run"
+            fi
+            ;;
+    esac
+}
+
+collect_py() {
+    local dir=$1 tool target runner
+    local f=$dir/pyproject.toml
+    [ -f "$f" ] || return
+    have python3 || return
+
+    local -A runners=()
+    while IFS=$'\t' read -r tool target; do
+        [ -n "$tool" ] && [ -n "$target" ] || continue
+        if [ -z "${runners[$tool]-}" ]; then
+            runners[$tool]=$(py_runner "$tool" "$f")
+            [ -n "${runners[$tool]}" ] || runners[$tool]="-"
+        fi
+        runner=${runners[$tool]}
+        [ "$runner" = - ] && continue
+        add "$tool" "$target" "$dir" "$f" "$runner"
+    done < <(py_toml list "$f")
+}
+
+# Walk cwd upward: to the git toplevel inside a repo, otherwise until a
+# directory actually yields targets (a source file with no tasks in it must
+# not hide a parent's Makefile).
+git_top=$(git rev-parse --show-toplevel 2>/dev/null)
+d=$PWD
+while :; do
+    collect_npm "$d"
+    collect_make "$d"
+    collect_just "$d"
+    collect_mise "$d"
+    collect_devbox "$d"
+    collect_py "$d"
+
+    [ "$d" = "$git_top" ] && break
+    [ "$d" = / ] && break
+    [ -z "$git_top" ] && [ ${#recs[@]} -gt 0 ] && break
+    d=$(dirname "$d")
+done
+
+if [ ${#recs[@]} -eq 0 ]; then
+    [ -n "${PJ_QUIET-}" ] || echo "pj: no task sources found in this tree" >&2
+    exit 1
+fi
+
+# ── List ───────────────────────────────────────────────────────────
+# Record (tab separated): display, kind, target, root, runner, manifest.
+# Tag each display with its kind (npm rows use the package manager) so `make`,
+# `just` or `poe` are typeable filters. The directory column only appears
+# when more than one project contributed. The manifest is the last field so
+# mtime-sort ranks tasks by their manifest's mtime.
+primary=${recs[0]#*$'\t'}
+primary=${primary#*$'\t'}
+primary=${primary%%$'\t'*}
+multi=0
+for r in "${recs[@]}"; do
+    root=${r#*$'\t'}
+    root=${root#*$'\t'}
+    root=${root%%$'\t'*}
+    [ "$root" = "$primary" ] || { multi=1; break; }
+done
+
+list() {
+    local r kind target root file runner tag display
+    for r in "${recs[@]}"; do
+        IFS=$'\t' read -r kind target root file runner <<<"$r"
+        case $kind in
+            npm) tag=${runner%% *} ;;   # npm | pnpm | yarn | bun
+            script) tag=py ;;           # pyproject console entry points
+            *) tag=$kind ;;
+        esac
+        if [ "$multi" = 1 ]; then
+            display=$(printf '%-8s %-26s %s' "$tag" "$target" "${root##*/}")
+        else
+            display=$(printf '%-8s %s' "$tag" "$target")
+        fi
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$display" "$kind" "$target" "$root" "$runner" "$file"
+    done | mtime-sort
+}
+
+if [ "${1-}" = --list ]; then
+    list
+    exit 0
+fi
+
+# ── Pick ───────────────────────────────────────────────────────────
+# The scan already ran, so hand tv the result instead of letting the cable
+# re-run `pj --list`; tv's enter action calls `pj --run`.
+tmp=$(mktemp "${TMPDIR:-/tmp}/pj.XXXXXX") || exit 1
+trap 'rm -f "$tmp"' EXIT
+list >"$tmp"
+if [ $# -gt 0 ]; then
+    PJ_EXTRA=$(printf '%q ' "$@")
+    export PJ_EXTRA
+fi
+[ -n "${PJ_STATE-}" ] && echo open >"$PJ_STATE"
+tv pj --inline --source-command "cat '$tmp'" --input-header "$primary"

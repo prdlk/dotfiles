@@ -1,0 +1,93 @@
+#
+# ~/.bashrc — managed by chezmoi
+#
+
+alias vim="nvim"
+alias vi="nvim"
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# PATH extras / tool envs (machine-optional, guarded)
+case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$HOME/.local/bin:$PATH" ;; esac
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+[ -d "$HOME/.maestro/bin" ] && PATH="$PATH:$HOME/.maestro/bin"
+
+# Go — GOPATH/GOBIN under ~/.local/share to keep $HOME clean.
+# GOROOT is provided by mise (toolchain lives under ~/.local/share/mise).
+export GOPATH="$HOME/.local/share/go"
+export GOBIN="$GOPATH/bin"
+case ":$PATH:" in *":$GOBIN:"*) ;; *) PATH="$GOBIN:$PATH" ;; esac
+
+# Repo roots (ghq) — same as fish's conf.d/10-env.fish; the ghq-repos tv
+# cable (ctrl-o) lists this root.
+export GHQ_ROOT="$HOME/Code"
+export CODE_ROOT="$HOME/Code"
+
+# Android SDK — relocated under ~/.local/share/android.
+export ANDROID_HOME="$HOME/.local/share/android"
+export ANDROID_SDK_ROOT="$ANDROID_HOME"
+for _adir in "$ANDROID_HOME/platform-tools" "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/emulator"; do
+    case ":$PATH:" in *":$_adir:"*) ;; *) [ -d "$_adir" ] && PATH="$PATH:$_adir" ;; esac
+done
+unset _adir
+
+# GITHUB_TOKEN from gh's keyring login — never stored on disk. An inherited
+# value wins, so nested shells skip the gh call.
+if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
+    _gh_token="$(gh auth token 2>/dev/null)"
+    [ -n "$_gh_token" ] && export GITHUB_TOKEN="$_gh_token"
+    unset _gh_token
+fi
+
+# Shared aliases (same set as fish/zsh; source of truth: .chezmoidata/aliases.yaml)
+[ -f "$HOME/.config/shell/aliases.sh" ] && . "$HOME/.config/shell/aliases.sh"
+
+# Shell functions — one file per function, bash ports of the fish ones
+# (cwd/history-touching helpers; standalone tools live in ~/.local/bin)
+if [ -d "$HOME/.config/bash/functions" ]; then
+    for _f in "$HOME/.config/bash/functions"/*.bash; do
+        [ -r "$_f" ] && . "$_f"
+    done
+    unset _f
+fi
+
+# Flyline — enhanced Bash line editing (machine-optional, guarded)
+[ -f "$HOME/.local/lib/libflyline.so" ] && enable -f "$HOME/.local/lib/libflyline.so" flyline
+
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && . "$HOME/.config/envman/load.sh"
+
+# Prompt — starship, consistent with fish
+command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
+
+# television: _tv completion (its ctrl-r is taken over by atuin below)
+command -v tv >/dev/null 2>&1 && eval "$(tv init bash)"
+
+# Readline keybinds — bash ports of fish_user_key_bindings.fish (tv cables)
+[ -f "$HOME/.config/bash/keybinds.bash" ] && . "$HOME/.config/bash/keybinds.bash"
+
+# atuin comes from the package manager (/usr/bin). No ~/.atuin/bin: an old
+# standalone install there shadowed it on PATH and its older schema rejected
+# the history DB the newer daemon had migrated.
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init bash)"
+
+# >>> termium >>>
+case ":$PATH:" in *:'/home/prad/.local/bin':*) ;; *) export PATH='/home/prad/.local/bin':"$PATH" ;; esac
+# <<< termium <<<
+
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/home/prad/.lmstudio/bin"
+# End of LM Studio CLI section
+
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init bash)"; fi
+
+# >>> open-knowledge cli >>>
+# ! Contents within this block are managed by OpenKnowledge. Do not edit.
+# ! Delete this whole block to opt out — OpenKnowledge will not re-add it.
+[ -f "$HOME/.ok/env.sh" ] && . "$HOME/.ok/env.sh"
+# <<< open-knowledge cli <<<
+

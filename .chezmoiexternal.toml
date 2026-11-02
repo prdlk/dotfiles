@@ -1,0 +1,25 @@
+# External content — cloned/downloaded by chezmoi, not stored in this repo.
+
+# Neovim config lives in its own repo. No refreshPeriod: chezmoi clones it
+# when ~/.config/nvim is missing (fresh machine) and otherwise never pulls,
+# so the local checkout always wins over the remote.
+[".config/nvim"]
+    type = "git-repo"
+    url = "https://github.com/prdlk/nvim.git"
+    [".config/nvim".pull]
+        args = ["--ff-only"]
+
+# bat syntax definition — upstream git repo, cloned when missing.
+[".config/bat/syntaxes/sublime-purescript-syntax"]
+    type = "git-repo"
+    url = "https://github.com/tellnobody1/sublime-purescript-syntax.git"
+    [".config/bat/syntaxes/sublime-purescript-syntax".pull]
+        args = ["--ff-only"]
+
+# tmux plugin manager — tmux.conf runs it from this path. tpm installs the
+# other plugins next to it (prefix + I); those stay unmanaged.
+[".config/tmux/plugins/tpm"]
+    type = "git-repo"
+    url = "https://github.com/tmux-plugins/tpm.git"
+    [".config/tmux/plugins/tpm".pull]
+        args = ["--ff-only"]

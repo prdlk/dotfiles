@@ -1,0 +1,69 @@
+#!/bin/sh
+# Open a git repo's web page in the browser — host-agnostic, so it works for
+# github.com, prad.codes (Gitea), or any other forge whose web layout is
+# https://<host>/<owner>/<repo> (all of them, in practice).
+#
+# Usage: gop [<remote> | <owner>/<repo> | <url>]
+#   no arg → origin, else upstream, else the first remote of the current repo
+#   bare owner/repo → github.com
+
+target=$1
+url=
+
+if [ -n "$target" ]; then
+    case $target in
+        *://* | *@*:* | */*) url=$target ;;  # explicit url / scp / owner/repo
+        *)
+            url=$(git remote get-url "$target" 2>/dev/null) || {
+                echo "gop: no remote named '$target'" >&2
+                exit 1
+            }
+            ;;
+    esac
+else
+    for remote in origin upstream $(git remote 2>/dev/null); do
+        url=$(git remote get-url "$remote" 2>/dev/null) && break
+        url=
+    done
+    if [ -z "$url" ]; then
+        echo "gop: not in a git repo, or it has no remotes" >&2
+        exit 1
+    fi
+fi
+
+# Reduce any remote form to <host>/<owner>/<repo>. The web page is https
+# unless the remote itself says plain http (a LAN forge, typically).
+proto=https
+case $url in
+    *://*)
+        # scheme form: drop scheme and credentials; drop the port for ssh/git
+        # (their port is not the web port), keep it for http/https.
+        scheme=${url%%://*}
+        rest=${url#*://}
+        rest=${rest#*@}
+        case $scheme in
+            ssh | git)
+                host=${rest%%/*}
+                rest="${host%%:*}/${rest#*/}"
+                ;;
+            http) proto=http ;;
+        esac
+        url=$rest
+        ;;
+    *@*:*)
+        # scp form: git@host:owner/repo
+        url=$(printf '%s\n' "${url#*@}" | sed 's#:#/#')
+        ;;
+esac
+url=${url%.git}
+url=${url%/}
+case $url in
+    */*/*) ;;                 # already host/owner/repo
+    */*) url=github.com/$url ;;
+    *)
+        echo "gop: could not parse a repo out of: ${target:-$url}" >&2
+        exit 1
+        ;;
+esac
+
+exec ${BROWSER:-xdg-open} "$proto://$url"

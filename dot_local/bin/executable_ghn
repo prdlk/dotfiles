@@ -1,0 +1,28 @@
+#!/bin/sh
+# Create a new private repo (prad.codes via tea, or github.com via gh),
+# clone it with ghq, and print the clone directory for the shell wrapper to cd.
+repo=$1
+if [ -z "$repo" ]; then
+    echo "usage: ghn <repo-name>" >&2
+    exit 1
+fi
+
+host=$(gum choose "prad.codes" "github.com") || exit 1
+
+if [ "$host" = prad.codes ]; then
+    owner=$(tea organizations list -o simple | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | gum choose) || exit 1
+    [ -n "$owner" ] || exit 1
+
+    tea repos create --name "$repo" --owner "$owner" --private >&2 || exit 1
+
+    ghq get "https://prad.codes/$owner/$repo" >&2 || exit 1
+    printf '%s\n' "$(ghq root)/prad.codes/$owner/$repo"
+else
+    owner=$(gum choose "prdlk" "wltbs") || exit 1
+    [ -n "$owner" ] || exit 1
+
+    gh repo create "$owner/$repo" --private >&2 || exit 1
+
+    ghq get "github.com/$owner/$repo" >&2 || exit 1
+    printf '%s\n' "$(ghq root)/github.com/$owner/$repo"
+fi

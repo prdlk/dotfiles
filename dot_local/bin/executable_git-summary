@@ -1,0 +1,20 @@
+#!/bin/sh
+# Aggregate all AGENTS.md files in the current git repo via code2prompt.
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$repo_root" ]; then
+    echo "git-summary: not inside a git repository" >&2
+    exit 1
+fi
+
+template=$HOME/.config/code2prompt/agents-md.hbs
+if [ ! -f "$template" ]; then
+    echo "git-summary: template not found at $template" >&2
+    exit 1
+fi
+
+# Pass through any extra flags (e.g. --output-file, --tokens)
+exec code2prompt "$repo_root" \
+    --include "AGENTS.md" \
+    --include "**/AGENTS.md" \
+    --template "$template" \
+    "$@"

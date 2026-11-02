@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omarchy:summary=Cycle Brave Origin windows and all its web apps; launch brave-origin if none are open.
+
+exec "$(dirname "$(readlink -f "$0")")/omarchy-cycle" brave

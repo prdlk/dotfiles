@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# omarchy:summary=Toggle a window between picture-in-picture (floating, pinned, bottom-left corner of the focused monitor) and tiled.
+# omarchy:args=[toggle|on] [address:0x...]
+
+set -uo pipefail
+
+# Usage: omarchy-pip [toggle|on] [address:0x...]
+#
+# "on" always fits the window: float, pin, resize to FRACTION of the focused
+# monitor on both axes and park it in the bottom-left corner, inset by GAP.
+# "toggle" (the default) does that unless the window is already floating and
+# pinned, in which case it unpins and tiles it again. The window defaults to
+# the active one. omarchy-summon calls "on" after carrying its window to the
+# focused monitor; the YouTube window rule in hypr/hyprland.lua mirrors the
+# same fraction and inset for the first open, so keep the three in sync.
+MODE=${1:-toggle}
+WINDOW=${2:-}
+case $MODE in
+toggle | on) ;;
+*)
+  echo "usage: ${0##*/} [toggle|on] [address:0x...]" >&2
+  exit 2
+  ;;
+esac
+
+FRACTION=0.3
+# Matches general:gaps_out so the window lines up with tiled neighbours and
+# its border stays on screen.
+GAP=10
+
+# Lua dispatcher first, classic name as the pre-lua fallback (same shape as
+# the other omarchy-* scripts here).
+hypr_dispatch() {
+  local lua="$1"
+  shift
+  hyprctl dispatch "$lua" >/dev/null 2>&1 || hyprctl dispatch "$@" >/dev/null
+}
+
+if [[ -z $WINDOW ]]; then
+  ACTIVE=$(hyprctl activewindow -j 2>/dev/null)
+  [[ -n $ACTIVE && $ACTIVE != "{}" ]] || exit 0
+  WINDOW="address:$(jq -r '.address' <<<"$ACTIVE")"
+else
+  ACTIVE=$(hyprctl clients -j | jq -c --arg a "${WINDOW#address:}" 'first(.[] | select(.address == $a)) // empty')
+  [[ -n $ACTIVE ]] || exit 1
+fi
+
+# The wiki documents action = "set", but on Hyprland 0.56 "set" toggles;
+# "on" / "off" are what the dispatcher actually honours.
+if [[ $MODE == toggle ]] && [[ $(jq -r '.floating and .pinned' <<<"$ACTIVE") == true ]]; then
+  hypr_dispatch "hl.dsp.window.pin({ action = \"off\", window = \"$WINDOW\" })" pin "$WINDOW"
+  hypr_dispatch "hl.dsp.window.float({ action = \"off\", window = \"$WINDOW\" })" settiled "$WINDOW"
+  exit 0
+fi
+
+# Focused monitor: origin and logical size.
+read -r MON_X MON_Y MON_W MON_H < <(hyprctl monitors -j |
+  jq -r '.[] | select(.focused) | "\(.x) \(.y) \(((.width / .scale) | floor)) \(((.height / .scale) | floor))"')
+[[ -n ${MON_H:-} ]] || exit 1
+
+WIDTH=$(awk "BEGIN { printf \"%d\", $MON_W * $FRACTION }")
+HEIGHT=$(awk "BEGIN { printf \"%d\", $MON_H * $FRACTION }")
+X=$((MON_X + GAP))
+Y=$((MON_Y + MON_H - HEIGHT - GAP))
+
+hypr_dispatch "hl.dsp.window.float({ action = \"on\", window = \"$WINDOW\" })" setfloating "$WINDOW"
+hypr_dispatch "hl.dsp.window.pin({ action = \"on\", window = \"$WINDOW\" })" pin "$WINDOW"
+hypr_dispatch "hl.dsp.window.resize({ x = $WIDTH, y = $HEIGHT, window = \"$WINDOW\" })" resizewindowpixel "exact $WIDTH $HEIGHT,$WINDOW"
+hypr_dispatch "hl.dsp.window.move({ x = $X, y = $Y, window = \"$WINDOW\" })" movewindowpixel "exact $X $Y,$WINDOW"

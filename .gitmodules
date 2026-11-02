@@ -1,0 +1,6 @@
+[submodule "dot_config/fish"]
+	path = dot_config/fish
+	url = https://github.com/prdlk/fish.git
+[submodule "dot_config/hypr"]
+	path = dot_config/hypr
+	url = https://github.com/prdlk/hypr.git

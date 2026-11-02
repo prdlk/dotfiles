@@ -1,0 +1,4 @@
+# drydock: scan the ghq root (~/Code/<host>/<owner>/<repo>, depth 3) directly,
+# not the ~/Projects symlink farm. Everything else stays at drydock's defaults
+# (`drydock config show` prints them).
+roots = ["~/Code"]

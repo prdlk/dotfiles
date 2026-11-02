@@ -1,0 +1,177 @@
+# Agent skills, installed by the Skills CLI instead of being vendored in this
+# repo. .chezmoiscripts/run_onchange_after_25-skills.sh.tmpl re-runs whenever
+# this file changes: it installs every skill below (`skills add <source> -g -y
+# -a <agents> --skill <name>…`, one call per source) and removes CLI-installed
+# skills that are no longer listed.
+#
+# source: anything `skills add` accepts — owner/repo (default branch), a
+#   GitHub tree URL (pins a ref or subdirectory), or a well-known endpoint URL.
+#   Skills that upstream deleted are pinned to the last ref that has them.
+# agents: optional; defaults to `agents` below. `universal` is the shared
+#   ~/.agents/skills library (Codex, Gemini CLI, OpenCode, Zed, …);
+#   `claude-code` links ~/.claude/skills/<name>.
+#
+# Not listed (installed by other packages, never touched by the sync):
+# omarchy and diagnose-crash (/usr/share/omarchy), terminal-browser.
+skills:
+  cli: skills@1.7.0
+  agents: [universal, claude-code]
+  sources:
+    - source: affaan-m/everything-claude-code
+      skills: [rust-testing]
+    - source: apollographql/skills
+      skills: [rust-best-practices]
+    - source: charlietlamb/openlogs
+      skills: [openlogs-server-logs]
+    - source: cloudflare/skills
+      skills: [cloudflare, workers-best-practices, wrangler]
+    - source: coldteadotai/pr-lens
+      skills: [eli5, pr-lens]
+    - source: Dammyjay93/interface-design
+      skills: [interface-design]
+    - source: deckardger/tanstack-agent-skills
+      skills:
+        - tanstack-integration-best-practices
+        - tanstack-query-best-practices
+        - tanstack-router-best-practices
+        - tanstack-start-best-practices
+    - source: Doist/todoist-cli
+      skills: [todoist-cli]
+    - source: finesssee/linear-cli
+      skills: [linear-documents]
+    - source: Forward-Future/loop-library
+      skills: [loopy]
+    - source: h4ckf0r0day/obscura
+      skills: [obscura]
+    - source: hardikpandya/stop-slop
+      skills: [stop-slop]
+    - source: jeffallan/claude-skills
+      skills: [golang-pro]
+    - source: leonardomso/rust-skills
+      skills: [rust-skills]
+    - source: Leonxlnx/taste-skill
+      skills:
+        - brandkit
+        - design-taste-frontend
+        - gpt-taste
+        - high-end-visual-design
+        - imagegen-frontend-web
+        - minimalist-ui
+        - redesign-existing-projects
+    - source: mattpocock/skills
+      skills:
+        - codebase-design
+        - diagnosing-bugs
+        - domain-modeling
+        - git-guardrails-claude-code
+        - grill-me
+        - grill-with-docs
+        - grilling
+        - handoff
+        - implement
+        - improve-codebase-architecture
+        - loop-me
+        - migrate-to-shoehorn
+        - prototype
+        - scaffold-exercises
+        - setup-matt-pocock-skills
+        - setup-pre-commit
+        - tdd
+        - teach
+        - triage
+        - writing-beats
+        - writing-fragments
+        - writing-shape
+    # Removed upstream after v1.1.0 (c66bdee; writing-great-skills became
+    # writing-for-agents).
+    - source: https://github.com/mattpocock/skills/tree/v1.1.0
+      skills:
+        - design-an-interface
+        - obsidian-vault
+        - qa
+        - request-refactor-plan
+        - ubiquitous-language
+        - writing-great-skills
+    # Removed upstream in daa01d8; pinned to its parent.
+    - source: https://github.com/mattpocock/skills/tree/153fc1b93de6584562765cdce299324e1ff9e661
+      skills: [resolving-merge-conflicts]
+    - source: https://mintlify.com/docs
+      skills: [mintlify, mintlify-api, mintlify-docs]
+    - source: nextlevelbuilder/ui-ux-pro-max-skill
+      skills: [ui-ux-pro-max]
+    - source: openai/skills
+      skills: [linear]
+    - source: petergyang/no-ai-slop
+      skills: [no-ai-slop]
+    - source: remix-run/remix
+      skills: [remix, typescript-expert, write-tests]
+    - source: remotion-dev/skills
+      skills:
+        - remotion-best-practices
+        - remotion-captions
+        - remotion-create
+        - remotion-docs
+        - remotion-interactivity
+        - remotion-maps
+        - remotion-markup
+        - remotion-multimedia
+        - remotion-render
+        - remotion-saas
+        - remotion-studio
+        - remotion-upgrade
+    - source: RoleModel/rolemodel-skills
+      skills: [laws-of-ux]
+    - source: schpet/linear-cli
+      skills: [linear-cli]
+    - source: shadcn-ui/ui
+      skills: [shadcn]
+    - source: sickn33/antigravity-awesome-skills
+      skills: [bun-development]
+    - source: tanstack-skills/tanstack-skills
+      skills: [tanstack-form, tanstack-table]
+    # Retired upstream in dd0d3f2f; pinned to its parent.
+    - source: https://github.com/terrylica/cc-skills/tree/6d35f84728b05adec50cb74ee45b5517bb954fa8
+      skills: [mise-tasks]
+    - source: TheOrcDev/8bitcn-ui
+      skills:
+        - fumadocs-component-docs
+        - fumadocs-mdx-structure
+        - fumadocs-registry-integration
+    - source: vercel-labs/agent-skills
+      skills: [web-design-guidelines]
+    - source: vercel-labs/json-render
+      skills: [core, react, react-email]
+    - source: vercel-labs/native
+      skills: [native-sdk]
+    - source: vercel-labs/skills
+      skills: [find-skills]
+    - source: whackur/solidity-agent-toolkit
+      skills: [solidity-foundry-development]
+    - source: wshobson/agents
+      skills: [rust-async-patterns, solidity-security, uv-package-manager]
+    - source: yeachan-heo/oh-my-claudecode
+      skills: [deepinit]
+
+    # Claude Code only.
+    - source: cloudflare/skills
+      agents: [claude-code]
+      skills:
+        - agents-sdk
+        - cloudflare-email-service
+        - cloudflare-one
+        - cloudflare-one-migrations
+        - durable-objects
+        - turnstile-spin
+        - web-perf
+    # Replaced upstream by sandbox-stable / sandbox-next in f96bff7.
+    - source: https://github.com/cloudflare/skills/tree/30553f89ae1ef1e3c2917cd09d72dac992bb4e9a
+      agents: [claude-code]
+      skills: [sandbox-sdk]
+    - source: earendil-works/absurd
+      agents: [claude-code]
+      skills: [absurd]
+    # Subdirectory URL: the bare repo's root SKILL.md would install the whole
+    # repository as the skill.
+    - source: https://github.com/AvivK5498/Claude-Code-Beads-Orchestration/tree/main/skills/create-beads-orchestration
+      agents: [claude-code]
+      skills: [create-beads-orchestration]

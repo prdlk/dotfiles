@@ -1,0 +1,6 @@
+#!/bin/sh
+# Interactive Markdown selector and previewer.
+file=$(fd --type f --extension md --max-depth 3 \
+    | fzf --preview 'mdfried {}' --preview-window=right:60%:wrap) || exit 0
+[ -n "$file" ] || exit 0
+exec mdfried "$file"

@@ -1,0 +1,10 @@
+# ── herdr-nvim (chmarax.herdr-nvim) ──
+# Read by the plugin binary from $XDG_CONFIG_HOME/herdr-nvim/config.toml.
+# Bound to ctrl+shift+e in kitty/ghostty → prefix+e (\x02e) → herdr-nvim.toggle.
+
+[sidebar]
+# The nvim pane opens to the LEFT of the existing panes. The plugin collapses
+# the tab's current layout into one anchor group, splits the editor off it, and
+# for "left" round-trips the anchor through a temporary tab so nvim ends up on
+# the left edge and the previous panes sit to its right. Default is "right".
+position = "left"

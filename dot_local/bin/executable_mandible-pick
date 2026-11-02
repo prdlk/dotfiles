@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# mandible-pick — pick a tool for mandible (it requires one), then open it.
+# fzf over the executables installed on PATH (no shell builtins, keywords or
+# aliases). A query with a space, such as "git remote add", or one that
+# matches nothing is used as typed (tool + subcommand path).
+# Used by the tmux-palette "mandible" item (alias: man).
+
+list() { # portable: no GNU find -printf
+    local d f
+    IFS=: read -ra dirs <<<"$PATH"
+    for d in "${dirs[@]}"; do
+        for f in "$d"/*; do [[ -x $f && ! -d $f ]] && printf '%s\n' "${f##*/}"; done
+    done
+}
+# enter: a query with a space ("git remote add") is a tool + subcommand path,
+# taken as typed; otherwise the highlighted command, or the query if none.
+q=$(list | sort -u | fzf --prompt 'mandible> ' --height 100% --reverse \
+    --with-shell 'bash -c' \
+    --bind 'enter:transform:[[ {q} == *" "* ]] && echo print-query || echo accept-or-print-query') || exit 0
+[ -n "$q" ] || exit 0
+# shellcheck disable=SC2086 # split "git remote" into tool + subcommands
+exec mandible $q

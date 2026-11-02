@@ -1,0 +1,13 @@
+[Unit]
+Description=Save kitty daily sessions before shutdown/reboot
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/kitty-day-save
+# Re-arm after a flush, in case the shutdown is cancelled.
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target

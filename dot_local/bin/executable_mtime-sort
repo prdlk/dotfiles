@@ -1,0 +1,24 @@
+#!/bin/sh
+# Sort stdin lines newest-first by mtime — the base order of the television
+# cables (tv then layers match quality and frecency on top).
+#
+# The path is each line's last tab-separated field (the whole line when it
+# has no tab). With --repo, <path>/.git/index is stat'ed first, so a repo
+# ranks by its last git activity rather than its directory mtime. Lines whose
+# path does not exist are dropped; ties keep their input order.
+#
+# Usage: <lines> | mtime-sort [--repo]
+exec perl -e '
+    my $repo = @ARGV && $ARGV[0] eq "--repo";
+    my ($i, @rows) = (0);
+    while (my $line = <STDIN>) {
+        chomp $line;
+        my $path = (split /\t/, $line)[-1];
+        next unless defined $path && length $path;
+        my $mtime;
+        $mtime = (stat "$path/.git/index")[9] if $repo;
+        $mtime = (stat $path)[9] unless defined $mtime;
+        push @rows, [$mtime, $i++, $line] if defined $mtime;
+    }
+    print "$_->[2]\n" for sort { $b->[0] <=> $a->[0] || $a->[1] <=> $b->[1] } @rows;
+' -- "$@"

@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Save every kitty daily session (~/.config/kitty/day_session.py) right before
+# shutdown/reboot.
+#
+# kitty-day-save.service runs this under a logind "delay" inhibitor. When a
+# shutdown or reboot starts, logind broadcasts PrepareForShutdown(true) and
+# waits (InhibitDelayMaxSec, 5 s by default) for the lock to be released, which
+# happens when this script exits. Nothing has been killed yet at that point, so
+# every kitty still has all of its windows. The flush also stops further saves
+# for a minute, so windows dying during the shutdown can't shrink the saved day.
+#
+# Usage: kitty-day-save         hold the lock, wait for a shutdown, flush, exit
+#        kitty-day-save --now   flush every running kitty immediately
+set -u
+
+case "${1-}" in
+--now)
+    # Every kitty on kitty.conf listens on @kitty-<pid>; ones that don't own
+    # a day session ignore the flush.
+    for s in $(grep -oE '@kitty-[0-9]+$' /proc/net/unix | sort -u); do
+        timeout 3 kitten @ --to "unix:$s" action kitten day_session.py flush >/dev/null 2>&1 &
+    done
+    wait
+    ;;
+--wait)
+    # grep returns on the first match; gdbus is left to the service's cgroup.
+    grep -m1 -q 'PrepareForShutdown (true' < <(
+        gdbus monitor --system --dest org.freedesktop.login1 --object-path /org/freedesktop/login1
+    ) && exec "$0" --now
+    ;;
+*)
+    exec systemd-inhibit --what=shutdown --mode=delay --who=kitty \
+        --why='Saving kitty sessions' "$0" --wait
+    ;;
+esac

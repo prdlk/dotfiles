@@ -1,0 +1,70 @@
+#!/bin/sh
+# Sync agent skills with .chezmoidata/skills.yaml through the Skills CLI:
+# install every declared skill (one `skills add` per source), then remove
+# skills a previous run installed that are no longer declared.
+# skills hash: {{ .skills | toJson | sha256sum }}
+set -u
+
+command -v npx >/dev/null 2>&1 || { echo "warning: npx not found — skipping skills sync" >&2; exit 0; }
+
+src={{ .chezmoi.sourceDir | quote }}
+state=${XDG_STATE_HOME:-$HOME/.local/state}/chezmoi/skills.txt
+declared='{{ range .skills.sources }}{{ range .skills }} {{ . }}{{ end }}{{ end }} '
+
+skills() { npx -y {{ .skills.cli | quote }} "$@" </dev/null; }
+
+# Leftovers from when skills were vendored in this repo (chezmoi symlink mode):
+# skill dirs whose files are symlinks into the source tree, and the old lock
+# symlink. Drop them so the CLI writes real copies instead of writing through
+# the links into the repo.
+for dir in "$HOME/.agents/skills"/* "$HOME/.claude/skills"/*; do
+    [ -d "$dir" ] && [ ! -L "$dir" ] || continue
+    if [ -n "$(find "$dir" -type l -lname "$src/*" -print -quit)" ]; then
+        rm -rf "$dir"
+    fi
+done
+lock=$HOME/.agents/.skill-lock.json
+if [ -L "$lock" ]; then
+    case $(readlink "$lock") in "$src"/*) rm -f "$lock" ;; esac
+fi
+
+# Remove what the last sync installed but skills.yaml no longer lists.
+stale=''
+if [ -f "$state" ]; then
+    while IFS= read -r name; do
+        case $declared in *" $name "*) ;; *) stale="$stale $name" ;; esac
+    done <"$state"
+fi
+if [ -n "$stale" ]; then
+    echo "skills: removing$stale"
+    # shellcheck disable=SC2086 # one word per skill name
+    skills remove -g -y $stale || echo "warning: skills remove failed:$stale" >&2
+fi
+
+failed=''
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+add() {
+    source=$1 agents=$2
+    shift 2
+    echo "skills: $source → $*"
+    # shellcheck disable=SC2086 # agents is a space-separated list
+    if ! skills add "$source" -g -y -a $agents --skill "$@" >"$log" 2>&1; then
+        failed="$failed $source"
+        tail -n 8 "$log" >&2
+    fi
+}
+{{ range .skills.sources -}}
+{{ $agents := $.skills.agents -}}
+{{ if hasKey . "agents" }}{{ $agents = .agents }}{{ end -}}
+add {{ .source | quote }} {{ $agents | join " " | quote }}{{ range .skills }} {{ . | quote }}{{ end }}
+{{ end -}}
+
+mkdir -p "$(dirname "$state")"
+printf '%s\n' $declared >"$state"
+
+if [ -n "$failed" ]; then
+    # Non-zero keeps the old hash, so the next `chezmoi apply` retries.
+    echo "error: skills add failed for:$failed" >&2
+    exit 1
+fi

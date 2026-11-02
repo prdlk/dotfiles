@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# omarchy:summary=Move the focused window into a neighboring group or swap with the neighbor; floating windows go to a screen corner
+# omarchy:args=<l|r|u|d>
+
+set -uo pipefail
+
+DIR="${1:-}"
+
+case "$DIR" in
+l | r | u | d) ;;
+*)
+  echo "Usage: omarchy-smart-move <l|r|u|d>"
+  exit 1
+  ;;
+esac
+
+hypr_dispatch() {
+  local lua="$1"
+  shift
+
+  hyprctl dispatch "$lua" >/dev/null 2>&1 || hyprctl dispatch "$@" >/dev/null
+}
+
+ACTIVE=$(hyprctl activewindow -j 2>/dev/null)
+[[ -n $ACTIVE && $ACTIVE != "{}" ]] || exit 0
+
+ADDRESS=$(jq -r '.address // empty' <<<"$ACTIVE")
+WORKSPACE=$(jq -r '.workspace.id // empty' <<<"$ACTIVE")
+GROUPED=$(jq -r '(.grouped // []) | length' <<<"$ACTIVE")
+
+[[ -n $ADDRESS && -n $WORKSPACE ]] || exit 0
+
+# A floating window has no neighbours to swap with, so the four keys park it
+# in a corner of its monitor instead, size unchanged, inside the reserved
+# area (the bar) and inset by GAP (matches general:gaps_out, same as
+# omarchy-pip). h/j/k/l read clockwise from the bottom left: l bottom-left,
+# d top-left, u top-right, r bottom-right.
+if [[ $(jq -r '.floating' <<<"$ACTIVE") == true ]]; then
+  GAP=10
+  read -r WIN_W WIN_H MON_ID < <(jq -r '"\(.size[0]) \(.size[1]) \(.monitor)"' <<<"$ACTIVE")
+  read -r MON_X MON_Y MON_W MON_H RES_L RES_T RES_R RES_B < <(hyprctl monitors -j | jq -r --argjson id "$MON_ID" \
+    '.[] | select(.id == $id) | "\(.x) \(.y) \(((.width / .scale) | floor)) \(((.height / .scale) | floor)) \(.reserved | join(" "))"')
+  [[ -n ${RES_B:-} ]] || exit 1
+
+  LEFT=$((MON_X + RES_L + GAP))
+  RIGHT=$((MON_X + MON_W - RES_R - WIN_W - GAP))
+  TOP=$((MON_Y + RES_T + GAP))
+  BOTTOM=$((MON_Y + MON_H - RES_B - WIN_H - GAP))
+  case $DIR in
+  l) X=$LEFT Y=$BOTTOM ;;
+  d) X=$LEFT Y=$TOP ;;
+  u) X=$RIGHT Y=$TOP ;;
+  r) X=$RIGHT Y=$BOTTOM ;;
+  esac
+
+  hypr_dispatch "hl.dsp.window.move({ x = $X, y = $Y })" movewindowpixel "exact $X $Y,address:$ADDRESS"
+  exit 0
+fi
+
+# Find the nearest window in the given direction. A window counts as a
+# neighbor only when it overlaps the focused window on the other axis, so a
+# window in a far corner is not picked.
+NEIGHBOR_GROUPED=$(hyprctl clients -j | jq -r \
+  --arg address "$ADDRESS" \
+  --arg dir "$DIR" \
+  --argjson workspace "$WORKSPACE" '
+  ( [ .[] | select(.address == $address) ] | first ) as $self
+  | if $self == null then "none" else
+      ( $self.at[0] + $self.size[0] / 2 ) as $sx
+    | ( $self.at[1] + $self.size[1] / 2 ) as $sy
+    | [ .[]
+        | select(.address != $address)
+        | select(.workspace.id == $workspace)
+        | select(.floating == false)
+        | select(.hidden == false)
+        | . + {
+            cx: (.at[0] + .size[0] / 2),
+            cy: (.at[1] + .size[1] / 2)
+          }
+        | select(
+            if $dir == "l" then .cx < $sx and (.at[1] < ($self.at[1] + $self.size[1])) and (($self.at[1]) < (.at[1] + .size[1]))
+            elif $dir == "r" then .cx > $sx and (.at[1] < ($self.at[1] + $self.size[1])) and (($self.at[1]) < (.at[1] + .size[1]))
+            elif $dir == "u" then .cy < $sy and (.at[0] < ($self.at[0] + $self.size[0])) and (($self.at[0]) < (.at[0] + .size[0]))
+            else .cy > $sy and (.at[0] < ($self.at[0] + $self.size[0])) and (($self.at[0]) < (.at[0] + .size[0]))
+            end
+          )
+      ]
+    | sort_by(
+        if $dir == "l" or $dir == "r" then (.cx - $sx | fabs) else (.cy - $sy | fabs) end
+      )
+    | first
+    | if . == null then "none"
+      elif ((.grouped // []) | length) > 0 then "group"
+      else "single"
+      end
+    end')
+
+# A group on either side means the move is group aware: Hyprland puts the
+# window into the neighboring group, or takes it out of its own group at the
+# edge. With no group in play, swap places with the neighbor instead.
+if [[ $NEIGHBOR_GROUPED == "group" || $GROUPED -gt 1 ]]; then
+  hypr_dispatch "hl.dsp.window.move({ direction = \"$DIR\", group_aware = true })" movewindoworgroup "$DIR"
+else
+  hypr_dispatch "hl.dsp.window.swap({ direction = \"$DIR\" })" swapwindow "$DIR"
+fi

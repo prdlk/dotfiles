@@ -1,0 +1,18 @@
+[theme]
+name = "cherry-blossom"
+
+[colors]
+AlertInfo = "#a78266"
+AlertWarn = "#ae825f"
+AlertError = "#bf615d"
+Annotation = "#a6958f"
+Guidance = "#8f9aa0"
+Important = "#cf716f"
+Title = "#cf716f"
+Muted = "#a6958f"
+SyntaxCommand = "#cf716f"
+SyntaxFlag = "#a78266"
+SyntaxString = "#a6b084"
+SyntaxVariable = "#c17e4a"
+SyntaxOperator = "#ad6756"
+SyntaxComment = "#a6958f"

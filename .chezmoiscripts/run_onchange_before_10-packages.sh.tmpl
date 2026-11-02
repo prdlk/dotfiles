@@ -1,0 +1,59 @@
+#!/bin/sh
+# Install packages declared in .chezmoidata/packages.yaml.
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+set -eu
+
+{{ if eq .chezmoi.os "linux" -}}
+if [ "$(id -u)" -eq 0 ]; then PACMAN="pacman"; else PACMAN="sudo pacman"; fi
+
+# Install only what no installed package already provides (`pacman -T`), so a
+# machine with mise-bin or yazi-git is not asked to replace them with mise/yazi.
+install_missing() {
+    missing=$(pacman -T "$@" || true)
+    # shellcheck disable=SC2086  # word splitting intended
+    [ -z "$missing" ] || $PACMAN -S --needed --noconfirm $missing
+}
+
+install_missing {{ range .packages.arch.pacman }}{{ . }} {{ end }}
+
+{{ if or (eq .role "desktop") (eq .role "laptop") -}}
+install_missing {{ range .packages.arch.desktop.pacman }}{{ . }} {{ end }}
+
+# [omarchy] repo packages — only where pacman.conf has that repo
+if pacman-conf -l | grep -qx omarchy; then
+    install_missing {{ range .packages.arch.desktop.omarchy }}{{ . }} {{ end }}
+fi
+
+aur_pkgs="{{ range .packages.arch.desktop.aur }}{{ . }} {{ end }}{{ range .packages.arch.aur }}{{ . }} {{ end }}"
+{{ else -}}
+aur_pkgs="{{ range .packages.arch.aur }}{{ . }} {{ end }}"
+{{ end -}}
+# AUR names no installed package provides yet; ones already installed from a
+# sync repo ([omarchy], extra) are neither rebuilt nor replaced.
+# shellcheck disable=SC2086
+aur_missing=$(pacman -T $aur_pkgs || true)
+if [ -n "$aur_missing" ]; then
+    # No AUR helper yet: take yay from a sync repo that ships it, else build
+    # yay-bin from the AUR (makepkg refuses root).
+    if ! command -v yay >/dev/null 2>&1 && ! command -v paru >/dev/null 2>&1; then
+        if pacman -Si yay >/dev/null 2>&1; then
+            $PACMAN -S --needed --noconfirm yay
+        elif [ "$(id -u)" -ne 0 ]; then
+            install_missing git base-devel
+            yay_build=$(mktemp -d)
+            git clone --depth 1 https://aur.archlinux.org/yay-bin.git "$yay_build"
+            (cd "$yay_build" && makepkg -si --noconfirm)
+            rm -rf "$yay_build"
+        fi
+    fi
+    if command -v yay >/dev/null 2>&1; then AUR="yay"
+    elif command -v paru >/dev/null 2>&1; then AUR="paru"
+    else AUR=""; fi
+    if [ -n "$AUR" ]; then
+        # shellcheck disable=SC2086
+        $AUR -S --needed --noconfirm $aur_missing
+    else
+        echo "warning: no yay/paru and none could be bootstrapped — skipping AUR packages:" $aur_missing >&2
+    fi
+fi
+{{ end -}}

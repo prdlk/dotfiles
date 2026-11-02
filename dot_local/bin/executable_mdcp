@@ -1,0 +1,17 @@
+#!/bin/sh
+# Fetch a URL as markdown, copy to clipboard, preview with mdfried.
+url=$1
+if [ -z "$url" ]; then
+    echo "usage: mdcp <url>" >&2
+    exit 1
+fi
+
+if command -v wl-copy >/dev/null 2>&1; then
+    copy=wl-copy paste=wl-paste
+else
+    echo "mdcp: no clipboard tool (wl-copy) found" >&2
+    exit 1
+fi
+
+curl.md "$url" | "$copy"
+"$paste" | mdfried

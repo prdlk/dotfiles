@@ -1,0 +1,24 @@
+#!/bin/sh
+# brave-new-tab URL
+# Open URL in a new tab of the running Brave Origin (its last active window),
+# or start Brave Origin with it. Detached, so the caller never blocks.
+# Without a scheme, localhost, *.localhost, *.local, and 127.x get http://;
+# anything else gets https://.
+set -eu
+
+[ $# -eq 1 ] || { echo "usage: brave-new-tab URL" >&2; exit 2; }
+
+url=$1
+case $url in
+*://* | about:*) ;;
+*)
+    host=${url%%[/?#]*}
+    host=$(printf '%s' "${host%:*}" | tr '[:upper:]' '[:lower:]')
+    case $host in
+    localhost | *.localhost | *.local | 127.*) url="http://$url" ;;
+    *) url="https://$url" ;;
+    esac
+    ;;
+esac
+
+exec setsid -f brave-origin --new-tab "$url" >/dev/null 2>&1

@@ -1,0 +1,11 @@
+#!/bin/sh
+# Choose and launch an AI CLI via gum.
+choice=$(gum choose --header 'AI CLI' claude opencode codex hermes fractal) || exit 0
+[ -n "$choice" ] || exit 0
+
+case "$choice" in
+    claude) exec claude --dangerously-skip-permissions ;;
+    # labels match the binary names, so just run it;
+    # add a dedicated case here if another tool needs flags
+    *) exec "$choice" ;;
+esac

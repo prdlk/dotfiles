@@ -1,0 +1,16 @@
+{{- $name := promptStringOnce . "name" "Full name" "Prad Nukala" -}}
+{{- $email := promptStringOnce . "email" "Email" "prad@sonr.io" -}}
+{{- $role := promptChoiceOnce . "role" "Machine role" (list "desktop" "laptop" "server") "desktop" -}}
+
+mode = "symlink"
+encryption = "age"
+
+[age]
+    identity = "~/.config/chezmoi/key.txt"
+    recipient = "age19tdqgavaekhvgqsd75n8a09vvshen2ykzy8kw6tenczz73449anqc3l7a6"
+    useBuiltin = true
+
+[data]
+    name = {{ $name | quote }}
+    email = {{ $email | quote }}
+    role = {{ $role | quote }}

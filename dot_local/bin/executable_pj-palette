@@ -1,0 +1,244 @@
+#!/usr/bin/env bash
+# pj-palette — pj's task runner as a tmux-palette source (the "tasks" palette,
+# ~/.config/tmux-palette/palettes/tasks.json).
+#
+#   pj-palette               print palette items (JSON) for the active pane's
+#                            project: running background tasks, quick actions
+#                            (install, dev, sync, make, compose up, …) and
+#                            every task `pj --list` finds
+#   pj-palette --run KIND TARGET ROOT RUNNER
+#                            run a pj task (the item's action)
+#   pj-palette --cmd ROOT CMD…
+#                            run a quick-action command in ROOT
+#   pj-palette --bg NAME [ROOT CMD…]
+#                            show background session NAME in a popup, first
+#                            starting CMD… in ROOT if it isn't running
+#   pj-palette --omp         print the omp palette's items: this tmux
+#                            session's omp (open or start), every other
+#                            running <session>:omp, and Quit items
+#
+# One-off items open a full-width split along the bottom of the window (25% of
+# its height) in the project root. The command runs in the foreground; ctrl-c
+# stops it (the output stays). Once it has exited, enter or ctrl-c closes the
+# pane.
+#
+# Long-running items (dev/start/serve/watch/preview tasks, compose up) run in a
+# detached session named <session>:<tool-and-command> (leetcode:bun-run-dev),
+# shown in a popup: q hides the popup and leaves the task running, ctrl-c
+# asks for confirmation, then stops the task and ends its session. Running
+# ones are listed first, under Running, to bring them back. tmux.conf's
+# prefix + a starts omp the same way (<session>:omp); omp needs q, so its
+# popup hides with ctrl-c (or prefix + a) and ctrl-q quits it.
+
+set -uo pipefail
+self=$(readlink -f "$0")
+
+# While the task runs, ctrl-c reaches only the task: with SIGINT trapped,
+# bash survives the child's death instead of exiting along with it.
+interrupted=
+trap 'interrupted=1' INT
+
+finish() {
+    local status=$1 key
+    # A background task stopped with ctrl-c ends its session (and popup).
+    [ -n "${PJ_BG-}" ] && [ -n "$interrupted" ] && exit 0
+    printf '\n\033[2m[exit %s] enter or ctrl-c to close\033[0m' "$status"
+    trap 'exit 0' INT
+    while IFS= read -rsn1 key; do
+        [ -z "$key" ] && exit 0   # enter
+    done
+    exit 0
+}
+
+# Id of session NAME. Background session names contain ':', which -t reads
+# as session:window, so they are targeted by id.
+session_id() {
+    local id name
+    while IFS=$'\t' read -r id name; do
+        [ "$name" = "$1" ] && { printf '%s' "$id"; return 0; }
+    done < <(tmux list-sessions -F $'#{session_id}\t#{session_name}' 2>/dev/null)
+    return 1
+}
+
+case ${1-} in
+--run)
+    shift
+    pj --run "$@"
+    finish $?
+    ;;
+--cmd)
+    cd "$2" || exit 1
+    shift 2
+    printf '→ %s\n' "$*" >&2
+    "$@"
+    finish $?
+    ;;
+--bg)
+    name=$2
+    if ! id=$(session_id "$name"); then
+        [ $# -ge 4 ] || exit 0   # a Running item whose task has since ended
+        root=$3
+        shift 3
+        id=$(tmux new-session -d -P -F '#{session_id}' -s "$name" -c "$root" -e PJ_BG=1 "$@") || exit 1
+        # @pj_task marks the session for the Running list (and for tmux.conf's
+        # prefix + a, which hides any of these popups).
+        tmux set -t "$id" @pj_task "$root" \; set -t "$id" status off \; \
+            set -t "$id" detach-on-destroy on
+        # Each session gets a key table for its hide/quit keys; other keys
+        # reach the program. A task's output takes no input, so q hides and
+        # ctrl-c (after a y/n confirm) stops the task. Interactive programs
+        # (omp) need q and typing, so ctrl-c hides and ctrl-q kills the session.
+        if [ "$1" = "$self" ]; then
+            tmux set -t "$id" key-table pj-task \; bind -T pj-task q detach-client \; \
+                bind -T pj-task C-c confirm-before -p 'Stop #{session_name}? (y/n)' 'send-keys C-c'
+        else
+            tmux set -t "$id" key-table pj-app \; bind -T pj-app C-c detach-client \; \
+                bind -T pj-app C-q kill-session
+        fi
+    fi
+    # Task output gets a big centered popup; interactive programs (omp) dock
+    # bottom-right beside the work. Positions past the client edge clamp to
+    # it (-x R would follow whichever pane tmux picks as current).
+    geometry=(-w 90% -h 80%)
+    [ "$(tmux display -p -t "$id" '#{key-table}')" = pj-app ] &&
+        geometry=(-w 35% -h 60% -x '#{client_width}' -y '#{client_height}')
+    tmux display-popup -E "${geometry[@]}" -b rounded -T " $name " "tmux attach -t '$id'"
+    exit 0
+    ;;
+esac
+
+have() { command -v "$1" >/dev/null 2>&1; }
+cwd=$(tmux display -p '#{pane_current_path}' 2>/dev/null) || cwd=$PWD
+session=$(tmux display -p '#{session_name}' 2>/dev/null)
+cd "$cwd" || exit 1
+root=$(git rev-parse --show-toplevel 2>/dev/null) || root=$cwd
+
+icon_for() {
+    case $1 in
+    bun) printf '' ;;
+    npm | yarn) printf '' ;;
+    pnpm) printf '' ;;
+    make) printf '' ;;
+    go) printf '' ;;
+    cargo) printf '' ;;
+    uv | py | poe | pdm | rye | taskipy | hatch | script) printf '' ;;
+    *) printf '' ;;
+    esac
+}
+
+# Tasks that run until stopped: dev/start/serve/watch/preview, also as a
+# namespace segment (dev:web, api:dev).
+long_running() { [[ $1 =~ (^|:)(dev|start|serve|watch|preview)(:|$) ]]; }
+slug() { local s=${*,,}; s=${s//[^a-z0-9]/-}; tr -s - <<<"$s"; }
+
+# Item action (a bash line the palette evals) running `pj-palette ARGV…`:
+# in a full-width bottom split (25%) in DIR, or, given NAME, in the background
+# session <session>:NAME shown in a popup. Argv goes to tmux as is (no shell,
+# so fish re-parses nothing).
+task_action() { # dir name argv…
+    local dir=$1 name=$2
+    shift 2
+    if [ -n "$name" ]; then
+        printf '%q ' "$self" --bg "$session:$name" "$dir" "$self" "$@"
+    else
+        printf '%q ' tmux split-window -v -f -l 25% -c "$dir" "$self" "$@"
+    fi
+}
+
+items=()
+item() { # category icon title description aliases(csv) action [icon color]
+    items+=("$(jq -cn --arg c "$1" --arg i "$2" --arg t "$3" --arg d "$4" --arg a "$5" --arg x "$6" --arg k "${7-}" \
+        '{category: $c, icon: $i, title: $t, description: $d,
+          aliases: ($a | split(",") | map(select(. != ""))), action: {shell: $x}}
+         + if $k == "" then {} else {iconColor: $k} end')")
+}
+quick() { # icon title aliases background(0/1) dir argv…
+    local icon=$1 title=$2 aliases=$3 dir=$5 name="" desc="in ${5/#$HOME/\~}"
+    [ "$4" = 1 ] && { name=$(slug "$title"); desc+=" · background"; }
+    shift 5
+    item Quick "$icon" "$title" "$desc" "$aliases" "$(task_action "$dir" "$name" --cmd "$dir" "$@")"
+}
+
+# ── omp palette (palettes/omp.json): the <session>:omp agent sessions ──────
+if [ "${1-}" = --omp ]; then
+    here=$session:omp live='#5eff6c' idle='#7b8496'
+    omps=$(tmux list-sessions -F $'#{session_id}\t#{session_name}\t#{@pj_task}\t#{session_attached}' 2>/dev/null |
+        awk -F'\t' '$2 ~ /:omp$/ && $3 != ""')
+    state() { [ "$1" -gt 0 ] && printf open || printf hidden; }
+    found=
+    while IFS=$'\t' read -r id name dir attached; do
+        [ "$name" = "$here" ] || continue
+        found=1
+        item "This session" '' "$name" "$(state "$attached") · in ${dir/#$HOME/\~}" "" \
+            "$(printf '%q ' "$self" --bg "$name")" "$live"
+    done <<<"$omps"
+    [ -n "$found" ] || item "This session" '' "$here" "not running · start in ${cwd/#$HOME/\~}" "new" \
+        "$(printf '%q ' "$self" --bg "$here" "$cwd" omp)" "$idle"
+    while IFS=$'\t' read -r id name dir attached; do
+        [ -n "$name" ] && [ "$name" != "$here" ] || continue
+        item Running '' "$name" "$(state "$attached") · in ${dir/#$HOME/\~}" "" \
+            "$(printf '%q ' "$self" --bg "$name")" "$live"
+    done <<<"$omps"
+    while IFS=$'\t' read -r id name dir attached; do
+        [ -n "$name" ] && item Quit '' "Quit $name" "kill the session" "kill" \
+            "$(printf '%q ' tmux kill-session -t "$id")"
+    done <<<"$omps"
+    printf '%s\n' "${items[@]}" | jq -s .
+    exit 0
+fi
+
+# ── Background tasks still running (any project), to bring back ──────────
+while IFS=$'\t' read -r name dir; do
+    [ -n "$dir" ] && item Running '' "$name" "in ${dir/#$HOME/\~}" "" "$(printf '%q ' "$self" --bg "$name")"
+done < <(tmux list-sessions -F $'#{session_name}\t#{@pj_task}' 2>/dev/null)
+
+# ── Quick actions, from the files at the project root ─────────────────────
+if [ -f "$root/package.json" ]; then
+    pm=$(jq -r '.packageManager // empty' "$root/package.json" 2>/dev/null)
+    pm=${pm%%@*}
+    if [ -z "$pm" ]; then
+        if [ -f "$root/bun.lock" ] || [ -f "$root/bun.lockb" ]; then pm=bun
+        elif [ -f "$root/pnpm-lock.yaml" ]; then pm=pnpm
+        elif [ -f "$root/yarn.lock" ]; then pm=yarn
+        else pm=npm
+        fi
+    fi
+    if have "$pm"; then
+        quick "$(icon_for "$pm")" "$pm install" "install,i" 0 "$root" "$pm" install
+        jq -e '.scripts.dev' "$root/package.json" >/dev/null 2>&1 &&
+            quick "$(icon_for "$pm")" "$pm run dev" "dev" 1 "$root" "$pm" run dev
+    fi
+fi
+if [ -f "$root/pyproject.toml" ] && have uv; then
+    quick "$(icon_for uv)" "uv sync" "sync,install" 0 "$root" uv sync
+    quick "$(icon_for uv)" "uv run python" "py,repl" 0 "$root" uv run python
+fi
+if have make && { [ -f "$root/Makefile" ] || [ -f "$root/makefile" ] || [ -f "$root/GNUmakefile" ]; }; then
+    quick "$(icon_for make)" "make" "m,build" 0 "$root" make
+fi
+[ -f "$root/go.mod" ] && have go && quick "$(icon_for go)" "go run ." "run" 0 "$root" go run .
+[ -f "$root/Cargo.toml" ] && have cargo && quick "$(icon_for cargo)" "cargo run" "run" 0 "$root" cargo run
+if have docker; then
+    for f in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
+        [ -f "$root/$f" ] || continue
+        quick '󰡨' "docker compose up" "up,compose" 1 "$root" docker compose up
+        break
+    done
+fi
+
+# ── Every task pj finds (npm/bun/pnpm scripts, make, just, mise, devbox,
+#    pyproject task tables and console scripts) ─────────────────────────────
+while IFS=$'\t' read -r display kind target troot runner _file; do
+    [ -n "$kind" ] || continue
+    tag=${display%% *}
+    desc="$runner $target" name=""
+    [ "$troot" != "$root" ] && desc+="  (${troot#"$root"/})"
+    long_running "$target" && { name=$(slug "$runner $target"); desc+=" · background"; }
+    item "Tasks: $tag" "$(icon_for "$tag")" "$target" "$desc" "" \
+        "$(task_action "$troot" "$name" --run "$kind" "$target" "$troot" "$runner")"
+done < <(PJ_QUIET=1 pj --list 2>/dev/null)
+
+if [ ${#items[@]} -eq 0 ]; then
+    item Tasks '' "No tasks found" "in ${cwd/#$HOME/\~}" "" "tmux display-message 'pj: no task sources here'"
+fi
+printf '%s\n' "${items[@]}" | jq -s .

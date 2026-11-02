@@ -1,0 +1,30 @@
+[mgr]
+ratio = [0, 2, 6]
+
+[opener]
+play = [
+	{ run = "mpv %s", orphan = true, for = "unix" },
+]
+edit = [
+	# routes into the host nvim when run inside its terminal ($NVIM set);
+	# plain blocking nvim otherwise. Lives in ~/.local/bin (yazi doesn't
+	# expand $HOME here). %s = selected/hovered paths (yazi interpolation).
+	{ run = 'yazi-nvim-open %s', block = true, for = "unix" },
+]
+open = [
+	{ run = "xdg-open %s1", desc = "Open" },
+]
+
+[open]
+prepend_rules = [
+	{ url = "*.{md,markdown}", use = [ "fry", "edit", "open" ] },
+]
+
+# Preview pane: bat for text-like files (md included, since mdfried is TTY-only)
+[[plugin.prepend_previewers]]
+mime = "text/*"
+run = 'piper -- bat -p --color=always --terminal-width=$w "$1"'
+
+[[plugin.prepend_previewers]]
+mime = "application/{mbox,javascript,wine-extension-ini}"
+run = 'piper -- bat -p --color=always --terminal-width=$w "$1"'

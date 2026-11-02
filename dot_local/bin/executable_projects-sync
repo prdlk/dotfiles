@@ -1,0 +1,36 @@
+#!/bin/bash
+# Mirror every repo under the ghq root (~/Code/<host>/<owner>/<repo>) as a
+# symlink ~/Projects/<repo>. Repos sharing a name across owners get
+# <owner>-<repo>. Links into ~/Code whose repo is gone are removed; anything
+# in ~/Projects that is not such a link is never touched. Run by
+# projects-sync.timer (systemd user).
+set -euo pipefail
+
+code=${GHQ_ROOT:-$HOME/Code}
+projects=$HOME/Projects
+mkdir -p "$projects"
+
+mapfile -t repos < <(find "$code" -mindepth 4 -maxdepth 4 -name .git -printf '%h\n' 2>/dev/null | sort)
+
+declare -A count keep
+for repo in "${repos[@]}"; do
+  name=${repo##*/}
+  count[$name]=$((${count[$name]:-0} + 1))
+done
+
+for repo in "${repos[@]}"; do
+  name=${repo##*/}
+  if ((count[$name] > 1)); then
+    owner=${repo%/*}
+    name=${owner##*/}-$name
+  fi
+  link=$projects/$name
+  keep[$name]=1
+  [[ -e $link && ! -L $link ]] && continue
+  [[ $(readlink "$link") == "$repo" ]] || ln -sfn "$repo" "$link"
+done
+
+for link in "$projects"/*; do
+  [[ -L $link && $(readlink "$link") == "$code"/* && -z ${keep[${link##*/}]:-} ]] && rm "$link"
+done
+exit 0

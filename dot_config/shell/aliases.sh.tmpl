@@ -1,0 +1,33 @@
+# Shared aliases for bash and zsh — generated from .chezmoidata/aliases.yaml.
+# fish renders the same data via fish/conf.d/20-aliases.fish. Edit the YAML,
+# not this file. Sourced from ~/.bashrc and ~/.zshrc (interactive shells only).
+{{- range .aliases }}
+
+# {{ .section }}
+{{- range .items }}
+alias {{ .name }}='{{ .cmd }}'
+{{- end }}
+{{- end }}
+
+# Clipboard
+if command -v wl-copy >/dev/null 2>&1; then
+    alias cpy='wl-copy'
+    alias pst='wl-paste'
+fi
+
+# q exits the shell; if this shell was spawned from yazi's own `q` bind
+# (`shell "$SHELL" --block`), also tell that yazi to quit so exiting
+# doesn't bounce back into the file manager.
+q() {
+    if [ -n "$YAZI_ID" ] && command -v ya >/dev/null 2>&1; then
+        ya emit quit 2>/dev/null
+    fi
+    exit
+}
+
+# Typo guards + eza (this file is only sourced by interactive shells)
+alias celar='clear'
+alias claer='clear'
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --icons'
+fi

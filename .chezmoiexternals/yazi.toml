@@ -1,0 +1,6 @@
+[".config/yazi"]
+    type = "git-repo"
+    url = "https://github.com/prdlk/yazi.git"
+    refreshPeriod = "168h"
+    [".config/yazi".pull]
+        args = ["--ff-only"]

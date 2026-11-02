@@ -1,0 +1,38 @@
+# Shell-agnostic aliases — single source of truth, rendered into:
+#   dot_config/fish/conf.d/20-aliases.fish.tmpl  (fish)
+#   dot_config/shell/aliases.sh.tmpl             (bash + zsh)
+# Shell-specific bits (clipboard detection, the `q` function, interactive
+# eza/typo guards) live in those templates, not here.
+aliases:
+  - section: "Editors / file managers"
+    items:
+      - { name: "e", cmd: "nvim" }
+      - { name: "e.d", cmd: "cd ~/.config/dotstate/storage/Rogz/.config && yazi" }
+      - { name: "e.f", cmd: "cd ~/.config/fish && yazi" }
+      - { name: "e.k", cmd: "yazi ~/.config/kitty" }
+      - { name: "e.v", cmd: "yazi ~/.config/nvim/lua" }
+      - { name: "e.y", cmd: "yazi ~/.config/yazi" }
+      - { name: "e.t", cmd: "nvim ~/.config/tmux/tmux.conf" }
+      - { name: "hx", cmd: "helix" }
+  - section: "Quick directory jumps"
+    items:
+      - { name: "cdc", cmd: "cd ~/.config && yazi" }
+      - { name: "cdd", cmd: "cd ~/Developer && yazi" }
+      - { name: "cdk", cmd: "cd ~/Documents/Knowledge && obsidian" }
+      - { name: "cdl", cmd: "cd ~/.local && yazi" }
+      - { name: "cds", cmd: "cd ~/.local/share/services && ls" }
+      - { name: "cdw", cmd: "cd ~/Downloads && yazi" }
+  - section: "Tools"
+    items:
+      - { name: "dd", cmd: "lazydocker" }
+      - { name: "gg", cmd: "lazygit" }
+      - { name: "ff", cmd: "exec fish" }
+      - { name: "npx", cmd: "bunx" }
+      - { name: "sm", cmd: "sudo micro" }
+      - { name: "sd", cmd: "ssh prad@192.168.1.68" }
+      - { name: "oc", cmd: "opencode" }
+      - { name: "dss", cmd: "dotstate sync" }
+      - { name: "fabric", cmd: "fabric-ai" }
+      - { name: "bk", cmd: "bead-kanban" }
+      - { name: "lc", cmd: "leetcode" }
+      - { name: "tk", cmd: "task" }

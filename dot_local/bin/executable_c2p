@@ -1,0 +1,5 @@
+#!/bin/sh
+# Code2Prompt with fuzzy-search template.
+tpl=$(fd --type f --extension hbs . "$HOME/.config/code2prompt" | fzf) || exit 0
+[ -n "$tpl" ] || exit 0
+exec code2prompt --template "$tpl"

@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# tmux-sessions — tmux session switcher as a tmux-palette source (the
+# "sessions" palette, ~/.config/tmux-palette/palettes/sessions.json).
+#
+#   tmux-sessions              print palette items (JSON): the other sessions
+#                              (last one first), every window of every session,
+#                              zoxide's directories, ~/.config's directories,
+#                              and a Rename and a Kill item per session
+#   tmux-sessions --new QUERY  the palette's query item (what was typed): switch
+#                              to session QUERY, or start it in QUERY if that is
+#                              a directory, else in zoxide's best match for it
+#   tmux-sessions --dir DIR    switch to, or start in DIR, the session named
+#                              after DIR's basename without dots
+#
+# pj-palette's background task sessions (@pj_task) are left out. Sessions are
+# targeted by id since names may contain ':'.
+
+set -uo pipefail
+self=$(readlink -f "$0")
+
+session_id() { # name
+    local id name
+    while IFS=$'\t' read -r id name; do
+        [ "$name" = "$1" ] && { printf '%s' "$id"; return 0; }
+    done < <(tmux list-sessions -F $'#{session_id}\t#{session_name}' 2>/dev/null)
+    return 1
+}
+
+# Switch to session NAME, first starting it in DIR (when given) if missing.
+open() { # name [dir]
+    local id
+    id=$(session_id "$1") ||
+        id=$(tmux new-session -d -P -F '#{session_id}' -s "$1" ${2:+-c "$2"}) || exit 1
+    tmux switch-client -t "$id"
+}
+
+case ${1-} in
+--dir)
+    dir=${2%/}
+    name=${dir##*/}
+    open "${name//./}" "$2"
+    exit
+    ;;
+--new)
+    query=$2
+    [ -d "${query/#\~/$HOME}" ] && exec "$self" --dir "${query/#\~/$HOME}"
+    dir=
+    if ! session_id "$query" >/dev/null; then
+        read -ra words <<<"$query"
+        dir=$(zoxide query -- "${words[@]}" 2>/dev/null)
+    fi
+    open "$query" "$dir"
+    exit
+    ;;
+esac
+
+{
+    tmux list-sessions -F $'S\t#{session_id}\t#{session_name}\t#{@pj_task}\t#{session_attached}\t#{session_windows}\t#{session_path}'
+    tmux list-windows -a -F $'W\t#{session_id}\t#{session_name}\t#{@pj_task}\t#{window_id}\t#{window_index}\t#{window_name}\t#{pane_current_path}'
+    zoxide query -l 2>/dev/null | sed 's/^/Z\t/'
+    find -L "$HOME/.config" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | sed 's/^/C\t/'
+} | jq -Rn --arg self "$self" --arg home "$HOME" \
+    --arg cur "$(tmux display -p '#{session_id}')" --arg last "$(tmux display -p '#{client_last_session}')" '
+    def tilde: if startswith($home) then "~" + .[($home | length):] else . end;
+    def session_name: rtrimstr("/") | split("/") | last | gsub("\\."; "");
+    [inputs | split("\t")] as $rows
+    | ($rows | map(select(.[0] == "S" and .[3] == ""))) as $sessions
+    | ($rows | map(select(.[0] == "S") | .[2])) as $names
+    | ($rows | map(select(.[0] == "Z") | .[1])) as $zoxide
+    | ($sessions | map(select(.[1] != $cur))) as $others
+    | def dir($category; $icon):
+        (.[1] | session_name) as $name
+        | {category: $category, icon: $icon, title: (.[1] | tilde),
+           description: (if $names | any(. == $name) then "switch to \($name)" else "new session \($name)" end),
+           action: {shell: "\($self | @sh) --dir \(.[1] | @sh)"}};
+    [
+      (($others | map(select(.[2] == $last)) + map(select(.[2] != $last)))[]
+       | {category: "Sessions", icon: "󱂬", title: .[2],
+          description: "\(.[5]) window\(if .[5] == "1" then "" else "s" end)\(if .[4] != "0" then " · attached" else "" end) · \(.[6] | tilde)",
+          action: {tmux: "switch-client -t \(.[1] | @sh)"}}
+         + (if .[4] != "0" then {iconColor: "#5eff6c"} else {} end)),
+      ($rows[] | select(.[0] == "W" and .[3] == "")
+       | (.[6] | capture("^(?<icon>[^\\x00-\\x7f]) (?<title>.*)$") // {icon: "", title: .}) as $w
+       | {category: "Windows", icon: $w.icon, title: $w.title,
+          description: "\(.[2]):\(.[5]) · \(.[7] | tilde)",
+          action: {tmux: "switch-client -t \("\(.[1]):\(.[4])" | @sh)"}}),
+      ($rows[] | select(.[0] == "Z") | dir("Zoxide"; "")),
+      ($rows[] | select(.[0] == "C" and (.[1] as $d | $zoxide | any(. == $d) | not)) | dir("Config"; "󱃖")),
+      ($sessions[]
+       | {category: "Rename", icon: "󰑕", title: "Rename \(.[2])", description: "rename the session",
+          action: {tmux: "command-prompt -I \(.[2] | @sh) -p \("Rename \(.[2]):" | @sh) \("rename-session -t \(.[1] | @sh) -- \"%%%\"" | @sh)"}}),
+      ($others[]
+       | {category: "Kill", icon: "󱂧", title: "Kill \(.[2])", description: "kill the session",
+          action: {tmux: "kill-session -t \(.[1] | @sh)"}})
+    ]'

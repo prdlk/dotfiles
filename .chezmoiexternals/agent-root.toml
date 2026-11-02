@@ -1,0 +1,8 @@
+# agent-root: lets coding agents run one command as root through a pkexec
+# dialog with a notify-send reason. Single upstream script; desktop/laptop
+# roles only (needs the session's polkit agent), gated in .chezmoiignore.tmpl.
+[".local/bin/agent-root"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/jankeesvw/agent-root/main/agent-root"
+    executable = true
+    refreshPeriod = "168h"

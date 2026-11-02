@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# gh-sonr-org-migrate
+# Migrates all repos from orgs matching "sonr" into sonr-io,
+# prompting via gum for renames on collision, then deletes emptied orgs.
+#
+# Requires: gh (authenticated as org owner on all orgs), gum, jq
+
+TARGET_ORG=sonr-io
+
+red()    { printf '\033[31m%s\033[0m\n' "$*"; }
+green()  { printf '\033[32m%s\033[0m\n' "$*"; }
+yellow() { printf '\033[33m%s\033[0m\n' "$*"; }
+cyan()   { printf '\033[36m%s\033[0m\n' "$*"; }
+bcyan()  { printf '\033[1;36m%s\033[0m\n' "$*"; }
+bgreen() { printf '\033[1;32m%s\033[0m\n' "$*"; }
+
+# ── Preflight ────────────────────────────────────────────────────────────────
+for bin in gh gum jq; do
+    if ! command -v "$bin" >/dev/null 2>&1; then
+        red "missing dependency: $bin"
+        exit 1
+    fi
+done
+
+if ! gh auth status >/dev/null 2>&1; then
+    red "gh is not authenticated"
+    exit 1
+fi
+
+# ── Discover source orgs ─────────────────────────────────────────────────────
+# All orgs the user belongs to whose login contains "sonr", excluding target.
+mapfile -t source_orgs < <(gh api user/orgs --paginate --jq '.[].login' \
+    | grep 'sonr' | grep -vx "$TARGET_ORG")
+
+if [ "${#source_orgs[@]}" -eq 0 ]; then
+    echo "No source orgs found. Nothing to do."
+    exit 0
+fi
+
+cyan "Source orgs:"
+printf '  %s\n' "${source_orgs[@]}"
+cyan "Target org:"
+echo " $TARGET_ORG"
+echo
+
+# Let the user confirm / trim the list interactively
+mapfile -t selected_orgs < <(printf '%s\n' "${source_orgs[@]}" | gum choose --no-limit \
+    --header "Select orgs to migrate into $TARGET_ORG (space to toggle, enter to confirm)")
+
+if [ "${#selected_orgs[@]}" -eq 0 ]; then
+    echo "Nothing selected. Exiting."
+    exit 0
+fi
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+repo_exists_in_target() {
+    gh api "repos/$TARGET_ORG/$1" --silent >/dev/null 2>&1
+}
+
+transfer_repo() {
+    # $1 = source org, $2 = repo name, $3 = (optional) new name
+    local src=$1 repo=$2 new_name=${3:-}
+    local args=(-f "new_owner=$TARGET_ORG")
+    if [ -n "$new_name" ]; then
+        args+=(-f "new_name=$new_name")
+    fi
+    gh api -X POST "repos/$src/$repo/transfer" "${args[@]}" --silent
+}
+
+# ── Migration ────────────────────────────────────────────────────────────────
+failed_transfers=()
+
+for org in "${selected_orgs[@]}"; do
+    echo
+    bcyan "── $org ──"
+
+    mapfile -t repos < <(gh api "orgs/$org/repos" --paginate --jq '.[].name')
+
+    if [ "${#repos[@]}" -eq 0 ]; then
+        echo "  (no repos)"
+        continue
+    fi
+
+    for repo in "${repos[@]}"; do
+        new_name=""
+
+        if repo_exists_in_target "$repo"; then
+            yellow "  ⚠ $repo already exists in $TARGET_ORG"
+            while true; do
+                new_name=$(gum input \
+                    --header "New name for $org/$repo (exists in $TARGET_ORG)" \
+                    --placeholder "$org-$repo" \
+                    --value "$org-$repo")
+                if [ -z "$new_name" ]; then
+                    echo "    skipped $org/$repo"
+                    new_name=__SKIP__
+                    break
+                fi
+                if repo_exists_in_target "$new_name"; then
+                    yellow "    $new_name also exists — pick another"
+                else
+                    break
+                fi
+            done
+            [ "$new_name" = __SKIP__ ] && continue
+        fi
+
+        label="$org/$repo → $TARGET_ORG/${new_name:-$repo}"
+        if transfer_repo "$org" "$repo" "$new_name"; then
+            green "  ✓ $label"
+        else
+            red "  ✗ failed: $label"
+            failed_transfers+=("$org/$repo")
+        fi
+    done
+done
+
+if [ "${#failed_transfers[@]}" -gt 0 ]; then
+    echo
+    red "Failed transfers (orgs containing these will NOT be deleted):"
+    printf '  %s\n' "${failed_transfers[@]}"
+fi
+
+# ── Wait for transfers to settle ─────────────────────────────────────────────
+# GitHub repo transfers are asynchronous; give them time to drain.
+echo
+gum spin --title "Waiting 30s for transfers to settle..." -- sleep 30
+
+# ── Delete emptied orgs ──────────────────────────────────────────────────────
+echo
+for org in "${selected_orgs[@]}"; do
+    # Skip orgs with failed transfers
+    org_had_failure=0
+    for f in ${failed_transfers[@]+"${failed_transfers[@]}"}; do
+        case "$f" in
+            "$org"/*) org_had_failure=1; break ;;
+        esac
+    done
+    if [ "$org_had_failure" -eq 1 ]; then
+        yellow "skipping delete: $org (had failures)"
+        continue
+    fi
+
+    remaining=$(gh api "orgs/$org/repos" --paginate --jq '. | length' | jq -s 'add // 0')
+
+    if [ "$remaining" -gt 0 ]; then
+        yellow "skipping delete: $org still has $remaining repo(s) (transfer pending?)"
+        continue
+    fi
+
+    if gum confirm "Delete empty org $org?"; then
+        if gh api -X DELETE "orgs/$org" --silent; then
+            green "✓ deleted $org"
+        else
+            red "✗ could not delete $org (API delete requires org owner; may need manual deletion in Settings)"
+        fi
+    else
+        echo "kept $org"
+    fi
+done
+
+echo
+bgreen "Done."

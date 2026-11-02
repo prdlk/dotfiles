@@ -1,0 +1,11 @@
+gui:
+  border: rounded
+  theme:
+    activeBorderColor:
+      - "#cf716f"
+    inactiveBorderColor:
+      - "#a6958f"
+    selectedLineBgColor:
+      - "#453130"
+    optionsTextColor:
+      - "#a6958f"

@@ -1,0 +1,116 @@
+#!/bin/sh
+# ghq get + resolve the on-disk clone path; prints the repo directory.
+# Shell wrappers (fish/bash/zsh `ghg` functions) cd into the printed path —
+# a child process can't change the caller's cwd.
+#
+# Then sets up a prad.codes mirror when the repo has none (best effort; the
+# clone never fails over it):
+#   github.com/<owner>/<name> you admin → pull mirror into a prad.codes org
+#     (picked with gum, guessed from the language; esc skips), every 8h
+#   prad.codes/<org>/<name> that isn't itself a mirror → push mirror to
+#     github.com/<you>/<name> (created if missing), on every push and every 8h
+repo=$1
+if [ -z "$repo" ]; then
+    echo "usage: ghg-clone <repo>" >&2
+    exit 1
+fi
+
+# ghq natively understands https://, ssh://, git@host:…, and host/user/repo.
+# Keep its output on stderr so stdout stays clean for the wrapper's cd.
+ghq get "$repo" >&2 || exit
+
+# Reduce the input to ghq's on-disk shape: <host>/<user>/<repo> —
+# strip scheme (https://, ssh://, git://), user@ (git@github.com:…),
+# turn scp host:path into host/path, drop trailing .git.
+rel=$(printf '%s\n' "$repo" \
+    | sed -E 's#^[[:alnum:]]+://##; s#^[^@/]+@##; s#:#/#; s#\.git$##')
+
+# bare "user/repo" with no host → default to github.com
+case "$rel" in
+    *.*/*) ;;
+    *) rel=github.com/$rel ;;
+esac
+
+dir=$(ghq root)/$rel
+if [ ! -d "$dir" ]; then
+    echo "ghg: expected clone at $dir but it does not exist" >&2
+    exit 1
+fi
+
+command -v zoxide >/dev/null 2>&1 && zoxide add "$dir"
+
+# ── Mirrors ───────────────────────────────────────────────────────────────
+# Everything below talks on stderr; stdout carries only the final path.
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# prad.codes orgs are per language; guess one from GitHub's primary language.
+lang_org() {
+    case $1 in
+    Go) echo go ;;
+    Python | "Jupyter Notebook") echo py ;;
+    Rust) echo rs ;;
+    Dart) echo dart ;;
+    TeX) echo tex ;;
+    JavaScript | TypeScript | Astro | Svelte | Vue | HTML | CSS) echo js ;;
+    Markdown | MDX) echo md ;;
+    *) echo env ;; # Lua, Shell, no code at all (configs)
+    esac
+}
+
+pull_mirror() { # owner name
+    info=$(gh repo view "$1/$2" --json viewerPermission,isPrivate,primaryLanguage \
+        -q '[.viewerPermission, .isPrivate, .primaryLanguage.name // ""] | @tsv' 2>/dev/null) || return 0
+    perm=$(printf '%s\n' "$info" | cut -f1)
+    private=$(printf '%s\n' "$info" | cut -f2)
+    lang=$(printf '%s\n' "$info" | cut -f3)
+    [ "$perm" = ADMIN ] || return 0 # someone else's repo: just a clone
+    # tea api exits 0 even on errors, hence jq -e on every response.
+    tea api "/api/v1/repos/search?q=$2&limit=50" | jq -e --arg u "github.com/$1/$2" \
+        'any(.data[]; (.original_url // "") | ascii_downcase | sub("(\\.git)?/?$"; "") | endswith($u | ascii_downcase))' \
+        >/dev/null && return 0
+    org=$(tea api '/api/v1/orgs?limit=50' | jq -r '.[].username' |
+        gum choose --header "Pull-mirror github.com/$1/$2 into which prad.codes org? (esc skips)" \
+            --selected "$(lang_org "$lang")") || return 0
+    [ -n "$org" ] || return 0
+    echo "→ pull mirror: github.com/$1/$2 → prad.codes/$org/$2 (every 8h)" >&2
+    priv=
+    [ "$private" = true ] && priv=--private
+    # shellcheck disable=SC2086 # $priv is one optional flag
+    tea repos migrate --name "$2" --owner "$org" --clone-url "https://github.com/$1/$2.git" \
+        --service git --mirror --mirror-interval 8h --auth-token "$(gh auth token)" $priv >&2 ||
+        echo "ghg: pull mirror failed" >&2
+}
+
+push_mirror() { # org name
+    repo=$(tea api "/api/v1/repos/$1/$2")
+    printf '%s' "$repo" | jq -e '.id and (.mirror | not)' >/dev/null || return 0
+    tea api "/api/v1/repos/$1/$2/push_mirrors" | jq -e 'length == 0' >/dev/null || return 0
+    me=$(gh api user -q .login 2>/dev/null) || return 0
+    if gh repo view "$me/$2" >/dev/null 2>&1; then
+        gum confirm "Push-mirror prad.codes/$1/$2 to the existing github.com/$me/$2? Mirror pushes overwrite it." || return 0
+    else
+        gum confirm "Push-mirror prad.codes/$1/$2 to a new github.com/$me/$2?" || return 0
+        vis=--public
+        [ "$(printf '%s' "$repo" | jq -r .private)" = true ] && vis=--private
+        gh repo create "$me/$2" "$vis" --description "Mirror of https://prad.codes/$1/$2" >&2 || return 0
+    fi
+    if jq -n --arg url "https://github.com/$me/$2.git" --arg user "$me" --arg pass "$(gh auth token)" \
+        '{remote_address: $url, remote_username: $user, remote_password: $pass,
+          interval: "8h0m0s", sync_on_commit: true}' |
+        tea api -d @- "/api/v1/repos/$1/$2/push_mirrors" | jq -e .remote_name >/dev/null; then
+        tea api -X POST "/api/v1/repos/$1/$2/push_mirrors-sync" >/dev/null # first push now
+        echo "→ push mirror: prad.codes/$1/$2 → github.com/$me/$2 (on push + every 8h)" >&2
+    else
+        echo "ghg: push mirror failed" >&2
+    fi
+}
+
+if have gh && have tea && have jq && have gum; then
+    owner=${rel#*/} name=${owner#*/} owner=${owner%%/*}
+    case $rel in
+    github.com/*/*) pull_mirror "$owner" "$name" ;;
+    prad.codes/*/*) push_mirror "$owner" "$name" ;;
+    esac
+fi
+
+printf '%s\n' "$dir"

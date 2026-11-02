@@ -1,0 +1,26 @@
+#!/bin/sh
+# Yazi `edit` opener. Inside a Neovim terminal ($NVIM set) files open in the
+# HOST instance via _G.EditFromYazi (see ~/.config/nvim/lua/config/yazi_session.lua)
+# and the yazi window hides itself; standalone yazi gets a regular blocking nvim.
+#
+# usage: nvim-open.sh [vsplit|split|tabedit] file...   (default mode: edit)
+
+case "$1" in
+  vsplit | split | tabedit) mode="$1"; shift ;;
+  *) mode="edit" ;;
+esac
+
+[ -n "$YAZI_OPEN_TRACE" ] && printf 'NVIM=%s MODE=%s ARGS=%s\n' "$NVIM" "$mode" "$*" >> "$YAZI_OPEN_TRACE"
+
+if [ -z "$NVIM" ]; then
+  # split modes are meaningless outside an nvim terminal — quiet no-op
+  [ "$mode" = "edit" ] || exit 0
+  exec nvim "$@"
+fi
+
+for f in "$@"; do
+  abs=$(realpath -- "$f") || continue
+  # escape for a vimscript double-quoted string
+  esc=$(printf '%s' "$abs" | sed 's/[\\"]/\\&/g')
+  nvim --server "$NVIM" --remote-expr "v:lua.EditFromYazi(\"$mode\", \"$esc\")"
+done

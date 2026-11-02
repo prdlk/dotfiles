@@ -1,0 +1,92 @@
+# ~/.config/topgrade.toml — tailored for Omarchy (Arch · yay · fish)
+# Only the keys that matter for this box are uncommented; everything else
+# keeps topgrade's sane defaults.
+
+[misc]
+# pacman/yay escalate privileges mid-run; cache sudo creds up front so an
+# unattended run doesn't block on a password prompt halfway through.
+pre_sudo = true
+
+# topgrade on this box is cargo-installed (~/.cargo/bin/topgrade), and the
+# [cargo] step below (cargo-update) already owns updating it. Self-update
+# stays off so two updaters don't fight over the same binary.
+no_self_update = true
+
+# Run distro cleanup after upgrading (paccache).
+# Needs `pacman-contrib` for paccache; harmlessly skipped if absent.
+cleanup = true
+
+# Surface *.pacnew / *.pacsave you need to merge — critical on a rolling
+# Arch base. (default true; pinned here as a reminder.)
+show_distribution_summary = true
+
+# Globally skipped steps:
+#   containers → topgrade pulls :latest for every local image on every run,
+#                which is noisy and can drag in breaking tags. Drop this entry
+#                if you actually want your dev images auto-refreshed.
+disable = ["containers", "config_update"]
+
+ignore_failures = ["uv", "containers"]
+
+# NOTE: the [python] pip/conda steps are off by default and left that way —
+# that's what protects your pinned torch 2.10.0+rocm7.2.4 from a blind upgrade.
+
+# Optional: update topgrade on goliath in the same pass. Requires topgrade
+# installed there + tmux locally; rides your existing SSH ControlMaster.
+# remote_topgrades = ["goliath"]
+
+
+[linux]
+# Omarchy's AUR helper is yay. Pin it so topgrade never silently falls back
+# to bare `pacman` (which would skip the AUR).
+# Valid values: autodetect, aura, garuda_update, pacman, pamac, paru, pikaur,
+#               trizen, yay
+arch_package_manager = "yay"
+
+# Pull archlinux.org news before the upgrade. Omarchy tracks Arch, so
+# manual-intervention advisories (keyring, library bumps) still apply to you.
+show_arch_news = true
+
+
+[cargo]
+# Also update git-sourced installs (your smartcommit / skillforge CLIs),
+# not just crates.io ones. This step is also what keeps topgrade itself fresh.
+git = true
+# Requires the updater binary:  cargo install cargo-update
+
+
+[firmware]
+# Check + display only — review fwupd updates before flashing the Z13 rather
+# than auto-applying firmware in an unattended run.
+upgrade = false
+
+
+[git]
+# Predefined repos still get pulled by default. Add your own globs if you want
+# configs fetched in the same pass; left commented so topgrade doesn't trip
+# over a dirty working tree mid-run.
+# repos = ["~/.config/omarchy", "~/Code/prad.codes/env/omarchy"]
+# arguments = "--rebase --autostash"
+
+
+[flatpak]
+# User-scope flatpaks update without sudo. Only set this if you keep
+# system-wide installs.
+# use_sudo = true
+
+
+[pre_commands]
+# "Emacs Snapshot" = "rm -rf ~/.emacs.d/elpa.bak && cp -rl ~/.emacs.d/elpa ~/.emacs.d/elpa.bak"
+# Capture local drift in managed config back into the chezmoi source repo
+# before anything upgrades. Note: only re-adds *managed* files; brand-new
+# configs still need a manual `chezmoi add`. Review/commit in
+# ~/.local/share/chezmoi afterwards.
+"Chezmoi Re-Add" = "chezmoi re-add"
+"GHQ Update" = "ghq list | ghq get -u -s"
+
+
+# Commands to run after anything
+[post_commands]
+# "Emacs Snapshot" = "rm -rf ~/.emacs.d/elpa.bak && cp -rl ~/.emacs.d/elpa ~/.emacs.d/elpa.bak"
+"Hermes Update" = "hermes update --backup --yes"
+"Herdr Update" = "herdr update"

@@ -1,0 +1,6 @@
+[".config/kitty"]
+    type = "git-repo"
+    url = "https://github.com/prdlk/kitty.git"
+    refreshPeriod = "168h"
+    [".config/kitty".pull]
+        args = ["--ff-only"]

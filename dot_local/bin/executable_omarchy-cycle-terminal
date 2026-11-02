@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omarchy:summary=Cycle through all terminals (ghostty/kitty/alacritty/foot/wezterm); launch the default if none are open.
+
+exec "$(dirname "$(readlink -f "$0")")/omarchy-cycle" terminal

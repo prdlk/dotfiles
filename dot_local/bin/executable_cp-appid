@@ -1,0 +1,43 @@
+#!/bin/sh
+# Fuzzy-pick a desktop app ID and copy to clipboard.
+existing_dirs=""
+for d in /usr/share/applications \
+         /usr/local/share/applications \
+         "$HOME/.local/share/applications" \
+         /var/lib/flatpak/exports/share/applications \
+         "$HOME/.local/share/flatpak/exports/share/applications" \
+         /var/lib/snapd/desktop/applications; do
+    [ -d "$d" ] && existing_dirs="$existing_dirs $d"
+done
+
+if [ -z "$existing_dirs" ]; then
+    echo "No application directories found." >&2
+    exit 1
+fi
+
+# word splitting of $existing_dirs is intended
+# shellcheck disable=SC2086
+chosen=$(
+    fd --type f --extension desktop . $existing_dirs \
+    | while IFS= read -r f; do
+        app_id=$(basename "$f" .desktop)
+        name=$(sed -n 's/^Name=//p' "$f" | head -n1)
+        [ -z "$name" ] && name=$app_id
+        printf '%s\t%s\n' "$name" "$app_id"
+    done \
+    | sort -u -t "$(printf '\t')" -k1 \
+    | fzf \
+        --delimiter='\t' \
+        --with-nth=1,2 \
+        --prompt="App ID › " \
+        --height=50% \
+        --layout=reverse \
+        --border=rounded \
+        --info=inline
+)
+
+[ -n "$chosen" ] || exit 0
+
+app_id=$(printf '%s\n' "$chosen" | cut -f2)
+printf '%s' "$app_id" | wl-copy
+echo "Copied: $app_id"

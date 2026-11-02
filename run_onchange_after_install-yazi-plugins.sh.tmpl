@@ -1,0 +1,15 @@
+#!/bin/sh
+# Install the yazi plugins pinned in ~/.config/yazi/package.toml whenever it
+# changes. ~/.config/yazi is a git-repo external (prdlk/yazi); plugins land in
+# its plugins/ dir (gitignored there, except the vendored bunny.yazi).
+{{- $pkg := joinPath .chezmoi.homeDir ".config/yazi/package.toml" }}
+# package.toml hash: {{ if stat $pkg }}{{ include $pkg | sha256sum }}{{ end }}
+set -eu
+command -v ya >/dev/null 2>&1 || exit 0
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/yazi/package.toml" ] || exit 0
+# ya's clone cache is disposable and clones made by an older ya can break a
+# newer one, so rebuild it once before giving up.
+ya pkg install || {
+	rm -rf "${XDG_CACHE_HOME:-$HOME/.cache}/yazi/packages"
+	ya pkg install
+}

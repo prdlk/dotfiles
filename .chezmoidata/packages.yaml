@@ -1,0 +1,149 @@
+packages:
+  arch:
+    pacman:
+      # shell + editors
+      - fish
+      - neovim
+      - helix
+      - micro
+      - tmux
+      # terminals (ghostty is the default)
+      - ghostty
+      - kitty
+      # tui tools (tmux-palette, television cables, fish functions)
+      - yazi
+      - lazygit
+      - lazydocker
+      - docker
+      - docker-compose
+      - btop
+      - fastfetch
+      - onefetch
+      - television
+      - serie
+      - tig
+      - gitui
+      - tldr
+      - navi
+      - mdfried
+      # vcs + forge
+      - git
+      - github-cli
+      - git-delta
+      - diffnav
+      - tea
+      # search / files
+      - fzf
+      - fd
+      - ripgrep
+      - zoxide
+      - eza
+      - bat
+      - jq
+      - duf
+      # media / preview (yazi + tv deps)
+      - ffmpeg
+      - ffmpegthumbnailer
+      - poppler
+      - resvg
+      - imagemagick
+      - chafa
+      - 7zip
+      - unzip
+      # remote
+      - mosh
+      - sshfs
+      - tailscale
+      # misc cli
+      - mise
+      - gum
+      - glow
+      - atuin
+      - wget
+      - starship
+      - zsh-syntax-highlighting
+      # fonts
+      - ttf-victor-mono-nerd
+    aur:
+      - topgrade
+      - portop
+    desktop:
+      # linux desktop layer (role desktop|laptop)
+      pacman:
+        - uwsm
+        - xdg-user-dirs
+        # wayland utilities the compositor configs and ~/.local/bin scripts call
+        - wl-clipboard
+        - cliphist
+        - wtype
+        - ydotool
+        - grim
+        - slurp
+        - hyprpicker
+        - pamixer
+        - brightnessctl
+        - libnotify
+        # desktop apps bound in hypr
+        - nautilus
+        - imv
+        - mpv
+        - evince
+        - chromium
+        - obsidian
+        # strata runtime deps (its installer runs `sudo -n pacman`, which fails
+        # without cached credentials, so they come from here instead)
+        - bubblewrap
+        - desktop-file-utils
+        - fontconfig
+        - gstreamer
+        - gst-libav
+        - gst-plugins-base
+        - gst-plugins-good
+        - gtk4
+        - gtksourceview5
+        - gvfs
+        - poppler-glib
+        - xdg-utils
+      # AUR, or a sync repo that ships the same name (yay prefers repos). Only
+      # names no installed package provides are passed on (`pacman -T`).
+      aur:
+        - tldraw-offline-bin
+        # desktop apps
+        - beeper-bin
+        - fastmail
+        - 1password
+        - brave-origin-bin
+        - claude-desktop
+        - spotify
+      # [omarchy] pacman repo (pkgs.omarchy.org); installed only when that repo
+      # is configured. Hyprland, waybar and the omarchy-* scripts come with
+      # the Omarchy install itself and are not listed.
+      omarchy:
+        - herdr
+        - flea
+        - voxtype-bin
+        - xdg-terminal-exec
+        - hyprland-preview-share-picker
+  shared:
+    gh_extensions:
+      - davidraviv/gh-clean-branches
+      - prdlk/gh-commit
+      - dlvhdr/gh-dash
+      - meiji163/gh-notify
+    # cargo installs (run_onchange_after_15-tools, after rustup)
+    cargo:
+      - suvadu
+      - mandible
+      - worktrunk
+    # global mise tools: `mise use -g <tool>` (run_onchange_after_15-tools).
+    # Registry short names where mise has one (`mise registry <tool>`), else a
+    # backend spec; written to ~/.config/mise/config.toml under the same key.
+    mise:
+      - ghq
+      - bun
+      - node
+      - uv
+      - opencode
+      - crush
+      # omp: prebuilt release binaries; not in the mise registry
+      - github:can1357/oh-my-pi

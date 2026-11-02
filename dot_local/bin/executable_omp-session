@@ -1,0 +1,296 @@
+#!/usr/bin/env python3
+"""omp-session — start or resume omp for the current git repo (ctrl-a in fish
+and zsh), and the backend of the television `omp-sessions` cable
+(~/.config/television/cable/omp-sessions.toml).
+
+Launch rules, inside a git repo:
+  default branch  resume the newest session on it if it was written less than
+                  3 hours ago; otherwise pick one with `tv omp-sessions`
+                  (all sessions of the repo). No sessions at all → new session.
+  other branch    resume the newest session on it; none → new session.
+  detached HEAD   pick with `tv omp-sessions` (no sessions → new session).
+Outside a git repo: plain `omp`.
+
+A session belongs to the repo when its cwd is the worktree root or below it,
+excluding worktrees nested inside it. omp does not record the git branch, so
+a session's branch is the branch HEAD was on (per `git reflog`) when the
+session file was last written.
+
+Cable entry points:
+  omp-session --list          one "display<TAB>session file" record per session
+  omp-session --preview FILE  title, cwd, and the conversation's message text
+  omp-session --resume FILE   the cable's enter action: `omp --resume FILE`
+  omp-session --new           the cable's ctrl-n action: a new `omp` session
+
+Env:
+  OMP_SESSION_STATE=FILE  --resume/--new write `ran` to it, so the launcher can
+                          tell a started session from a cancelled picker and
+                          only move the cursor back up after a cancel (tv
+                          --inline).
+  PI_CODING_AGENT_DIR     omp's agent dir (default ~/.omp/agent).
+"""
+
+import json
+import os
+import re
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+RECENT = 3 * 3600
+SESSIONS = Path(os.environ.get("PI_CODING_AGENT_DIR") or Path.home() / ".omp" / "agent") / "sessions"
+
+# tv closes the preview pipe early on long sessions; exit quietly.
+signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+MOVES = (
+    # (pattern, group of the branch HEAD moved to, group of the branch it left)
+    (re.compile(r"checkout: moving from (.+) to (.+)$"), 2, 1),
+    (re.compile(r"Branch: renamed refs/heads/(.+) to refs/heads/(.+)$"), 2, 1),
+    # rebase (start) detaches HEAD; the finish returns to the rebased branch.
+    (re.compile(r"rebase.*\(finish\): returning to refs/heads/(.+)$"), 1, 1),
+)
+
+
+def git(*args):
+    r = subprocess.run(["git", *args], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else ""
+
+
+def inside(path, root):
+    return path == root or path.startswith(root.rstrip("/") + "/")
+
+
+class Session:
+    __slots__ = ("path", "mtime", "cwd", "title")
+
+    def __init__(self, path, mtime, cwd, title):
+        self.path, self.mtime, self.cwd, self.title = path, mtime, cwd, title
+
+
+def header(path):
+    """(cwd, title) from the head of a session file: an optional title record,
+    then the session record."""
+    title = None
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for _, line in zip(range(4), fh):
+                rec = json.loads(line)
+                if rec.get("type") == "title":
+                    title = rec.get("title")
+                elif rec.get("type") == "session":
+                    return rec.get("cwd"), title
+    except (OSError, ValueError):
+        pass
+    return None
+
+
+def repo_sessions(top):
+    """Sessions whose cwd is inside the worktree `top`, newest first."""
+    nested = [
+        line[len("worktree "):]
+        for line in git("worktree", "list", "--porcelain").splitlines()
+        if line.startswith("worktree ")
+    ]
+    nested = [w for w in nested if w != top and inside(w, top)]
+    out = []
+    for path in SESSIONS.glob("*/*.jsonl"):
+        h = header(path)
+        if not h or not h[0]:
+            continue
+        cwd, title = h
+        if not inside(cwd, top) or any(inside(cwd, w) for w in nested):
+            continue
+        try:
+            mtime = path.stat().st_mtime
+        except OSError:
+            continue
+        out.append(Session(path, mtime, cwd, title))
+    out.sort(key=lambda s: s.mtime, reverse=True)
+    return out
+
+
+class Timeline:
+    """Which branch HEAD was on at a given time, from this worktree's reflog."""
+
+    def __init__(self, current):
+        self.current = current
+        self.moves = []  # (unix time, to, from), newest first
+        for line in git("reflog", "--date=unix", "--format=%gd%x09%gs").splitlines():
+            ref, _, subject = line.partition("\t")
+            m = re.search(r"@\{(\d+)\}", ref)
+            if not m:
+                continue
+            for pat, to, frm in MOVES:
+                hit = pat.search(subject)
+                if hit:
+                    self.moves.append((int(m.group(1)), hit.group(to), hit.group(frm)))
+                    break
+
+    def branch_at(self, t):
+        for ts, to, _ in self.moves:
+            if ts <= t:
+                return to
+        # Older than every recorded move: the branch the oldest move left.
+        return self.moves[-1][2] if self.moves else self.current
+
+
+def default_branch():
+    ref = git("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD")
+    if ref:
+        return ref.split("/", 1)[1]
+    for b in (git("config", "init.defaultBranch"), "main", "master"):
+        if b and git("rev-parse", "--verify", "--quiet", f"refs/heads/{b}"):
+            return b
+    return ""
+
+
+def first_user_text(path):
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if '"role":"user"' not in line:
+                    continue
+                text = message_text(json.loads(line).get("message") or {})
+                if text.strip():
+                    return text.strip().splitlines()[0]
+    except (OSError, ValueError):
+        pass
+    return ""
+
+
+def message_text(msg):
+    content = msg.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "\n".join(p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text")
+    return ""
+
+
+def age(seconds):
+    for unit, size in (("w", 604800), ("d", 86400), ("h", 3600), ("m", 60)):
+        if seconds >= size:
+            return f"{int(seconds // size)}{unit}"
+    return "now"
+
+
+# ── Cable entry points ─────────────────────────────────────────────
+
+
+def cmd_list():
+    top = git("rev-parse", "--show-toplevel")
+    if not top:
+        return
+    sessions = repo_sessions(top)
+    timeline = Timeline(git("branch", "--show-current"))
+    now = time.time()
+    rows = []
+    for s in sessions:
+        branch = timeline.branch_at(s.mtime)
+        title = s.title or first_user_text(s.path) or s.path.stem
+        sub = os.path.relpath(s.cwd, top)
+        rows.append((age(now - s.mtime), branch, title + ("" if sub == "." else f"  · {sub}"), s.path))
+    width = min(max((len(r[1]) for r in rows), default=0), 24)
+    for when, branch, title, path in rows:
+        print(f"{when:>4}  {branch[:width]:<{width}}  {title}\t{path}")
+
+
+def cmd_preview(path):
+    path = Path(path)
+    h = header(path)
+    cwd, title = h if h else ("", None)
+    updated = time.strftime("%Y-%m-%d %H:%M", time.localtime(path.stat().st_mtime))
+    print(f"\033[1m{title or path.stem}\033[0m")
+    print(f"\033[2m{updated} · {cwd}\033[0m")
+    colors = {"user": "\033[1;36m", "assistant": "\033[1;35m"}
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            if '"type":"message"' not in line:
+                continue
+            try:
+                msg = json.loads(line).get("message") or {}
+            except ValueError:
+                continue
+            role = msg.get("role")
+            text = message_text(msg).strip() if role in colors else ""
+            if text:
+                print(f"\n{colors[role]}▌ {role}\033[0m\n{text}")
+
+
+def mark_ran():
+    state = os.environ.get("OMP_SESSION_STATE")
+    if state:
+        Path(state).write_text("ran\n")
+
+
+def cmd_resume(path):
+    mark_ran()
+    os.execvp("omp", ["omp", "--resume", str(path)])
+
+
+# ── Launcher ───────────────────────────────────────────────────────
+
+
+def new_session():
+    mark_ran()
+    os.execvp("omp", ["omp"])
+
+
+def pick(sessions):
+    if not sessions:
+        new_session()
+    fd, state = tempfile.mkstemp(prefix="omp-session.")
+    os.close(fd)
+    try:
+        subprocess.run(["tv", "omp-sessions", "--inline"], env={**os.environ, "OMP_SESSION_STATE": state})
+        ran = Path(state).read_text().strip() == "ran"
+    finally:
+        os.unlink(state)
+    if not ran:
+        # Cancelled: tv left the cursor on the line below the prompt.
+        with open("/dev/tty", "w") as tty:
+            tty.write("\033[A")
+
+
+def launch():
+    top = git("rev-parse", "--show-toplevel")
+    if not top:
+        new_session()
+    sessions = repo_sessions(top)
+    branch = git("branch", "--show-current")
+    if not branch:
+        pick(sessions)
+        return
+    timeline = Timeline(branch)
+    mine = next((s for s in sessions if timeline.branch_at(s.mtime) == branch), None)
+    if branch == default_branch():
+        if mine and time.time() - mine.mtime < RECENT:
+            cmd_resume(mine.path)
+        pick(sessions)
+    elif mine:
+        cmd_resume(mine.path)
+    else:
+        new_session()
+
+
+def main(argv):
+    if not argv:
+        launch()
+    elif argv[0] == "--list":
+        cmd_list()
+    elif argv[0] == "--preview" and len(argv) == 2:
+        cmd_preview(argv[1])
+    elif argv[0] == "--resume" and len(argv) == 2:
+        cmd_resume(argv[1])
+    elif argv == ["--new"]:
+        new_session()
+    else:
+        sys.exit("usage: omp-session [--list | --preview FILE | --resume FILE | --new]")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

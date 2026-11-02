@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""atuin-pick: atuin history picker for a kitty split (ctrl+shift+p).
+
+atuin search -i draws its TUI on the tty and prints the selected command
+to stdout (Esc prints nothing). Filter to history from the current
+directory. Hand the selection to an interactive fish via --init-command:
+it runs inside that shell (aliases/abbr resolve, cd persists) with its
+output in the split, and the prompt drops down below it.
+"""
+import os
+import shlex
+import subprocess
+
+# kitty's launch env has no ATUIN_SESSION (atuin's shell init never ran), so
+# seed it here. atuin itself comes from the package manager, on PATH.
+atuin = "atuin"
+if "ATUIN_SESSION" not in os.environ:
+    os.environ["ATUIN_SESSION"] = subprocess.run(
+        [atuin, "uuid"], stdout=subprocess.PIPE, text=True
+    ).stdout.strip()
+
+sel = subprocess.run(
+    [atuin, "search", "-i", "--filter-mode", "directory"],
+    stdout=subprocess.PIPE,
+    text=True,
+).stdout.strip()
+
+argv = ["fish"]
+if sel:
+    argv += ["-C", f"echo {shlex.quote('\u276f ' + sel)}; {sel}"]
+os.execvp("fish", argv)

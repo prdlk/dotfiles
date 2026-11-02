@@ -1,0 +1,4 @@
+# Default terminal for xdg-terminal-exec (omarchy-launch-terminal,
+# GLib's Terminal=true launches): first entry wins.
+com.mitchellh.ghostty.desktop
+kitty.desktop

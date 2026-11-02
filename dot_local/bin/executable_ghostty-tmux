@@ -1,0 +1,22 @@
+#!/bin/bash
+# Ghostty's `command`: every Ghostty window gets its own tmux session, never
+# a mirror of another window's. Reclaim the oldest detached session (left by
+# a closed window, or restored by tmux-continuum after a reboot) so closed
+# windows don't pile up sessions; otherwise start a new one. pj-palette's
+# background task sessions (@pj_task, named <session>:<task>) are never
+# reclaimed, and targets use the session id since names may contain ':'.
+# The first window after boot starts the server, which is what triggers
+# continuum's restore.
+# ponytail: two windows opened in the same instant can claim the same detached
+# session; take a lock (flock) here if that ever bites.
+
+# A server started here inherits this PATH. Ghostty launched from the desktop
+# has no shell init, so add mise's shims for tools tmux plugins shell out to
+# (bun for tmux-palette, fzf, zoxide).
+[[ -d $HOME/.local/share/mise/shims ]] && PATH="$HOME/.local/share/mise/shims:$PATH"
+
+oldest=$(tmux list-sessions -f '#{&&:#{==:#{session_attached},0},#{!:#{@pj_task}}}' \
+    -F '#{session_created} #{session_id}' 2>/dev/null | sort -n | head -1 | cut -d' ' -f2)
+
+[[ -n $oldest ]] && exec tmux attach-session -t "$oldest"
+exec tmux new-session

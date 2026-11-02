@@ -1,0 +1,6 @@
+[".omp"]
+    type = "git-repo"
+    url = "https://github.com/prdlk/omp.git"
+    refreshPeriod = "168h"
+    [".omp".pull]
+        args = ["--ff-only"]

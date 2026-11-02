@@ -1,0 +1,18 @@
+[theme]
+name = "cyberdream"
+
+[colors]
+AlertInfo = "#5ef1ff"
+AlertWarn = "#f1ff5e"
+AlertError = "#ff6e5e"
+Annotation = "#7b8496"
+Guidance = "#5ea1ff"
+Important = "#ff5ef1"
+Title = "#5ef1ff"
+Muted = "#7b8496"
+SyntaxCommand = "#5ea1ff"
+SyntaxFlag = "#5ef1ff"
+SyntaxString = "#5eff6c"
+SyntaxVariable = "#ff5ef1"
+SyntaxOperator = "#ff5ea0"
+SyntaxComment = "#7b8496"

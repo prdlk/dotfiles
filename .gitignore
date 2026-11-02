@@ -1,0 +1,8 @@
+/dot_config/lazygit/dot_omc
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
+
+__pycache__/
