@@ -132,6 +132,10 @@ Colors come from the CherryBlossom palette, shared with Ghostty, tmux, and omp:
 | <kbd>o</kbd> | localBranches | `gh pr create --fill -w` ("start ai pull request") | |
 | <kbd>C</kbd> | localBranches | `gh repo sync && gh clean-branches --force` | log |
 | <kbd>O</kbd> | commits | `hub browse -- "commit/{{.SelectedLocalCommit.Hash}}"` | |
+| <kbd>n</kbd> | worktrees | Prompts for a branch name, then `wt switch --create <branch> --no-cd` ("New branch + worktree in ~/Work") | terminal |
+| <kbd>w</kbd> | localBranches | `wt switch <selected branch> --no-cd` ("Worktree for branch in ~/Work") | terminal |
+
+Worktrees go to `~/Work/<repo>-<branch>`, from worktrunk's `worktree-path` (`dot_config/worktrunk/private_config.toml`). Clones stay under ghq's `~/Code`. lazygit's own worktree flow always names the directory after the branch alone, so the two worktree keys above replace the built-in ones and hand off to `wt`. `worktree.defaultPath: ~/Work` makes the built-in menus that remain, such as detached worktrees from commits and tags, offer `~/Work` as the parent directory. `ghostty-tmux` puts `~/.cargo/bin` on the tmux server's PATH so `wt` resolves in the `prefix g` popup.
 
 `gh commit`, `gh clean-branches`, and `gh dash` are managed gh extensions (see [GitHub CLI](github-cli.md)). `gitv`, `gwm`, `wrkflw`, `github`, `livediff`, and `hub` are not installed by this repo.
 

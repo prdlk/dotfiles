@@ -12,8 +12,10 @@
 
 # A server started here inherits this PATH. Ghostty launched from the desktop
 # has no shell init, so add mise's shims for tools tmux plugins shell out to
-# (bun for tmux-palette, fzf, zoxide).
+# (bun for tmux-palette, fzf, zoxide) and cargo's bin for the cargo-installed
+# ones (wt, which lazygit's worktree keys call from the prefix g popup).
 [[ -d $HOME/.local/share/mise/shims ]] && PATH="$HOME/.local/share/mise/shims:$PATH"
+[[ -d $HOME/.cargo/bin ]] && PATH="$HOME/.cargo/bin:$PATH"
 
 oldest=$(tmux list-sessions -f '#{&&:#{==:#{session_attached},0},#{!:#{@pj_task}}}' \
     -F '#{session_created} #{session_id}' 2>/dev/null | sort -n | head -1 | cut -d' ' -f2)

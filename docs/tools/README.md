@@ -50,7 +50,7 @@ These packages are declared in `.chezmoidata/packages.yaml` but have no config f
 | `wget` | HTTP downloads | Not referenced by any config. |
 | `zsh-syntax-highlighting` | zsh highlighting | Sourced by the zsh setup. See [Shell](../shell/README.md). |
 | `ttf-victor-mono-nerd` / `font-victor-mono-nerd-font` | Nerd Font | Terminal font. See [Terminal](../terminal/README.md). |
-| `suvadu`, `mandible`, `worktrunk` | Declared under `packages.shared.cargo` | Installed by [`15-tools`](../chezmoi/scripts.md#15-tools), which installs rustup first when `cargo` is missing. `mandible` backs the tmux-palette "mandible" item via `~/.local/bin/mandible-pick`. `worktrunk` is the `wt` git-worktree CLI for parallel agent workflows. |
+| `suvadu`, `mandible`, `worktrunk` | Declared under `packages.shared.cargo` | Installed by [`15-tools`](../chezmoi/scripts.md#15-tools), which installs rustup first when `cargo` is missing. `mandible` backs the tmux-palette "mandible" item via `~/.local/bin/mandible-pick`. `worktrunk` is the `wt` git-worktree CLI for parallel agent workflows; `dot_config/worktrunk/private_config.toml` sets `worktree-path = "~/Work/{{ repo }}-{{ branch \| sanitize }}"`, so worktrees of ghq clones in `~/Code` land in `~/Work/<repo>-<branch>`. [lazygit](lazygit.md)'s worktree keys call it. |
 
 Tools with their own pages in other sections: [fish](../shell/fish.md), [starship](../shell/starship.md), and [atuin](../shell/atuin.md) under Shell; [kitty](../terminal/kitty.md) and [tmux](../terminal/tmux.md) under Terminal.
 

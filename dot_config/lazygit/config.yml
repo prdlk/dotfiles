@@ -437,7 +437,29 @@ keybinding:
     bulkMenu: b
   commitMessage:
     commitMenu: <c-o>
+# Worktrees live in ~/Work/<repo>-<branch> (worktrunk's worktree-path, see
+# ~/.config/worktrunk/config.toml); clones stay under ghq's ~/Code. lazygit's
+# own flow always names the directory after the branch alone, so the two keys
+# that create worktrees hand off to `wt switch` instead (custom commands win
+# over built-ins in the same context). The built-in menus left elsewhere
+# (detached worktrees from commits/tags) still offer ~/Work as the parent.
+worktree:
+  defaultPath: ~/Work
 customCommands:
+  - key: "n"
+    context: "worktrees"
+    description: "New branch + worktree in ~/Work (wt)"
+    prompts:
+      - type: "input"
+        title: "New branch (worktree: ~/Work/<repo>-<branch>)"
+        key: "Branch"
+    command: "wt switch --create {{.Form.Branch | quote}} --no-cd"
+    output: terminal
+  - key: "w"
+    context: "localBranches"
+    description: "Worktree for branch in ~/Work (wt)"
+    command: "wt switch {{.SelectedLocalBranch.Name | quote}} --no-cd"
+    output: terminal
   - key: "<c-i>"
     command: "gitv {{.Repository.Owner}}/{{.Repository.Name}}"
     context: "global"
