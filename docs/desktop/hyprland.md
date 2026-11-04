@@ -19,6 +19,7 @@ Hyprland Lua config layered on Omarchy — master layout, terminal-only blur, mo
 | `dot_config/hypr/input.lua` | `~/.config/hypr/input.lua` | Key repeat, tablet/touch mapping |
 | `dot_config/hypr/looknfeel.lua` | `~/.config/hypr/looknfeel.lua` | Layout, decoration, blur |
 | `dot_config/hypr/monitors.lua` | `~/.config/hypr/monitors.lua` | Monitor modes and positions |
+| `dot_config/hypr/nav.lua` | `~/.config/hypr/nav.lua` | `SUPER + [SHIFT +] H/J/K/L` focus and move |
 | `dot_config/hypr/hyprsunset.conf` | `~/.config/hypr/hyprsunset.conf` | Night-light profile |
 | `dot_config/hypr/xdph.conf` | `~/.config/hypr/xdph.conf` | xdg-desktop-portal-hyprland |
 | `dot_config/hypr/dot_luarc.json` | `~/.config/hypr/.luarc.json` | Lua language server settings |
@@ -122,11 +123,11 @@ Omarchy's stock fade (0.985 active / 0.96 inactive) is kept. Terminals get their
 | Output | Mode | Position | Scale |
 | --- | --- | --- | --- |
 | any (fallback) | `preferred` | `auto` | 3.2 |
-| `eDP-1` (laptop) | `2560x1600@180` | `auto-right` | 2 |
-| `DP-4` (Apple Studio Display) | `5120x2880@60` | `0x0` | 2 |
+| `desc:Apple Computer Inc StudioDisplay 0x984262A7` (Studio Display, Thunderbolt; connector name varies, e.g. `DP-4`) | `5120x2880@60` | `0x0` | 2 |
+| `eDP-1` (laptop) | `2560x1600@180` | `<external width>x0`: `2560x0` with the Studio Display, `3440x0` with the ultrawide, `0x0` undocked | 2 |
 | `desc:Samsung Electric Company S34CG50 HNTY501103` (ultrawide, USB-C to HDMI from the iGPU; shows up as a `DP-n` connector) | `3440x1440@100` | `0x0` | 1 |
 
-`GDK_SCALE=3` is exported. The external display sits left of the laptop panel; `auto-right` puts `eDP-1` at its logical width (2560 for the Studio Display, 3440 for the ultrawide), or at 0 when undocked. `monitors.lua` returns the "main external display" (Studio Display, else Samsung ultrawide) used by the workspace rules, the Wacom mapping, and `omarchy-toggle-scratch`, and reloads the config on hotplug when it changes.
+`GDK_SCALE=3` is exported. The main external display always sits at `0x0`, left of the laptop panel. `eDP-1`'s x is computed at config load from the connected external's mode width divided by its scale, instead of `auto-right`, so the layout never depends on which monitor Hyprland configured first. Externals are matched by EDID description, because the Studio Display comes back as a different `DP-n` after a replug or on another port, and a connector-name rule would hand it the fallback (`auto`, scale 3.2). `monitors.lua` returns the "main external display" (Studio Display, else Samsung ultrawide) used by the workspace rules, the Wacom mapping, and `omarchy-toggle-scratch`, and reloads the config on hotplug when it changes, which also recomputes `eDP-1`'s position.
 
 `~/.config/uwsm/env-hyprland` (source `dot_config/uwsm/env-hyprland`, Linux desktop/laptop only) is sourced by uwsm before Hyprland starts. It sets `AQ_DRM_DEVICES` to the AMD iGPU, resolved from `/dev/dri/by-path/pci-0000:c4:00.0-card`, so Hyprland never opens the Thunderbolt eGPU (RTX 5060 Ti, compute only: AI models, CUDA). Every display, the Samsung ultrawide included, hangs off the iGPU. It leaves the variable unset if that path is missing. It also sets `__EGL_VENDOR_LIBRARY_FILENAMES` to Mesa's `50_mesa.json`, so neither Hyprland nor session apps load `libEGL_nvidia` and hold `/dev/nvidiactl`; CUDA does not use EGL.
 
@@ -175,15 +176,20 @@ Every binding defined in `bindings.lua`. Bindings not listed here are Omarchy de
 | `SUPER + BACKSPACE` | Focus last window | toggle transparency |
 | `SUPER + TAB` | Next window in the active workspace | next workspace |
 | `SUPER + SHIFT + TAB` | Previous window in the active workspace | previous workspace |
-| `SUPER + H` / `J` / `K` / `L` | Focus left / down / up / right | `J`: toggle split, `K`: keybindings menu, `L`: toggle layout |
+| `SUPER + H` / `J` / `K` / `L` | Focus left / down / up / right (`nav.focus`); at the edge, the monitor that way | `J`: toggle split, `K`: keybindings menu, `L`: toggle layout |
 | `SUPER + D` | Toggle split (dwindle `togglesplit`) | — |
-| `SUPER + SHIFT + H` | `omarchy-smart-move l` — move/merge left; floating: bottom-left corner | — |
-| `SUPER + SHIFT + J` | `omarchy-smart-move d` — move/merge down; floating: top-left | — |
-| `SUPER + SHIFT + K` | `omarchy-smart-move u` — move/merge up; floating: top-right | — |
-| `SUPER + SHIFT + L` | `omarchy-smart-move r` — move/merge right; floating: bottom-right | — |
+| `SUPER + SHIFT + H` / `L` | Move left / right (`nav.move`): swap the column; at the edge, carry the window to the monitor that way. Floating: bottom-left / bottom-right corner | — |
+| `SUPER + SHIFT + J` / `K` | Move down / up: swap within the column; at its bottom / top, carry the window to the next / previous workspace on this monitor. Floating: top-left / top-right corner | — |
 | `SUPER + SHIFT + T` | `omarchy-pip` — toggle picture-in-picture | — |
 
-`SUPER + TAB` walks a ring built only from the active workspace's mapped windows, ordered by `stable_id`. Grouped windows stay in the ring and hidden ones are skipped. It raises the focused window afterwards. It avoids `cyclenext`, which would pull in a hidden scratchpad. `binds.movefocus_cycles_groupfirst = true` makes `hjkl` focus step through a group's tabs before leaving the group.
+`SUPER + TAB` walks a ring built only from the active workspace's mapped windows, ordered by `stable_id`. Grouped windows stay in the ring and hidden ones are skipped. It raises the focused window afterwards. It avoids `cyclenext`, which would pull in a hidden scratchpad.
+
+`nav.lua` picks the neighbor itself rather than using Hyprland's directional focus, which searches the whole layout: on the scrolling tape, `J`/`K` with nothing above or below jumped to an off-screen column. A neighbor must lie past the focused window's centre on the move axis and overlap it on the other axis; inactive group tabs share their group's cell and are skipped. So `J`/`K` stay in the column and `H`/`L` walk the columns.
+
+- **Focus:** `H`/`L` step through a group's tabs before leaving the group. At the tape's edge the key focuses the monitor that way (`eDP-1` is right of the external); nothing past the outer edges. Floating windows use Hyprland's directional focus.
+- **Move:** a group on either side makes the move group aware (`window.move` with `group_aware`), merging into or leaving a group. Otherwise `H`/`L` on a scrolling workspace swap the whole column (`swapcol`), and other layouts and `J`/`K` swap windows. With no neighbor, `H`/`L` move the window to the monitor that way and `J`/`K` to the previous/next workspace by id on the same monitor, never wrapping; focus follows. Floating windows go to a corner of their monitor without resizing, inside the reserved area (the bar) and inset 10 px (`general:gaps_out`), clockwise from bottom-left.
+
+`binds.movefocus_cycles_groupfirst = true` stays set for Omarchy's `SUPER + arrows`, which still use Hyprland's directional focus.
 
 ### Workspaces and monitors
 
@@ -333,17 +339,6 @@ omarchy-pip [toggle|on] [address:0x...]
 ```
 
 Picture-in-picture for any window. Floats and pins it, resizes it to 30% of the focused monitor on both axes, and places it in the bottom-left corner with a 10 px inset (matching `general:gaps_out`). `toggle` (the default) unpins and re-tiles a window that is already floating and pinned. `on` always applies the fit. Defaults to the active window. The dispatcher is called with `on`/`off` because `set` toggles on Hyprland 0.56. Bound to `SUPER + SHIFT + T`. `omarchy-summon` also calls it.
-
-### omarchy-smart-move
-
-```sh
-omarchy-smart-move <l|r|u|d>
-```
-
-- **Tiled:** finds the nearest tiled, visible window in that direction that overlaps on the other axis. If that neighbor, or the focused window, is in a group, it runs a group-aware move (`movewindoworgroup`), which merges into or leaves a group. Otherwise it swaps with the neighbor.
-- **Floating:** moves the window to a corner of its monitor without resizing, inside the reserved area (the bar) and inset 10 px. Corners go clockwise from bottom-left: `l` bottom-left, `d` top-left, `u` top-right, `r` bottom-right.
-
-Bound to `SUPER + SHIFT + H/J/K/L`.
 
 ### omarchy-summon
 
