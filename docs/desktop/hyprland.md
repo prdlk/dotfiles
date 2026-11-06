@@ -70,6 +70,7 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
 | `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
+| `^kitty(-.*)?$` (kitty and the `kitty-tmux`, `kitty-herdr`, `kitty-goliath` hosts) | `group = "set always"`: opens as a group; with `group.auto_group` on (the default), a kitty opened while a group is focused joins it as a tab |
 
 Scratch residents are placed `silent` so that [`omarchy-toggle-scratch`](#omarchy-toggle-scratch) decides when to reveal them. The YouTube rule matches both `youtube.com` and `www.youtube.com` because Chromium's class changes once a video plays. It excludes the picture-in-picture overlay so Omarchy's own PiP rule still applies. Its size and inset must stay in sync with [`omarchy-pip`](#omarchy-pip).
 
