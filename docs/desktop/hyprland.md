@@ -247,7 +247,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | `SUPER + CTRL + ALT + T` | tldraw offline: `omarchy-launch-or-focus tldraw-offline "gtk-launch tldraw-offline"` | show time |
 | `SUPER + CTRL + ALT + W` | tldraw: `omarchy-launch-or-focus tldraw "gtk-launch TLDraw"` | toggle weather |
 | `SUPER + CTRL + ALT + SPACE` | Sticky Notes Canvas via `gtk-launch io.github.faridjaff.StickyNotesCanvas` | — |
-| `SUPER + SHIFT + G` | Goliath: `kitty --class=kitty-goliath --title=goliath --session=none mosh goliath` (main `kitty.conf`; see [SSH and mosh](../tools/ssh.md)) | Signal |
+| `SUPER + SHIFT + G` | Goliath: `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`; new tabs and splits there are goliath sessions too (see [kitty](../terminal/kitty.md#goliath-super--shift--g), [SSH and mosh](../tools/ssh.md)) | Signal |
 | `SUPER + ALT + SHIFT + F` | `uwsm-app -- "$HOME/.local/bin/strata" "$(omarchy-cmd-terminal-cwd)"` — strata in the terminal's cwd | unbound first (default unnamed) |
 
 strata is the default file manager: `inode/directory` in `mimeapps.list` and the `org.freedesktop.FileManager1` D-Bus service both point at it ([15-tools](../chezmoi/scripts.md#15-tools)). The cwd bind uses the absolute path because `~/.local/bin` may be missing from uwsm-app's `PATH`. Omarchy's own file-manager bind on `SUPER + SHIFT + F` is replaced by full screen (below). A rule tagging `com.thisisgm.flea.picker` as `+floating-window` still sits between `flea --picker` marker comments, which the `flea` tool writes and removes itself.

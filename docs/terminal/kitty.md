@@ -15,6 +15,7 @@ GPU terminal emulator and the primary terminal on every role.
   kitty.conf
   tmux.conf
   herdr.conf
+  goliath.conf
   ssh.conf
   current-theme.conf
   tab_bar.py
@@ -187,7 +188,13 @@ Launched by `super+a`. Class `kitty-herdr`, `tab_bar_style hidden` (herdr draws 
 
 ### Goliath (`SUPER + SHIFT + G`)
 
-Not a separate config: [Hyprland](../desktop/hyprland.md) starts a new kitty on the main `kitty.conf` (same tab bar, keys and theme) running `kitty --class=kitty-goliath --title=goliath --session=none mosh goliath`. That is a plain login shell on goliath over mosh, no tmux; it survives suspend and network changes, and closing the window ends it. Host settings and mosh caveats (`TERM` is `xterm-256color` inside) are in [SSH and mosh](../tools/ssh.md). New tabs and splits open local shells. `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
+[Hyprland](../desktop/hyprland.md) starts `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`: a login shell on goliath over mosh, no tmux; it survives suspend and network changes, and closing the window ends it. `goliath.conf` is `include kitty.conf` (same tab bar, keys and theme) plus overrides:
+
+- The launch aliases (`launch_tb`, `launch_hs`, `launch_vs`, `launch_vs50`, `launch_os`, `launch_ov`, `launch_mn`) run `mosh goliath`, and `ctrl+shift+t` maps to `launch_tb`, so every new tab, split, window and overlay is another goliath session. Maps that pass a program (`ctrl+shift+g` lazygit, `ctrl+shift+f` yazi, `ctrl+shift+e` nvim, `ctrl+shift+p` atuin-pick) run it on goliath.
+- New sessions start in goliath's home directory: kitty's `--cwd=current` only clones `kitten ssh` sessions, and mosh does not forward the remote shell's cwd (OSC 7).
+- `env MOSH_TITLE_NOPREFIX=1` drops mosh's `[mosh] ` title prefix, so tabs get goliath's `goliath:<dir>` title.
+
+Host settings and mosh caveats (`TERM` is `xterm-256color` inside) are in [SSH and mosh](../tools/ssh.md). `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
 
 ### ssh.conf
 
@@ -197,7 +204,7 @@ Kitten `ssh` config: for `hostname goliath`, `share_connections yes`.
 
 | File | Purpose |
 | --- | --- |
-| `tab_bar.py` | Provides `draw_title` for `{custom}` in the tab template. Title is `<index> <icon> <label>`: the label is the git repo root name of the tab's cwd (walks up for `.git`), or the file nvim is editing (parsed from nvim's title). Icon comes from the foreground process cmdline (editors, AI agents like claude/omp/opencode/codex, git tools, docker, herdr, tmux, yazi, btop, atuin, ssh, chezmoi, …) with a folder fallback. Labels are elided at 28 chars. In the `stack` layout with more than one pane, ` <nf-md-layers> <panes>` is appended; kitty repaints the tab bar on every layout change. No subprocesses or timers. |
+| `tab_bar.py` | Provides `draw_title` for `{custom}` in the tab template. Title is `<index> <icon> <label>`: the label is the git repo root name of the tab's cwd (walks up for `.git`), or the file nvim is editing (parsed from nvim's title). Remote sessions (`ssh`, `kitten ssh`, `mosh`/`mosh-client`) get `nf-md-server_network` (`U+F0471`) and the remote directory instead: the last component of the `<host>:<dir>` title the remote shell sets (`goliath:~/Code/omp` → `omp`, `~` at home); other remote titles, such as a remote nvim's, show as is. Icon comes from the foreground process cmdline (editors, AI agents like claude/omp/opencode/codex, git tools, docker, herdr, tmux, yazi, btop, atuin, chezmoi, …) with a folder fallback. Labels are elided at 28 chars. In the `stack` layout with more than one pane, ` <nf-md-layers> <panes>` is appended; kitty repaints the tab bar on every layout change. No subprocesses or timers. |
 | `pass_keys.py` | Bound to `ctrl+h/j/k/l`. If the window's foreground process matches `vim`, `nvim`, `fzf`, `tv`, `tmux` or `herdr`, the key is forwarded; otherwise kitty moves to the neighboring window. |
 | `navigate_kitty.py` | No-UI kitten that calls `neighboring_window` with a direction argument; the counterpart nvim can invoke. Not mapped in `kitty.conf`. |
 | `select_tab.py` | Full-screen fuzzy tab picker using `kitty @ ls` data; shows cwds zsh-style. Keys: Up/Down/PgUp/PgDn scroll, Enter selects, typing filters, `ctrl+c`/Esc quits. Not mapped in `kitty.conf`. |

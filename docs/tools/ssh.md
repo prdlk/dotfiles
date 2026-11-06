@@ -22,7 +22,7 @@ Keys, `known_hosts` and the agent socket are not managed; only `config` is. The 
 
 ## mosh
 
-`SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) opens `kitty --class=kitty-goliath --title=goliath --session=none mosh goliath` on the main `kitty.conf` (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
+`SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) opens `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`; new tabs and splits in that window are mosh sessions too (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
 
 - mosh's bootstrap ssh runs with `-S none`, so it never uses the shared connection; key auth through the agent must work non-interactively.
 - goliath runs no firewall, and Tailscale carries the UDP traffic.
