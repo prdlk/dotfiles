@@ -14,7 +14,7 @@ Keys, `known_hosts` and the agent socket are not managed; only `config` is. The 
 
 | Option | Value | Why |
 | --- | --- | --- |
-| `HostName` | `goliath.tail62ced9.ts.net` | Tailscale MagicDNS: the same address at home and away. The LAN's DNS answers `goliath` with an IPv6 address only |
+| `HostName` | `100.115.218.84` | goliath's Tailscale IPv4 address: the same address at home and away, with no DNS lookup. The LAN's DNS answers `goliath` with an IPv6 address only. Changes only if goliath is re-added to the tailnet (`tailscale ip -4` on goliath) |
 | `HostKeyAlias` | `goliath` | Host keys stay filed under the short name already in `known_hosts` |
 | `User` | `prad` | |
 | `IdentityFile` / `IdentitiesOnly` | `~/.ssh/id_ed25519` / `yes` | Offers one key instead of trying every default |
@@ -22,7 +22,7 @@ Keys, `known_hosts` and the agent socket are not managed; only `config` is. The 
 
 ## mosh
 
-`SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) opens `kitty --class=kitty-goliath --title=goliath --session=none mosh goliath` on the main `kitty.conf` (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale name), starts `mosh-server` on goliath, then talks UDP 60000–61000 over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
+`SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) opens `kitty --class=kitty-goliath --title=goliath --session=none mosh goliath` on the main `kitty.conf` (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
 
 - mosh's bootstrap ssh runs with `-S none`, so it never uses the shared connection; key auth through the agent must work non-interactively.
 - goliath runs no firewall, and Tailscale carries the UDP traffic.
