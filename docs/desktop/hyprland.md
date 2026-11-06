@@ -68,6 +68,8 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^com\.anthropic\.Claude$` | `name:claude`, maximized (follows the window there) |
 | `^com\.fastmail\.Fastmail$` | `name:fastmail`, maximized (follows) |
 | `^Beeper$` | `name:beeper`, maximized (follows) |
+| `^(ai\.storyteller\.)?<app>$` for `deckcraft`, `figcraft`, `filmcraft`, `gridcraft`, `pdfcraft`, `photocraft`, `vectorcraft`, `wordcraft` (Craft AppImages in `~/Applications`) | `name:<app>`, one workspace per app on the focused monitor (follows). PdfCraft and PhotoCraft declare a bare `StartupWMClass`, hence the optional prefix |
+| `^io\.github\.lgse\.Strata$` (strata) | `+floating-window`: Omarchy floats, centers and sizes it 875×600 |
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
 | `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
