@@ -6,7 +6,7 @@ kitty is the primary terminal. It runs in three modes: plain kitty (kitty owns s
 
 | Page | Source | What it covers |
 | --- | --- | --- |
-| [kitty](kitty.md) | external repo via `.chezmoiexternals/kitty.toml` | Main config, host configs (tmux, herdr, goliath), kittens, custom tab bar |
+| [kitty](kitty.md) | external repo via `.chezmoiexternals/kitty.toml` | Main config, host configs (tmux, herdr), the goliath ssh window, kittens, custom tab bar |
 | [Ghostty](ghostty.md) | external repo via `.chezmoiexternals/ghostty.toml` | tmux-only terminal: ctrl+shift chords → tmux, themes |
 | [tmux](tmux.md) | external repo via `.chezmoiexternals/tmux.toml` | Prefix, bindings, kitty-style tabs with Nerd Font icons, resurrect/continuum persistence |
 | [herdr](herdr.md) | external repo via `.chezmoiexternals/herdr.toml`, plus `dot_config/herdr-nvim/` | Agent-aware multiplexer: keys, theme, plugins, Claude hook |

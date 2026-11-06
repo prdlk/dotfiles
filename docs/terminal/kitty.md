@@ -15,7 +15,6 @@ GPU terminal emulator and the primary terminal on every role.
   kitty.conf
   tmux.conf
   herdr.conf
-  goliath.conf
   ssh.conf
   current-theme.conf
   tab_bar.py
@@ -186,9 +185,9 @@ Launched by `super+a`. Class `kitty-herdr`, `tab_bar_style hidden` (herdr draws 
 | `ctrl+shift+q` | `prefix x` |
 | `ctrl+shift+p` | `prefix P` (Switchboard commands) |
 
-### goliath.conf — ssh to goliath
+### Goliath (`SUPER + SHIFT + G`)
 
-Launched by `SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) as a new kitty (`--class=kitty-goliath`). `shell kitten ssh goliath`: a plain login shell on goliath, no tmux, so closing the window ends the session. kitten ssh copies kitty's terminfo over, so `TERM` stays `xterm-kitty`; connection sharing comes from `ssh.conf`. Also sets `listen_on unix:@kitty-goliath` and `tab_bar_style hidden`, and includes the Omarchy theme. No key maps beyond kitty's defaults.
+Not a separate config: [Hyprland](../desktop/hyprland.md) starts a new kitty on the main `kitty.conf` (same tab bar, keys and theme) running `kitty --class=kitty-goliath --title=goliath --session=none kitten ssh goliath`. That is a plain login shell on goliath, no tmux, so closing the window ends the session. kitten ssh copies kitty's terminfo over, so `TERM` stays `xterm-kitty`. New tabs and splits open local shells. `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
 
 ### ssh.conf
 
@@ -203,7 +202,7 @@ Kitten `ssh` config: for `hostname goliath`, `share_connections yes`.
 | `navigate_kitty.py` | No-UI kitten that calls `neighboring_window` with a direction argument; the counterpart nvim can invoke. Not mapped in `kitty.conf`. |
 | `select_tab.py` | Full-screen fuzzy tab picker using `kitty @ ls` data; shows cwds zsh-style. Keys: Up/Down/PgUp/PgDn scroll, Enter selects, typing filters, `ctrl+c`/Esc quits. Not mapped in `kitty.conf`. |
 | `switchtab.py` | Focuses the tab whose `vt` user var matches the argument, or launches one with that var and reorders tabs by `vt`. Not mapped. |
-| `os_window_title.py` | Global watcher. On every `on_tab_bar_dirty` (tab switch, focus change, any program title change; also fires while the bar is hidden) it sets the OS window title to `tab_bar.py`'s `wd_label` for the active window's cwd: the repo root name, `~` at home, the dir name outside a repo. An empty label clears the override, so kitty falls back to the program's title. |
+| `os_window_title.py` | Global watcher. On every `on_tab_bar_dirty` (tab switch, focus change, any program title change; also fires while the bar is hidden) it sets the OS window title to `tab_bar.py`'s `wd_label` for the active window's cwd: the repo root name, `~` at home, the dir name outside a repo. An empty label clears the override, so kitty falls back to the program's title. Does nothing in a kitty started with `--title` (the goliath window). |
 | `day_session.py` | Daily sessions: `geninclude` script, global watcher and the `flush` no-UI kitten in one file. See [Daily sessions](#daily-sessions). |
 
 Related: the [tmux](tmux.md) `is_vim` check and herdr's `vim-herdr-navigation` plugin complete the `ctrl+h/j/k/l` chain. Hyprland window rules can match the `kitty`, `kitty-tmux` and `kitty-herdr` app-ids ([Hyprland](../desktop/hyprland.md)).
