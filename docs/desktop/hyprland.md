@@ -64,7 +64,6 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^brave-www\.tldraw\.com__-Default$` | Workspace 3 |
 | `^tldraw-offline$` | Workspace 5, fullscreen |
 | `^so\.stencil\.tern$` | `special:scratchpad silent` |
-| `^com\.anthropic\.Claude$` | `special:claude silent` |
 | `^com\.fastmail\.Fastmail$` | `special:fastmail silent` |
 | `^Beeper$` | `special:beeper silent` |
 | `^brave-home\.google\.com__.*` | `special:home silent` |
@@ -231,7 +230,8 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 
 | Keys | Action | Replaces |
 | --- | --- | --- |
-| `SUPER + CTRL + A` | Claude: `omarchy-launch-or-focus claude "gtk-launch com.anthropic.Claude"` | audio panel |
+| `SUPER + CTRL + ALT + L` | Claude Desktop: `omarchy-launch-or-focus com.anthropic.Claude claude-desktop`; an ordinary window, no scratch workspace | — |
+| `SUPER + CTRL + A` | Unbound | audio panel |
 | `SUPER + CTRL + G` | Gemini: `omarchy-launch-or-focus gemini "gtk-launch gemini-desktop"` | — |
 | `SUPER + CTRL + ALT + H` | `omarchy-cycle ai` | — |
 | `SUPER + CTRL + ALT + J` | `omarchy-cycle-terminal` | — |
@@ -364,13 +364,12 @@ Runs `omarchy-hyprland-workspace-layout-toggle`, then polls the workspace layout
 ### omarchy-toggle-scratch
 
 ```sh
-omarchy-toggle-scratch [scratchpad|claude|fastmail|beeper|home|lmstudio]
+omarchy-toggle-scratch [scratchpad|fastmail|beeper|home|lmstudio]
 ```
 
 | Profile | Special workspace | Home monitor | Residents (class → launch) |
 | --- | --- | --- | --- |
 | `scratchpad` | `special:scratchpad` | Studio Display, else Samsung ultrawide | `so.stencil.tern` → `tern` |
-| `claude` | `special:claude` | Studio Display, else Samsung ultrawide | `com.anthropic.Claude` → `claude-desktop` |
 | `fastmail` | `special:fastmail` | `eDP-1` | `com.fastmail.Fastmail` → `gtk-launch com.fastmail.Fastmail` |
 | `beeper` | `special:beeper` | `eDP-1` | `Beeper` → `gtk-launch beeper` |
 | `home` | `special:home` | focused | `brave-home\.google\.com__.*` → `gtk-launch 'Google Home'` |
