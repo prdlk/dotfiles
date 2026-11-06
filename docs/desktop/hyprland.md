@@ -65,9 +65,9 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^brave-www\.tldraw\.com__-Default$` | Workspace 3 |
 | `^tldraw-offline$` | Workspace 5, fullscreen |
 | `^so\.stencil\.tern$` | `special:scratchpad silent` |
-| `^com\.anthropic\.Claude$` | `name:claude` (follows the window there) |
-| `^com\.fastmail\.Fastmail$` | `name:fastmail` (follows) |
-| `^Beeper$` | `name:beeper` (follows) |
+| `^com\.anthropic\.Claude$` | `name:claude`, maximized (follows the window there) |
+| `^com\.fastmail\.Fastmail$` | `name:fastmail`, maximized (follows) |
+| `^Beeper$` | `name:beeper`, maximized (follows) |
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
 | `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
