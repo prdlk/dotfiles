@@ -187,7 +187,7 @@ Launched by `super+a`. Class `kitty-herdr`, `tab_bar_style hidden` (herdr draws 
 
 ### Goliath (`SUPER + SHIFT + G`)
 
-Not a separate config: [Hyprland](../desktop/hyprland.md) starts a new kitty on the main `kitty.conf` (same tab bar, keys and theme) running `kitty --class=kitty-goliath --title=goliath --session=none kitten ssh goliath`. That is a plain login shell on goliath, no tmux, so closing the window ends the session. kitten ssh copies kitty's terminfo over, so `TERM` stays `xterm-kitty`. New tabs and splits open local shells. `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
+Not a separate config: [Hyprland](../desktop/hyprland.md) starts a new kitty on the main `kitty.conf` (same tab bar, keys and theme) running `kitty --class=kitty-goliath --title=goliath --session=none mosh goliath`. That is a plain login shell on goliath over mosh, no tmux; it survives suspend and network changes, and closing the window ends it. Host settings and mosh caveats (`TERM` is `xterm-256color` inside) are in [SSH and mosh](../tools/ssh.md). New tabs and splits open local shells. `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
 
 ### ssh.conf
 

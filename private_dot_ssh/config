@@ -1,0 +1,18 @@
+# ~/.ssh/config (chezmoi: private_dot_ssh/config). Keepalives come from
+# Omarchy's /etc/ssh/ssh_config.d/20-omarchy-keepalive.conf (15 s x 3).
+
+# goliath: home server. Reached over Tailscale (MagicDNS), so one name works
+# on the LAN and away; the LAN's own DNS only hands out an IPv6 address.
+# HostKeyAlias keeps the host keys already filed under "goliath".
+Host goliath
+  HostName goliath.tail62ced9.ts.net
+  HostKeyAlias goliath
+  User prad
+  IdentityFile ~/.ssh/id_ed25519
+  IdentitiesOnly yes
+  # One shared connection: the first ssh/scp/git authenticates, later ones
+  # start instantly and it lingers 10 min after the last closes. mosh's
+  # bootstrap ssh runs with -S none and does its own handshake.
+  ControlMaster auto
+  ControlPath ~/.ssh/cm-%C
+  ControlPersist 10m

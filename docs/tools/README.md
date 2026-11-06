@@ -22,6 +22,7 @@ Packages come from `.chezmoidata/packages.yaml` and are installed by `run_onchan
 | [drydock](drydock.md) | drydock repo fleet view | `dot_config/drydock/config.toml` | n/a |
 | [television](television.md) | tv fuzzy picker, custom cables | external repo via `.chezmoiexternals/television.toml` | `cyberdream-transparent` |
 | [LeetCode](leetcode.md) | leetcode CLI, `lc-elir` | `dot_leetcode/` | n/a |
+| [SSH and mosh](ssh.md) | ssh, mosh | `private_dot_ssh/config` | n/a |
 
 - [Git](git.md): Identity from chezmoi data, diff pagers, gh credential helper.
 - [Yazi](yazi.md): Keymap, plugins, bookmarks, and the Neovim bridge.
