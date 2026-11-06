@@ -1,121 +1,18 @@
-# Agent skills, installed by the Skills CLI instead of being vendored in this
-# repo. .chezmoiscripts/run_onchange_after_25-skills.sh.tmpl re-runs whenever
-# this file changes: it installs every skill below (`skills add <source> -g -y
-# -a <agents> --skill <name>…`, one call per source) and removes CLI-installed
-# skills that are no longer listed.
+# Agent skills come from one place: github.com/prdlk/skills, installed whole by
+# the Skills CLI. .chezmoiscripts/run_onchange_after_25-skills.sh.tmpl re-runs
+# whenever this file changes: it installs every skill in the source
+# (`skills add <source> -g -y -a <agents> --skill '*'`), then removes any
+# CLI-installed skill whose recorded source is something else.
 #
-# source: anything `skills add` accepts — owner/repo (default branch), a
-#   GitHub tree URL (pins a ref or subdirectory), or a well-known endpoint URL.
-#   Skills that upstream deleted are pinned to the last ref that has them.
-# agents: optional; defaults to `agents` below. `universal` is the shared
-#   ~/.agents/skills library (Codex, Gemini CLI, OpenCode, Zed, …);
-#   `claude-code` links ~/.claude/skills/<name>.
+# source: anything `skills add` accepts. Pin a ref with a tree URL
+#   (https://github.com/prdlk/skills/tree/<ref>).
+# agents: `universal` is the shared ~/.agents/skills library (Codex, Gemini
+#   CLI, OpenCode, Zed, …); `claude-code` links ~/.claude/skills/<name>.
 #
-# Not listed (installed by other packages, never touched by the sync):
-# omarchy and diagnose-crash (/usr/share/omarchy), terminal-browser.
+# Skills that other packages install (omarchy and diagnose-crash from
+# /usr/share/omarchy, terminal-browser) are not in the CLI's lock file and are
+# never touched.
 skills:
   cli: skills@1.7.0
   agents: [universal, claude-code]
-  sources:
-    - source: affaan-m/everything-claude-code
-      skills: [rust-testing]
-    - source: apollographql/skills
-      skills: [rust-best-practices]
-    - source: charlietlamb/openlogs
-      skills: [openlogs-server-logs]
-    - source: cloudflare/skills
-      skills: [cloudflare, workers-best-practices, wrangler]
-    - source: coldteadotai/pr-lens
-      skills: [eli5, pr-lens]
-    - source: Dammyjay93/interface-design
-      skills: [interface-design]
-    - source: deckardger/tanstack-agent-skills
-      skills:
-        - tanstack-integration-best-practices
-        - tanstack-query-best-practices
-        - tanstack-router-best-practices
-        - tanstack-start-best-practices
-    - source: Doist/todoist-cli
-      skills: [todoist-cli]
-    - source: finesssee/linear-cli
-      skills: [linear-documents]
-    - source: Forward-Future/loop-library
-      skills: [loopy]
-    - source: h4ckf0r0day/obscura
-      skills: [obscura]
-    - source: hardikpandya/stop-slop
-      skills: [stop-slop]
-    - source: jeffallan/claude-skills
-      skills: [golang-pro]
-    - source: leonardomso/rust-skills
-      skills: [rust-skills]
-    - source: Leonxlnx/taste-skill
-      skills:
-        - brandkit
-        - design-taste-frontend
-        - gpt-taste
-        - high-end-visual-design
-        - imagegen-frontend-web
-        - minimalist-ui
-        - redesign-existing-projects
-    - source: mattpocock/skills
-      skills:
-        - codebase-design
-        - diagnosing-bugs
-        - domain-modeling
-        - git-guardrails-claude-code
-        - grill-me
-        - grill-with-docs
-        - grilling
-        - handoff
-        - implement
-        - improve-codebase-architecture
-        - loop-me
-        - migrate-to-shoehorn
-        - prototype
-        - scaffold-exercises
-        - setup-matt-pocock-skills
-        - setup-pre-commit
-        - tdd
-        - teach
-        - triage
-        - writing-beats
-        - writing-fragments
-        - writing-shape
-    # Removed upstream after v1.1.0 (c66bdee; writing-great-skills became
-    # writing-for-agents).
-    - source: https://github.com/mattpocock/skills/tree/v1.1.0
-      skills:
-        - design-an-interface
-        - obsidian-vault
-        - qa
-        - request-refactor-plan
-        - ubiquitous-language
-        - writing-great-skills
-    # Removed upstream in daa01d8; pinned to its parent.
-    - source: https://github.com/mattpocock/skills/tree/153fc1b93de6584562765cdce299324e1ff9e661
-      skills: [resolving-merge-conflicts]
-    - source: https://mintlify.com/docs
-      skills: [mintlify, mintlify-api, mintlify-docs]
-    - source: nextlevelbuilder/ui-ux-pro-max-skill
-      skills: [ui-ux-pro-max]
-    - source: openai/skills
-      skills: [linear]
-    - source: petergyang/no-ai-slop
-      skills: [no-ai-slop]
-    - source: remix-run/remix
-      skills: [remix, typescript-expert, write-tests]
-    - source: remotion-dev/skills
-      skills:
-        - remotion-best-practices
-        - remotion-captions
-        - remotion-create
-        - remotion-docs
-        - remotion-interactivity
-        - remotion-maps
-        - remotion-markup
-        - remotion-multimedia
-        - remotion-render
-        - remotion-saas
-        - remotion-studio
-        - remotion-upgrade
+  source: prdlk/skills

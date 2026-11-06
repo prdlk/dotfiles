@@ -48,10 +48,11 @@ so all shells share one implementation; helpers that must mutate shell state
 (`cd`-style) are per-shell functions in `fish/functions/`, `bash/functions/`,
 and `zsh/functions/`.
 
-Agent skills are not vendored: `.chezmoidata/skills.yaml` lists every
-skill and its upstream source, and
-`.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` installs them with the
-Skills CLI whenever that file changes.
+Agent skills are not vendored: they all come from
+[prdlk/skills](https://github.com/prdlk/skills), and
+`.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` installs every skill in
+it with the Skills CLI (removing skills from any other source) whenever
+`.chezmoidata/skills.yaml` changes.
 
 Omarchy layer (roles `desktop`/`laptop`): `dot_config/hypr` (submodule),
 `dot_config/waybar`, `dot_config/uwsm`, fontconfig, mimeapps,

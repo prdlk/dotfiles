@@ -2,50 +2,55 @@
 
 Every run_ script chezmoi executes during apply, when each one fires, and what it does on each OS and role.
 
-Seven scripts run during `chezmoi apply`. Five live in `.chezmoiscripts/`, a directory whose scripts run as if they sat at the source root without creating a matching target directory. Two sit at the repo root. All seven are templates; `20-gh-extensions` is a fish script, the rest use `#!/bin/sh` with `set -eu` (except `25-skills`, which uses `set -u`).
+Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a directory whose scripts run as if they sat at the source root without creating a matching target directory. Two sit at the repo root. All eight are templates; `20-gh-extensions` is a fish script, the rest use `#!/bin/sh` with `set -eu` (except `25-skills`, which uses `set -u`).
 
 ## Execution order
 
 `before_` scripts run before any file is written; `after_` scripts run after every file, symlink, and external is in place. Within a phase chezmoi runs scripts in ASCII order of their target names, so the numeric prefixes come first.
 
-1. **10-packages (before, onchange)**
+1. **05-externals (before, every apply)**
+
+   Offer to replace external targets that exist but are not git checkouts.
+
+2. **10-packages (before, onchange)**
 
    Install system packages from `packages.yaml`.
 
-2. **Files, symlinks, externals**
+3. **Files, symlinks, externals**
 
    chezmoi writes the target state.
 
-3. **15-tools (after, onchange)**
+4. **15-tools (after, onchange)**
 
    rustup and cargo crates, omp, global mise tools, strata on Linux desktops.
 
-4. **20-gh-extensions (after, onchange)**
+5. **20-gh-extensions (after, onchange)**
 
    Install gh extensions from a fish session.
 
-5. **25-skills (after, onchange)**
+6. **25-skills (after, onchange)**
 
-   Install and prune agent skills.
+   Install every skill in prdlk/skills, remove skills from other sources.
 
-6. **30-user-services (after, once)**
+7. **30-user-services (after, once)**
 
    Enable systemd user units (kitty-day-save, projects-sync.timer).
 
-7. **40-post (after, onchange)**
+8. **40-post (after, onchange)**
 
    bat cache, font cache.
 
-8. **build-bat-cache (after, onchange)**
+9. **build-bat-cache (after, onchange)**
 
    Rebuild bat cache when its theme or config changes.
 
-9. **install-yazi-plugins (after, onchange)**
+10. **install-yazi-plugins (after, onchange)**
 
    Reinstall yazi plugins when the manifest changes.
 
 | Script | Phase | Frequency | Re-run trigger |
 | --- | --- | --- | --- |
+| `.chezmoiscripts/run_before_05-externals.sh.tmpl` | before | every apply | Always runs; cheap unless a target is in the way |
 | `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` | before | onchange | sha256 of `.chezmoidata/packages.yaml`; also the role and OS, which change the rendered package list |
 | `.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` | after | onchange | sha256 of `packages.shared.cargo` and `packages.shared.mise` as JSON; also the OS and role, which add the strata step |
 | `.chezmoiscripts/run_onchange_after_20-gh-extensions.sh.tmpl` | after | onchange | sha256 of `packages.shared.gh_extensions` as JSON |
@@ -62,6 +67,16 @@ Seven scripts run during `chezmoi apply`. Five live in `.chezmoiscripts/`, a dir
 ```
 
 `run_once_` scripts run once per unique rendered content and again only if that content changes or the previous run failed.
+
+## 05-externals
+
+`.chezmoiscripts/run_before_05-externals.sh.tmpl` clears the way for the `git-repo` externals in `.chezmoiexternals/*.toml` and `.chezmoiexternal.toml` (its list is rendered from those files, so new externals are covered without edits). chezmoi clones an external only into a missing or empty target and pulls only in an existing checkout; any other directory at the target stops the apply with a git error. A fresh Omarchy install ships its own `~/.config/kitty`, `ghostty`, `omarchy`, and others, so the first apply would stop there.
+
+- Runs before every apply (`run_before_`). With every target missing, empty, or already a checkout it only stats directories and exits 0.
+- For each target that exists otherwise (a non-empty directory without `.git`, a file, or a symlink), it asks on the terminal: `<target> exists and is not a git checkout. Replace it with <url> (old copy kept as <target>.bak-<time>)? [y/N]`.
+- **y**: moves the target to `<target>.bak-<YYYYmmdd-HHMMSS>` and runs `git clone <url> <target>`, so chezmoi finds a checkout and pulls. If the clone fails, the original is moved back and the script exits 1.
+- **n** (or anything else): exits 1 with a message, which aborts the apply; nothing is moved.
+- No terminal (`chezmoi apply` from a script or cron): lists the conflicting targets and exits 1.
 
 ## 10-packages
 
@@ -107,14 +122,13 @@ The strata flags install the binary, `~/.local/share/applications/io.github.lgse
 
 ## 25-skills
 
-`.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` installs the agent skills declared in [`skills.yaml`](data.md#skillsyaml) with the Skills CLI (`npx -y skills@1.7.0`). See [Skills](../ai/skills.md).
+`.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` installs every agent skill in the one source in [`skills.yaml`](data.md#skillsyaml), [prdlk/skills](https://github.com/prdlk/skills), with the Skills CLI (`npx -y skills@1.7.0`). See [Skills](../ai/skills.md).
 
-- Exits 0 with a warning if `npx` is missing.
-- One-time migration: deletes any directory in `~/.agents/skills` or `~/.claude/skills` that contains symlinks into the chezmoi source directory (the old vendored layout), and removes `~/.agents/.skill-lock.json` if it is a symlink into the source directory.
-- Removes skills listed in `${XDG_STATE_HOME:-~/.local/state}/chezmoi/skills.txt` that are no longer declared, with `skills remove -g -y`.
-- Runs one `skills add <source> -g -y -a <agents> --skill <names…>` per source entry. Output is captured; on failure the last 8 lines are printed.
-- Writes the declared names to `skills.txt`. Claude-only installs are not in the CLI's lock, so the script keeps its own record.
-- Exits 1 if any source failed, so chezmoi keeps the old hash and retries on the next apply.
+- Exits 0 with a warning if `npx` or `jq` is missing.
+- One-time migration: deletes any directory in `~/.agents/skills` or `~/.claude/skills` that contains symlinks into the chezmoi source directory (the old vendored layout), removes `~/.agents/.skill-lock.json` if it is a symlink into the source directory, and deletes the old state file `~/.local/state/chezmoi/skills.txt`.
+- Runs `skills add <source> -g -y -a <agents> --skill '*'`.
+- Reads the CLI's lock (`${XDG_STATE_HOME:-~/.local/state}/skills/.skill-lock.json`) and removes every skill whose recorded source is not `prdlk/skills`, with `skills remove -g -y`. Skills installed by packages are not in the lock and stay.
+- Exits 1 if the install or the removal failed, so chezmoi keeps the old hash and retries on the next apply. A failed install removes nothing.
 
 ## 30-user-services
 

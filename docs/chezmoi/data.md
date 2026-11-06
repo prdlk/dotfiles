@@ -179,4 +179,4 @@ Every other YAML alias (`e`, `e.v`, `hx`, `cdc`, `cdk`, `cdl`, `cds`, `cdw`, and
 
 ## skills.yaml
 
-Declares the agent skills installed by the Skills CLI. `skills.cli` is the pinned CLI (`skills@1.7.0`, run with `npx -y`), `skills.agents` the default install targets (`[universal, claude-code]`), and `skills.sources` a list of `{ source, skills, agents? }` entries: 110 skills across 42 entries. The full list, pinned sources, and add/remove workflow are on the [Skills](../ai/skills.md) page.
+Declares where agent skills come from. `skills.cli` is the pinned CLI (`skills@1.7.0`, run with `npx -y`), `skills.agents` the install targets (`[universal, claude-code]`), and `skills.source` the single source, `prdlk/skills`: every skill in it is installed and skills from any other source are removed. See the [Skills](../ai/skills.md) page.

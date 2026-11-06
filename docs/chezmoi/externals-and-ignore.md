@@ -4,7 +4,7 @@ The git repos chezmoi clones into $HOME and every rule in .chezmoiignore.tmpl, i
 
 ## .chezmoiexternal.toml
 
-Externals are content chezmoi fetches instead of storing in the repo. Every entry is a `git-repo` external: chezmoi runs `git clone` when the target directory is missing. Because they are real git checkouts, they are never symlinked into the source tree.
+Externals are content chezmoi fetches instead of storing in the repo. Every entry is a `git-repo` external: chezmoi runs `git clone` when the target directory is missing. Because they are real git checkouts, they are never symlinked into the source tree. A target that already exists without being a checkout (Omarchy's stock `~/.config/kitty`, for example) would stop the apply; [`05-externals`](scripts.md#05-externals) asks to move it aside and clones the repo in its place first.
 
 **.chezmoiexternal.toml**
 

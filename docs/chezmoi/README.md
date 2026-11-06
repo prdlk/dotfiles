@@ -36,6 +36,7 @@ The repo is a [chezmoi](https://chezmoi.io) source directory. It lives at `~/Cod
 .chezmoiignore.tmpl
 .gitmodules
 .chezmoiscripts/
+  run_before_05-externals.sh.tmpl
   run_onchange_before_10-packages.sh.tmpl
   run_onchange_after_15-tools.sh.tmpl
   run_onchange_after_20-gh-extensions.sh.tmpl

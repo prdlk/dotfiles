@@ -1,0 +1,64 @@
+#!/bin/sh
+# Make way for git-repo externals. chezmoi can only clone into a missing or
+# empty target, and only pull in a target that is already a checkout; a
+# directory with other content stops the apply (a fresh Omarchy install ships
+# its own ~/.config/kitty, ghostty, omarchy, …). For each such target, ask
+# whether to replace it: yes moves it aside to <target>.bak-<time> and clones
+# the repo there, so chezmoi finds a checkout; no aborts the apply. Runs
+# before every apply; it only stats directories unless one is in the way.
+set -eu
+
+conflicts=$(mktemp)
+trap 'rm -f "$conflicts"' EXIT
+check() {
+    target=$1 url=$2
+    [ -e "$target" ] || [ -L "$target" ] || return 0
+    if [ -d "$target" ] && [ ! -L "$target" ]; then
+        [ -e "$target/.git" ] && return 0
+        [ -z "$(ls -A "$target")" ] && return 0
+    fi
+    printf '%s\t%s\n' "$target" "$url" >>"$conflicts"
+}
+{{- $files := glob (joinPath .chezmoi.sourceDir ".chezmoiexternals" "*.toml") }}
+{{- if stat (joinPath .chezmoi.sourceDir ".chezmoiexternal.toml") }}
+{{-   $files = append $files (joinPath .chezmoi.sourceDir ".chezmoiexternal.toml") }}
+{{- end }}
+{{- range $files }}
+{{-   range $path, $ext := include . | fromToml }}
+{{-     if eq (get $ext "type") "git-repo" }}
+check {{ joinPath $.chezmoi.destDir $path | quote }} {{ $ext.url | quote }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+[ -s "$conflicts" ] || exit 0
+
+# A subshell: a failed redirect on the special builtin `:` would end this shell.
+if ! ( : </dev/tty ) 2>/dev/null; then
+    echo "error: these git-repo external targets exist and are not checkouts:" >&2
+    cut -f1 "$conflicts" | sed 's/^/  /' >&2
+    echo "Run chezmoi apply in a terminal to be asked about each, or move them aside." >&2
+    exit 1
+fi
+
+stamp=$(date +%Y%m%d-%H%M%S)
+while IFS="$(printf '\t')" read -r target url; do
+    printf '%s exists and is not a git checkout. Replace it with %s (old copy kept as %s.bak-%s)? [y/N] ' \
+        "$target" "$url" "$target" "$stamp" >/dev/tty
+    read -r answer </dev/tty || answer=''
+    case $answer in
+    [yY]*) ;;
+    *)
+        echo "error: kept $target; chezmoi cannot apply its external. Move it aside or answer y, then apply again." >&2
+        exit 1
+        ;;
+    esac
+    mv "$target" "$target.bak-$stamp"
+    if ! git clone --quiet "$url" "$target"; then
+        rm -rf "$target"
+        mv "$target.bak-$stamp" "$target"
+        echo "error: cloning $url failed; $target restored." >&2
+        exit 1
+    fi
+    echo "$target: cloned $url (old copy in $target.bak-$stamp)"
+done <"$conflicts"

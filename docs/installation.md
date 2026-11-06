@@ -84,7 +84,7 @@ See [Configuration](chezmoi/config.md) for how the role is stored and [Ignore ru
 
 3. **Files and externals**
 
-   Configs are linked into `$HOME` (symlink mode). The neovim config, Omarchy's `~/.config/omarchy` checkout, and the terminal and tool configs are cloned as externals. See [Externals and ignore rules](chezmoi/externals-and-ignore.md).
+   Configs are linked into `$HOME` (symlink mode). The neovim config, Omarchy's `~/.config/omarchy` checkout, and the terminal and tool configs are cloned as externals. Where Omarchy already put a directory at one of those paths, `run_before_05-externals` asks whether to replace it (the old copy is kept as `<dir>.bak-<time>`); answering no aborts the apply. See [Externals and ignore rules](chezmoi/externals-and-ignore.md).
 
 4. **Post-apply scripts**
 
