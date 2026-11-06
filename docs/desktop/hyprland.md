@@ -236,7 +236,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | `SUPER + CTRL + ALT + G` | `omarchy-cycle ghostty` | — |
 | `SUPER + CTRL + ALT + O` | `omarchy-cycle obsidian` | — |
 | `SUPER + CTRL + ALT + F` | strata: `omarchy-launch-or-focus io.github.lgse.Strata "gtk-launch io.github.lgse.Strata"` | — |
-| `SUPER + CTRL + ALT + E` | `omarchy-toggle-scratch fastmail` | — |
+| `SUPER + CTRL + ALT + E` | `omarchy-toggle-scratch fastmail` | World clock (`omarchy.elsewhen` panel) |
 | `SUPER + CTRL + ALT + M` | `omarchy-toggle-scratch beeper` | — |
 | `SUPER + CTRL + L` | `omarchy-toggle-scratch lmstudio` (LM Studio) | toggle window gaps |
 | `SUPER + CTRL + ALT + Y` | `omarchy-summon youtube` | web apps cycle |
