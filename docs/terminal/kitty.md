@@ -88,10 +88,10 @@ The socket also exports `KITTY_LISTEN_ON` into each pane. nvim reads it to know 
 | --- | --- |
 | `super+n` | Vertical split 50/50 (`launch_vs50`) |
 | `super+z` | Toggle `stack` layout (zoom); the tab title gains a layers icon and pane count (`nf-md-layers 3`) while other panes are hidden |
-| `ctrl+shift+t`, `super+enter` | New tab in current cwd |
+| `ctrl+shift+t`, `ctrl+shift+space` | New tab in current cwd (`new_tab_with_cwd`, `launch_tb`) |
 | `ctrl+space`, `ctrl+shift+j` | Horizontal split, 30% (`launch_hs`) |
 | `ctrl+enter`, `ctrl+shift+l` | Vertical split, 40% (`launch_vs`) |
-| `ctrl+shift+space` | New OS window |
+| `super+enter` | New OS window in current cwd (`launch_os`) |
 | `ctrl+shift+h` / `ctrl+shift+k` | Previous / next tab |
 | `ctrl+shift+g` | `lazygit` in an overlay |
 | `ctrl+shift+f` | `yazi` in a new tab |
@@ -131,7 +131,7 @@ What a restored window gets back:
 - **Running program**: saved with `--use-foreground-process` and re-run after the `cat`, so the shell is still there when it exits (`nvim`, `sleep 700`, dev servers). Commands still at shell init when saved (mise/direnv hooks) are ignored. A command is never replayed if any of its words is `rm`, `rmdir`, `mv`, `dd`, `shred`, `truncate`, `mkfs*`, `wipefs`, `fdisk`, `parted`, `sudo`, `doas`, `su`, `run0`, `pkexec`, `kill`, `pkill`, `killall`, `reboot`, `shutdown` or `poweroff` (`NO_REPLAY`).
 - Programs launched as the window's own command (`ctrl+shift+e` nvim, `ctrl+shift+g` lazygit) were already restored by kitty; they have no shell, so no scrollback.
 
-Only windows that belong to the session are saved: `new_tab_with_cwd` and the `--cwd=current` launch aliases join it; `new_os_window` (`ctrl+shift+space`) does not.
+Only windows that belong to the session are saved: `new_tab_with_cwd` and the `--cwd=current` launch aliases join it; a bare `new_os_window` does not.
 
 ## Host configs
 

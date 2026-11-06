@@ -88,9 +88,7 @@ All bindings in `keymap.toml` are `[[mgr.prepend_keymap]]` entries, so they take
 | <kbd>g</kbd> <kbd>r</kbd> | cd to the git root (`git rev-parse --show-toplevel`) |
 | <kbd>g</kbd> <kbd>C</kbd> | cd to `~/.local/share/chezmoi` |
 | <kbd>g</kbd> <kbd>d</kbd> | cd to `~/Downloads` |
-| <kbd>g</kbd> <kbd>D</kbd> <kbd>d</kbd> | cd to `$GHQ_ROOT/github.com` |
-| <kbd>g</kbd> <kbd>D</kbd> <kbd>w</kbd> | cd to `$GHQ_ROOT/github.com/wltbs` |
-| <kbd>g</kbd> <kbd>D</kbd> <kbd>p</kbd> | cd to `$GHQ_ROOT/github.com/prdlk` |
+| <kbd>g</kbd> <kbd>D</kbd> | cd to `$GHQ_ROOT/github.com` |
 | <kbd>g</kbd> <kbd>l</kbd> | cd to `~/.local` |
 | <kbd>g</kbd> <kbd>p</kbd> | cd to `~/Pictures` |
 | <kbd>g</kbd> <kbd>o</kbd> <kbd>p</kbd> | cd to `~/Documents/Obsidian/Personal` |
