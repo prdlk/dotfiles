@@ -181,6 +181,7 @@ Every binding defined in `bindings.lua`. Bindings not listed here are Omarchy de
 | `SUPER + SHIFT + H` / `L` | Move left / right (`nav.move`): swap the column; at the edge, carry the window to the monitor that way. Floating: bottom-left / bottom-right corner | — |
 | `SUPER + SHIFT + J` / `K` | Move down / up: swap within the column; at its bottom / top, carry the window to the next / previous workspace on this monitor. Floating: top-left / top-right corner | — |
 | `SUPER + SHIFT + T` | `omarchy-pip` — toggle picture-in-picture | — |
+| `SUPER + M` | Unbound | minimize window to the dock |
 
 `SUPER + TAB` walks a ring built only from the active workspace's mapped windows, ordered by `stable_id`. Grouped windows stay in the ring and hidden ones are skipped. It raises the focused window afterwards. It avoids `cyclenext`, which would pull in a hidden scratchpad.
 
