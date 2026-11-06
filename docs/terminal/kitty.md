@@ -50,7 +50,7 @@ Colors come from the active Omarchy theme; it is included last so it wins. `curr
 | Option | Value |
 | --- | --- |
 | `font_family` | `VictorMono Nerd Font`, then overridden in the `BEGIN_KITTY_FONTS` block to `family="VictorMono Nerd Font Mono"`; bold/italic `auto` |
-| `font_size` | `10.0`, one point below Ghostty's `font-size = 11` |
+| `font_size` | `10.5`, half a point below Ghostty's `font-size = 11` |
 | `window_padding_width` | `8` |
 | `hide_window_decorations` | `yes` |
 | `background_opacity` | `0.9` |
