@@ -186,23 +186,9 @@ Launched by `super+a`. Class `kitty-herdr`, `tab_bar_style hidden` (herdr draws 
 | `ctrl+shift+q` | `prefix x` |
 | `ctrl+shift+p` | `prefix P` (Switchboard commands) |
 
-### goliath.conf — remote tmux over mosh
+### goliath.conf — ssh to goliath
 
-Opens straight into the tmux session `main` on host `goliath` via `mosh goliath -- tmux new-session -A -s main`. `font_size 9.0`, `listen_on unix:@kitty-goliath`, `env MOSH_TITLE_NOPREFIX=1` (drops mosh's `[mosh] ` title prefix), `tab_bar_style hidden`.
-
-> [!WARNING]
-> mosh bootstraps ssh with `-S none`, so non-interactive key auth to goliath must work. It needs mosh on both ends and UDP 60000–61000 open. mosh sets `TERM=xterm-256color`, so kitty-only capabilities such as undercurl are unavailable inside.
-
-| Key | Sends |
-| --- | --- |
-| `super+w` | `prefix x` |
-| `super+t` | `prefix %` |
-| `super+n` | `prefix "` |
-| `super+enter`, `alt+n` | `prefix t` |
-| `alt+h` / `alt+l` | `prefix H` / `prefix L` |
-| `alt+q w e r t y u i o` | `prefix 1`–`9` (`alt+t` is bound twice; the later `prefix 5` wins) |
-| `super+left/right/up/down` | `prefix` + `ctrl+arrow` |
-| `super+d` | `prefix d` |
+Launched by `SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) as a new kitty (`--class=kitty-goliath`). `shell kitten ssh goliath`: a plain login shell on goliath, no tmux, so closing the window ends the session. kitten ssh copies kitty's terminfo over, so `TERM` stays `xterm-kitty`; connection sharing comes from `ssh.conf`. Also sets `listen_on unix:@kitty-goliath` and `tab_bar_style hidden`, and includes the Omarchy theme. No key maps beyond kitty's defaults.
 
 ### ssh.conf
 
