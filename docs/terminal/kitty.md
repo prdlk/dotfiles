@@ -62,7 +62,7 @@ Colors come from the active Omarchy theme; it is included last so it wins. `curr
 | `allow_remote_control` | `socket-only` |
 | `listen_on` | `unix:@kitty-{kitty_pid}` |
 | `enabled_layouts` | `splits:split_axis=vertical,stack` |
-| Tab bar | `powerline`, `slanted`, centered, top edge, always shown (`tab_bar_min_tabs 1`, so the stack-layout indicator is visible with one tab), `tab_title_template "{custom}"` |
+| Tab bar | `powerline`, `slanted`, centered, top edge, shown only with two or more tabs (`tab_bar_min_tabs 2`; the stack-layout indicator lives in the bar, so it is hidden with one tab), `tab_title_template "{custom}"` |
 
 > [!NOTE]
 > Transparency uses kitty's own alpha, so text stays opaque. This alpha is also what lets the compositor blur the window: Hyprland enables blur globally and opts out every window except terminal classes.
