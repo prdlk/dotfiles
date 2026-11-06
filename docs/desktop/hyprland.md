@@ -259,6 +259,8 @@ strata is the default file manager: `inode/directory` in `mimeapps.list` and the
 | `SUPER + SHIFT + E` | `omarchy-menu toggle system` | Email |
 | `SUPER + SHIFT + Q` | `omarchy-menu toggle system` | — |
 | `SUPER + F24` | `voxtype record toggle --profile hermes` — dictation | — |
+| `SUPER + CTRL + X` | `omarchy-dictation toggle` (only when `o.dictation_installed()`) | — |
+| `F9` (hold) | Push-to-talk: `omarchy-dictation start` on press, `stop` on release (only when `o.dictation_installed()`) | — |
 | `SUPER + SHIFT + SPACE` | Emoji picker (`omarchy-shell shell toggle omarchy.emojis`) | toggle top bar |
 | `SUPER + P` | Clipboard manager (`omarchy-shell shell toggle omarchy.clipboard`) | pseudo window |
 | `ALT + TAB` | ScrollOverview `toggle all` (only when the plugin is loaded) | Omarchy's two `ALT + TAB` binds |
