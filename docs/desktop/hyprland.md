@@ -101,6 +101,7 @@ The layout, touchpad, and gesture examples in the file are commented out. Palm r
 | `decoration.blur` | enabled; `size 5`, `passes 2`, `brightness 0.8`, `contrast 1.1`, `vibrancy 0.15`, `noise 0.01`, `new_optimizations`, `popups = false` |
 | `decoration.shadow` | disabled |
 | `group.groupbar.gradient_rounding` | 0 |
+| `group.groupbar.disable_when_only` | true: no tab bar on a group of one (kitty always opens as a group); it appears when a second window joins |
 | Workspace animation | disabled (`hl.animation({ leaf = "workspaces", enabled = false })`) |
 
 Blur must be enabled globally before any window can use it, so every window tagged `default-opacity` gets `no_blur = true`, and terminals get it back:
