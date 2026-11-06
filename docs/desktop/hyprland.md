@@ -230,8 +230,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 
 | Keys | Action | Replaces |
 | --- | --- | --- |
-| `SUPER + CTRL + ALT + L` | Claude Desktop: `omarchy-launch-or-focus com.anthropic.Claude claude-desktop`; an ordinary window, no scratch workspace | — |
-| `SUPER + CTRL + A` | Unbound | audio panel |
+| `SUPER + CTRL + A` | Claude Desktop: `omarchy-launch-or-focus com.anthropic.Claude claude-desktop`; an ordinary window, no scratch workspace | audio panel |
 | `SUPER + CTRL + G` | Gemini: `omarchy-launch-or-focus gemini "gtk-launch gemini-desktop"` | — |
 | `SUPER + CTRL + ALT + H` | `omarchy-cycle ai` | — |
 | `SUPER + CTRL + ALT + J` | `omarchy-cycle-terminal` | — |
