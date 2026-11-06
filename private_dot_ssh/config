@@ -1,11 +1,12 @@
 # ~/.ssh/config (chezmoi: private_dot_ssh/config). Keepalives come from
 # Omarchy's /etc/ssh/ssh_config.d/20-omarchy-keepalive.conf (15 s x 3).
 
-# goliath: home server. Reached over Tailscale (MagicDNS), so one name works
-# on the LAN and away; the LAN's own DNS only hands out an IPv6 address.
-# HostKeyAlias keeps the host keys already filed under "goliath".
+# goliath: home server, by its Tailscale IPv4 address: one address on the LAN
+# and away, no DNS lookup (the LAN's DNS only hands out an IPv6 address).
+# mosh takes the address from here (%h), so its UDP session runs over
+# Tailscale too. HostKeyAlias keeps the host keys filed under "goliath".
 Host goliath
-  HostName goliath.tail62ced9.ts.net
+  HostName 100.115.218.84
   HostKeyAlias goliath
   User prad
   IdentityFile ~/.ssh/id_ed25519
