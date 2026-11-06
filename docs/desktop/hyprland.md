@@ -229,6 +229,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | `SUPER + CTRL + J` | Height +100 px |
 | `SUPER + ALT + C` | Fit active column (scrolling layout only) |
 | `SUPER + SHIFT + ALT + C` | Fit visible columns (scrolling layout only) |
+| `SUPER + CTRL + F` | Zen mode: `omarchy-toggle-fullscreen-desktop` hides the bar and sets gaps to 0; moved from `SUPER + CTRL + ALT + F`, replaces Omarchy's tiled full screen |
 
 ### Applications
 
@@ -241,7 +242,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | `SUPER + CTRL + ALT + K` | `omarchy-cycle-browser` | — |
 | `SUPER + CTRL + ALT + G` | `omarchy-cycle ghostty` | — |
 | `SUPER + CTRL + ALT + O` | `omarchy-cycle obsidian` | — |
-| `SUPER + CTRL + ALT + F` | strata: `omarchy-launch-or-focus io.github.lgse.Strata "gtk-launch io.github.lgse.Strata"` | — |
+| `SUPER + CTRL + ALT + F` | strata: `omarchy-launch-or-focus io.github.lgse.Strata "gtk-launch io.github.lgse.Strata"` | full screen desktop (now `SUPER + CTRL + F`) |
 | `SUPER + CTRL + ALT + E` | Fastmail: `omarchy-launch-or-focus com.fastmail.Fastmail "gtk-launch com.fastmail.Fastmail"`, on `name:fastmail` on `eDP-1` | World clock (`omarchy.elsewhen` panel) |
 | `SUPER + CTRL + ALT + M` | Beeper: `omarchy-launch-or-focus Beeper "gtk-launch beeper"`, on `name:beeper` on `eDP-1` | — |
 | `SUPER + CTRL + L` | `omarchy-toggle-scratch lmstudio` (LM Studio) | toggle window gaps |
