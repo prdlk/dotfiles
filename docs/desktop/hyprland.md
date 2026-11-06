@@ -54,6 +54,7 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | --- | --- |
 | 1 (default), 2, 3, 4 | The main external display: `desc:Apple Computer Inc StudioDisplay 0x984262A7` if connected, else `desc:Samsung Electric Company S34CG50 HNTY501103` (Studio Display while neither is). Chosen at config load; `monitors.lua` reloads the config when the main external changes, and existing workspaces 1–4 are moved over |
 | 5 (default), 6, 7, 8 | `eDP-1` |
+| `name:claude`, `name:fastmail`, `name:beeper` | `eDP-1`; created on demand, one per app (window rules below) |
 
 `default` marks the workspace each monitor shows when it connects.
 
@@ -64,8 +65,9 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^brave-www\.tldraw\.com__-Default$` | Workspace 3 |
 | `^tldraw-offline$` | Workspace 5, fullscreen |
 | `^so\.stencil\.tern$` | `special:scratchpad silent` |
-| `^com\.fastmail\.Fastmail$` | `special:fastmail silent` |
-| `^Beeper$` | `special:beeper silent` |
+| `^com\.anthropic\.Claude$` | `name:claude` (follows the window there) |
+| `^com\.fastmail\.Fastmail$` | `name:fastmail` (follows) |
+| `^Beeper$` | `name:beeper` (follows) |
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
 | `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
@@ -230,7 +232,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 
 | Keys | Action | Replaces |
 | --- | --- | --- |
-| `SUPER + CTRL + A` | Claude Desktop: `omarchy-launch-or-focus com.anthropic.Claude claude-desktop`; an ordinary window, no scratch workspace | audio panel |
+| `SUPER + CTRL + A` | Claude Desktop: `omarchy-launch-or-focus com.anthropic.Claude claude-desktop`, on its own workspace `name:claude` on `eDP-1` | audio panel |
 | `SUPER + CTRL + G` | Gemini: `omarchy-launch-or-focus gemini "gtk-launch gemini-desktop"` | — |
 | `SUPER + CTRL + ALT + H` | `omarchy-cycle ai` | — |
 | `SUPER + CTRL + ALT + J` | `omarchy-cycle-terminal` | — |
@@ -238,8 +240,8 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | `SUPER + CTRL + ALT + G` | `omarchy-cycle ghostty` | — |
 | `SUPER + CTRL + ALT + O` | `omarchy-cycle obsidian` | — |
 | `SUPER + CTRL + ALT + F` | strata: `omarchy-launch-or-focus io.github.lgse.Strata "gtk-launch io.github.lgse.Strata"` | — |
-| `SUPER + CTRL + ALT + E` | `omarchy-toggle-scratch fastmail` | World clock (`omarchy.elsewhen` panel) |
-| `SUPER + CTRL + ALT + M` | `omarchy-toggle-scratch beeper` | — |
+| `SUPER + CTRL + ALT + E` | Fastmail: `omarchy-launch-or-focus com.fastmail.Fastmail "gtk-launch com.fastmail.Fastmail"`, on `name:fastmail` on `eDP-1` | World clock (`omarchy.elsewhen` panel) |
+| `SUPER + CTRL + ALT + M` | Beeper: `omarchy-launch-or-focus Beeper "gtk-launch beeper"`, on `name:beeper` on `eDP-1` | — |
 | `SUPER + CTRL + L` | `omarchy-toggle-scratch lmstudio` (LM Studio) | toggle window gaps |
 | `SUPER + CTRL + ALT + Y` | `omarchy-summon youtube` | web apps cycle |
 | `SUPER + SHIFT + Y` | `omarchy-summon youtube` | YouTube desktop entry |
@@ -363,18 +365,16 @@ Runs `omarchy-hyprland-workspace-layout-toggle`, then polls the workspace layout
 ### omarchy-toggle-scratch
 
 ```sh
-omarchy-toggle-scratch [scratchpad|fastmail|beeper|home|lmstudio]
+omarchy-toggle-scratch [scratchpad|home|lmstudio]
 ```
 
 | Profile | Special workspace | Home monitor | Residents (class → launch) |
 | --- | --- | --- | --- |
 | `scratchpad` | `special:scratchpad` | Studio Display, else Samsung ultrawide | `so.stencil.tern` → `tern` |
-| `fastmail` | `special:fastmail` | `eDP-1` | `com.fastmail.Fastmail` → `gtk-launch com.fastmail.Fastmail` |
-| `beeper` | `special:beeper` | `eDP-1` | `Beeper` → `gtk-launch beeper` |
 | `home` | `special:home` | focused | `brave-home\.google\.com__.*` → `gtk-launch 'Google Home'` |
 | `lmstudio` | `special:lmstudio` | focused | `ai\.elementlabs\.lmstudio` → `gtk-launch ai.elementlabs.lmstudio` |
 
-If the workspace is visible, the script hides it. If not, it launches any resident with no window there, waits up to 8 s for the first new window, and reveals the workspace on the home monitor (or the focused one if the home monitor is absent). Launching only missing residents avoids duplicate web-app windows. Bound to `SUPER + CTRL + S`, `SUPER + A`, `SUPER + CTRL + ALT + E`, `SUPER + CTRL + ALT + M`, `SUPER + CTRL + H`, and `SUPER + CTRL + L`.
+If the workspace is visible, the script hides it. If not, it launches any resident with no window there, waits up to 8 s for the first new window, and reveals the workspace on the home monitor (or the focused one if the home monitor is absent). Launching only missing residents avoids duplicate web-app windows. Bound to `SUPER + CTRL + S`, `SUPER + A`, `SUPER + CTRL + H`, and `SUPER + CTRL + L`.
 
 ## Related
 
