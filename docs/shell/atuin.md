@@ -1,6 +1,6 @@
 # atuin
 
-Shell history search with a daemon, directory-scoped up-arrow, tmux popups, a CherryBlossom theme, and the atuin AI inline command generator.
+Shell history search with a daemon, directory-scoped up-arrow, tmux popups, a cyberdream theme, and the atuin AI inline command generator.
 
 [atuin](https://atuin.sh) replaces shell history search in fish, bash, and zsh. It also provides `atuin ai inline`, a natural-language command generator that the fish config binds to keys.
 
@@ -78,7 +78,7 @@ bash and zsh have no AI binding.
 | `daemon.enabled` | `true` | Uses the background daemon |
 | `daemon.autostart` | `true` | atuin starts and manages the daemon itself |
 | `pty_proxy.enabled` | `false` | `atuin init` does not re-exec the shell inside `atuin pty-proxy` |
-| `theme.name` | `"cherry-blossom"` | Loads `themes/cherry-blossom.toml` |
+| `theme.name` | `"cyberdream"` | Loads `themes/cyberdream.toml` |
 | `tmux.enabled` | `true` | Search opens in a tmux popup when inside tmux (tmux 3.2+) |
 | `tmux.width` / `tmux.height` | `"80%"` / `"60%"` | Popup size |
 | `ai.enabled` | `true` | Enables `atuin ai` |
@@ -106,23 +106,23 @@ No sync server, key, or session is configured in the repo. atuin keeps its encry
 
 ## Theme
 
-`themes/cherry-blossom.toml` defines the selected theme, from the CherryBlossom palette shared with Ghostty, tmux, lazygit, and omp:
+`themes/cyberdream.toml` defines the selected theme, from the cyberdream palette shared with [fish](fish.md#theme), [Starship](starship.md#palette), Ghostty, tmux, lazygit, and omp:
 
 | Key | Color |
 | --- | --- |
-| `AlertInfo` | `#a78266` |
-| `AlertWarn` | `#ae825f` |
-| `AlertError` | `#bf615d` |
-| `Annotation` | `#a6958f` |
-| `Guidance` | `#8f9aa0` |
-| `Important` | `#cf716f` |
-| `Title` | `#cf716f` |
-| `Muted` | `#a6958f` |
-| `SyntaxCommand` | `#cf716f` |
-| `SyntaxFlag` | `#a78266` |
-| `SyntaxString` | `#a6b084` |
-| `SyntaxVariable` | `#c17e4a` |
-| `SyntaxOperator` | `#ad6756` |
-| `SyntaxComment` | `#a6958f` |
+| `AlertInfo` | `#5ef1ff` |
+| `AlertWarn` | `#f1ff5e` |
+| `AlertError` | `#ff6e5e` |
+| `Annotation` | `#7b8496` |
+| `Guidance` | `#5ea1ff` |
+| `Important` | `#ff5ef1` |
+| `Title` | `#5ef1ff` |
+| `Muted` | `#7b8496` |
+| `SyntaxCommand` | `#5ea1ff` |
+| `SyntaxFlag` | `#5ef1ff` |
+| `SyntaxString` | `#5eff6c` |
+| `SyntaxVariable` | `#ff5ef1` |
+| `SyntaxOperator` | `#ff5ea0` |
+| `SyntaxComment` | `#7b8496` |
 
-`themes/cyberdream.toml` is still shipped (the palette shared with [fish](fish.md#theme) and [Starship](starship.md#palette)) but not selected.
+`themes/cherry-blossom.toml` (the CherryBlossom palette) is still shipped but not selected.

@@ -1,6 +1,6 @@
 # Lazydocker
 
-Lazydocker with rounded borders and the CherryBlossom border and selection colors shared with lazygit.
+Lazydocker with rounded borders and the cyberdream border and selection colors shared with lazygit.
 
 [Lazydocker](https://github.com/jesseduffield/lazydocker) is a terminal UI for Docker containers, images, volumes, and compose projects. The config only restyles it to match [lazygit](lazygit.md).
 
@@ -19,22 +19,22 @@ gui:
   border: rounded
   theme:
     activeBorderColor:
-      - "#cf716f"
+      - "#5ef1ff"
     inactiveBorderColor:
-      - "#a6958f"
+      - "#7b8496"
     selectedLineBgColor:
-      - "#453130"
+      - "#3c4048"
     optionsTextColor:
-      - "#a6958f"
+      - "#3c4048"
 ```
 
 | Key | Value | Palette |
 | --- | --- | --- |
 | `gui.border` | `rounded` | |
-| `activeBorderColor` | `#cf716f` | CherryBlossom primary |
-| `inactiveBorderColor` | `#a6958f` | CherryBlossom on-surface-variant |
-| `selectedLineBgColor` | `#453130` | CherryBlossom selection (primary 20% over surface) |
-| `optionsTextColor` | `#a6958f` | CherryBlossom on-surface-variant |
+| `activeBorderColor` | `#5ef1ff` | cyberdream cyan |
+| `inactiveBorderColor` | `#7b8496` | cyberdream grey |
+| `selectedLineBgColor` | `#3c4048` | cyberdream selection |
+| `optionsTextColor` | `#3c4048` | cyberdream selection |
 
 Everything else (keybindings, commands, log settings) is left at lazydocker's defaults.
 

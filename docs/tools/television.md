@@ -6,7 +6,7 @@ tv config symlinked from the repo, a transparent cyberdream theme, and the custo
 
 | | |
 | --- | --- |
-| Source | [prdlk/television](https://github.com/prdlk/television) via `.chezmoiexternals/television.toml`: `config.toml`, `cable/*.toml`, `themes/cyberdream-transparent.toml` |
+| Source | [prdlk/television](https://github.com/prdlk/television) via `.chezmoiexternals/television.toml`: `config.toml`, `cable/*.toml`, `themes/cyberdream-transparent.toml` (selected), `themes/cherry-blossom-transparent.toml` (CherryBlossom, not selected) |
 | Target | `~/.config/television/` |
 | Install | Not listed in `.chezmoidata/packages.yaml`; install separately |
 

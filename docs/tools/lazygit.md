@@ -1,8 +1,8 @@
 # Lazygit
 
-Lazygit with CherryBlossom colors, delta diffs, a full keybinding map, and custom commands wired to gh and helper scripts.
+Lazygit with cyberdream colors, delta diffs, a full keybinding map, and custom commands wired to gh and helper scripts.
 
-[Lazygit](https://github.com/jesseduffield/lazygit) is a terminal UI for git. The config sets CherryBlossom colors, renders diffs with delta, turns on background fetching and a whole-graph log, and adds custom commands that call `gh`.
+[Lazygit](https://github.com/jesseduffield/lazygit) is a terminal UI for git. The config sets cyberdream colors, renders diffs with delta, turns on background fetching and a whole-graph log, and adds custom commands that call `gh`.
 
 | | |
 | --- | --- |
@@ -23,20 +23,20 @@ tmux-resurrect lists `lazygit` among the processes it restores.
 
 ## GUI
 
-Colors come from the CherryBlossom palette, shared with Ghostty, tmux, and omp:
+Colors are upstream `extras/lazygit/cyberdream.yml` from [cyberdream.nvim](https://github.com/scottmckendry/cyberdream.nvim), the palette shared with Ghostty, tmux, and omp:
 
 | Theme key | Color |
 | --- | --- |
-| `activeBorderColor` | `#cf716f` |
-| `inactiveBorderColor` | `#a6958f` |
-| `searchingActiveBorderColor` | `#c17e4a` |
-| `optionsTextColor` | `#a6958f` |
-| `selectedLineBgColor` | `#453130` |
-| `cherryPickedCommitBgColor` | `#453130` |
-| `cherryPickedCommitFgColor` | `#ad6756` |
-| `unstagedChangesColor` | `#ae825f` |
-| `defaultFgColor` | `#dcc1b7` |
-| `authorColors."*"` | `#dcc1b7` (every author the same color) |
+| `activeBorderColor` | `#5ef1ff` |
+| `inactiveBorderColor` | `#7b8496` |
+| `searchingActiveBorderColor` | `#ff5ef1` |
+| `optionsTextColor` | `#3c4048` |
+| `selectedLineBgColor` | `#3c4048` |
+| `cherryPickedCommitBgColor` | `#3c4048` |
+| `cherryPickedCommitFgColor` | `#ff5ea0` |
+| `unstagedChangesColor` | `#ffbd5e` |
+| `defaultFgColor` | `#ffffff` |
+| `authorColors."*"` | `#ffffff` (every author the same color) |
 
 | Option | Value |
 | --- | --- |

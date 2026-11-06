@@ -1,6 +1,5 @@
 "$schema" = 'https://starship.rs/config-schema.json'
-palette = "cherryblossom"
-
+palette = "cyberdream"
 
 format = """
 $username\
@@ -95,46 +94,3 @@ dim-blue = "#4f85d1"
 dim-purple = "#d050c6"
 dim-cyan = "#4fc5d1"
 dim-white = "#d0d0d1"
-
-# >>> CHERRYBLOSSOM STARSHIP PALETTE >>>
-# CherryBlossom Starship Palette
-
-[palettes.cherryblossom]
-# Standard colors
-blue      = "#7a858b"
-red       = "#bf615d"
-green     = "#8a9a6b"
-yellow    = "#c17e4a"
-cyan      = "#a78266"
-magenta   = "#ad6756"
-white     = "#dcc1b7"
-black     = "#201d1c"
-
-# Extended palette (Catppuccin-compatible names)
-rosewater = "#ae825f"
-flamingo  = "#cf716f"
-pink      = "#c6745f"
-mauve     = "#ad6756"
-maroon    = "#cf716f"
-peach     = "#ae825f"
-teal      = "#a78266"
-sky       = "#baa59d"
-sapphire  = "#8f9aa0"
-lavender  = "#c6745f"
-
-# Text shades
-text      = "#dcc1b7"
-subtext1  = "#dcc1b7"
-subtext0  = "#5b5450"
-
-# Surface shades
-overlay2  = "#5b5450"
-overlay1  = "#5b5450"
-overlay0  = "#201d1c"
-surface2  = "#201d1c"
-surface1  = "#201d1c"
-surface0  = "#222120"
-base      = "#222120"
-mantle    = "#222120"
-crust     = "#222120"
-# <<< CHERRYBLOSSOM STARSHIP PALETTE <<<

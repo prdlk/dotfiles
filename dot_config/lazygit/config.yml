@@ -2,25 +2,26 @@ gui:
   border: rounded
   theme:
     activeBorderColor:
-      - "#cf716f"
+      - "#5ef1ff"
     inactiveBorderColor:
-      - "#a6958f"
+      - "#7b8496"
     searchingActiveBorderColor:
-      - "#c17e4a"
+      - "#ff5ef1"
     optionsTextColor:
-      - "#a6958f"
+      - "#3c4048"
     selectedLineBgColor:
-      - "#453130"
+      - "#3c4048"
     cherryPickedCommitBgColor:
-      - "#453130"
+      - "#3c4048"
     cherryPickedCommitFgColor:
-      - "#ad6756"
+      - "#ff5ea0"
     unstagedChangesColor:
-      - "#ae825f"
+      - "#ffbd5e"
     defaultFgColor:
-      - "#dcc1b7"
+      - "#ffffff"
     authorColors:
-      "*": "#dcc1b7" # The number of lines you scroll by when scrolling the main window
+      "*": "#ffffff"
+  # The number of lines you scroll by when scrolling the main window
   scrollHeight: 2
   # If true, allow scrolling past the bottom of the content in the main window
   scrollPastBottom: true
