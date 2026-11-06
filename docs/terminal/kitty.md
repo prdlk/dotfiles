@@ -24,7 +24,7 @@ GPU terminal emulator and the primary terminal on every role.
   navigate_kitty.py
   select_tab.py
   switchtab.py
-  window_titler.py
+  os_window_title.py
   themes/
     cyberdream.conf
     koda-dark.conf
@@ -63,6 +63,7 @@ Colors come from the active Omarchy theme; it is included last so it wins. `curr
 | `listen_on` | `unix:@kitty-{kitty_pid}` |
 | `enabled_layouts` | `splits:split_axis=vertical,stack` |
 | Tab bar | `powerline`, `slanted`, centered, top edge, shown only with two or more tabs (`tab_bar_min_tabs 2`; the stack-layout indicator lives in the bar, so it is hidden with one tab), `tab_title_template "{custom}"` |
+| OS window title | The active tab's repo name (`watcher os_window_title.py`), like Ghostty's tmux session title; program titles (fish's path, omp's spinner, nvim's file) only reach the tab bar |
 
 > [!NOTE]
 > Transparency uses kitty's own alpha, so text stays opaque. This alpha is also what lets the compositor blur the window: Hyprland enables blur globally and opts out every window except terminal classes.
@@ -216,7 +217,7 @@ Kitten `ssh` config: for `hostname goliath`, `share_connections yes`.
 | `navigate_kitty.py` | No-UI kitten that calls `neighboring_window` with a direction argument; the counterpart nvim can invoke. Not mapped in `kitty.conf`. |
 | `select_tab.py` | Full-screen fuzzy tab picker using `kitty @ ls` data; shows cwds zsh-style. Keys: Up/Down/PgUp/PgDn scroll, Enter selects, typing filters, `ctrl+c`/Esc quits. Not mapped in `kitty.conf`. |
 | `switchtab.py` | Focuses the tab whose `vt` user var matches the argument, or launches one with that var and reorders tabs by `vt`. Not mapped. |
-| `window_titler.py` | Watcher that appends `[<vt> <pty>]` to window titles. Not referenced in `kitty.conf`. |
+| `os_window_title.py` | Global watcher. On every `on_tab_bar_dirty` (tab switch, focus change, any program title change; also fires while the bar is hidden) it sets the OS window title to `tab_bar.py`'s `wd_label` for the active window's cwd: the repo root name, `~` at home, the dir name outside a repo. An empty label clears the override, so kitty falls back to the program's title. |
 | `day_session.py` | Daily sessions: `geninclude` script, global watcher and the `flush` no-UI kitten in one file. See [Daily sessions](#daily-sessions). |
 
 Related: the [tmux](tmux.md) `is_vim` check and herdr's `vim-herdr-navigation` plugin complete the `ctrl+h/j/k/l` chain. Hyprland window rules can match the `kitty`, `kitty-tmux` and `kitty-herdr` app-ids ([Hyprland](../desktop/hyprland.md)).
