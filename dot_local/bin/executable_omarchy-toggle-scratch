@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle a scratch workspace (scratchpad, fastmail, beeper, home, lmstudio), starting its resident apps when any is missing.
+# omarchy:summary=Toggle a scratch workspace (scratchpad, home, lmstudio), starting its resident apps when any is missing.
 
 set -uo pipefail
 
-# Usage: omarchy-toggle-scratch [scratchpad|fastmail|beeper|home|lmstudio]
+# Usage: omarchy-toggle-scratch [scratchpad|home|lmstudio]
 #
 # Each profile is a special workspace, the monitor it opens on, and its
 # resident apps (class pattern -> launch command; the pattern is an anchored
@@ -29,16 +29,6 @@ scratchpad)
   HOME_MONITOR=$EXTERNAL
   MEMBERS=("so.stencil.tern|tern")
   ;;
-fastmail)
-  NAME="fastmail"
-  HOME_MONITOR="eDP-1"
-  MEMBERS=("com.fastmail.Fastmail|gtk-launch com.fastmail.Fastmail")
-  ;;
-beeper)
-  NAME="beeper"
-  HOME_MONITOR="eDP-1"
-  MEMBERS=("Beeper|gtk-launch beeper")
-  ;;
 home)
   NAME="home"
   MEMBERS=("brave-home\.google\.com__.*|gtk-launch 'Google Home'")
@@ -48,7 +38,7 @@ lmstudio)
   MEMBERS=("ai\.elementlabs\.lmstudio|gtk-launch ai.elementlabs.lmstudio")
   ;;
 *)
-  echo "usage: ${0##*/} [scratchpad|fastmail|beeper|home|lmstudio]" >&2
+  echo "usage: ${0##*/} [scratchpad|home|lmstudio]" >&2
   exit 2
   ;;
 esac
