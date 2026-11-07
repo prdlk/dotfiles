@@ -1,0 +1,6 @@
+// Seeded once by chezmoi (create_): vicinae rewrites this file from the settings GUI.
+// Tracked preferences live in chezmoi.json; keys added here win over it.
+{
+   "$schema": "https://vicinae.com/schemas/config.json",
+   "imports": ["./chezmoi.json"]
+}

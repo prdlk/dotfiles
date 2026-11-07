@@ -1,0 +1,87 @@
+// Managed by chezmoi (dot_config/vicinae/chezmoi.json); symlinked into ~/.config/vicinae.
+//
+// settings.json imports this file. Vicinae owns settings.json: the settings GUI
+// rewrites it via tmp file + rename, which would replace a chezmoi symlink, so
+// tracked preferences live here instead. Keys set in settings.json (by the GUI)
+// override this file.
+//
+// Global shortcuts go through the vicinae_hotkey_v1 protocol, which Omarchy's
+// Hyprland build exposes. hypr/bindings.lua unbinds SUPER + SPACE and
+// SUPER + P so the compositor does not reserve them; a key Hyprland already
+// binds is denied (the default alt+SPACE collides with dictation).
+{
+   "$schema": "https://vicinae.com/schemas/config.json",
+   "close_on_focus_loss": true,
+   "pop_to_root_on_close": true,
+   "activate_on_single_click": true,
+   "wrap_navigation": true,
+   "keybinding": "vim",
+   "search_files_in_root": true,
+   "global_shortcuts": {
+      "toggle": "super+SPACE"
+   },
+   "font": {
+      "rendering": "native",
+      "normal": {
+         "family": "VictorMono Nerd Font",
+         "size": 9.5
+      }
+   },
+   "theme": {
+      "dark": {
+         "icon_theme": "Hicolor"
+      }
+   },
+   "providers": {
+      "@c4n4m1/store.vicinae.zoxide-recent-directories": {
+         "preferences": {
+            "application": "kitty.desktop"
+         }
+      },
+      "@fbosch/store.vicinae.nerdfont-search": {
+         "entrypoints": {
+            "nerdfonts-search": {
+               "alias": "nfs"
+            }
+         }
+      },
+      "@rithvikvibhu/store.vicinae.arch-packages": {
+         "entrypoints": {
+            "search-arch-packages": {
+               "alias": "aur"
+            }
+         }
+      },
+      "@selfxplanatorium/store.vicinae.fff-search": {
+         "preferences": {
+            "roots": "~/Code,~/.local/share/chezmoi,~/.config",
+            "editorInTerminal": true,
+            "showPreview": true,
+            "followSymlinks": false
+         }
+      },
+      "applications": {
+         "entrypoints": {
+            "Zoom": {
+               "enabled": false
+            }
+         }
+      },
+      "clipboard": {
+         "entrypoints": {
+            "history": {
+               "shortcut": "super+P"
+            }
+         }
+      },
+      "snippets": {
+         "preferences": {
+            "enabled": true,
+            "undo": true,
+            "layout": "",
+            "prePasteDelay": "0",
+            "keyDelay": "2"
+         }
+      }
+   }
+}
