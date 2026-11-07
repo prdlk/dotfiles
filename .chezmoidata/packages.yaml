@@ -104,10 +104,16 @@ packages:
         - gvfs
         - poppler-glib
         - xdg-utils
+        # vicinae-server links libcmark-gfm, which every AUR vicinae PKGBUILD
+        # lists only as a makedepend; explicit here so orphan cleanup
+        # (`pacman -Rns $(pacman -Qdtq)`) cannot remove it again
+        - cmark-gfm
       # AUR, or a sync repo that ships the same name (yay prefers repos). Only
       # names no installed package provides are passed on (`pacman -T`).
       aur:
         - tldraw-offline-bin
+        # launcher (SUPER + SPACE); vicinae-git also satisfies it (provides=vicinae)
+        - vicinae
         # desktop apps
         - beeper-bin
         - fastmail
