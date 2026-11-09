@@ -81,6 +81,7 @@ Runs for every shell, including non-interactive ones, so scripts get the same `P
 | `GITEA_LOGIN` | `prad.codes` |
 | `GITLAB_HOST` | `git.sonr.org` |
 | `GITHUB_TOKEN` | `gh auth token`, unless already set and only if `gh` is logged in |
+| `FREE_ROUTER_PORT`, `FREE_ROUTER_API_KEY` | each `KEY=VALUE` line of `~/.config/free-router/env`, if it exists. See [free-router](../ai/free-router.md) |
 | `EDITOR`, `VISUAL` | `nvim` |
 | `BROWSER` | `/usr/bin/brave-origin` if that binary exists |
 | `CHROME_EXECUTABLE` | `/usr/bin/chromium` if it exists |

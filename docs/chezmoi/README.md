@@ -24,6 +24,7 @@ The repo is a [chezmoi](https://chezmoi.io) source directory. It lives at `~/Cod
 .chezmoiexternal.toml
 .chezmoiexternals/
   agent-root.toml
+  freellmapi.toml
   ghostty.toml
   herdr.toml
   kitty.toml
@@ -86,7 +87,7 @@ README.md
 | `.chezmoi.toml.tmpl` | `~/.config/chezmoi/chezmoi.toml` | Config template rendered by `chezmoi init`. See [Config and roles](config.md). |
 | `.chezmoidata/` | — | YAML merged into template data (`.packages`, `.aliases`, `.skills`). See [Packages and aliases](data.md) and [Skills](../ai/skills.md). |
 | `.chezmoiexternal.toml` | — | Git repos cloned into `$HOME` (nvim config, a bat syntax, tpm). |
-| `.chezmoiexternals/` | — | One external per app or tool: agent-root, ghostty, herdr, kitty, omarchy, omp, television, tmux, tmux-palette, yazi. Plain config repos cloned into `~/.config/<app>`. See [Externals and ignore rules](externals-and-ignore.md#chezmoiexternals). |
+| `.chezmoiexternals/` | — | One external per app or tool: agent-root, freellmapi, ghostty, herdr, kitty, omarchy, omp, television, tmux, tmux-palette, yazi. Mostly plain config repos cloned into `~/.config/<app>`. See [Externals and ignore rules](externals-and-ignore.md#chezmoiexternals). |
 | `.gitmodules` | — | `dot_config/hypr` and `dot_config/fish` are git submodules. See [Submodules](externals-and-ignore.md#submodules). |
 | `.chezmoiignore.tmpl` | — | Target paths chezmoi skips; gates the Linux desktop layer by role. |
 | `.chezmoiscripts/`, root `run_*` | — | Install and housekeeping scripts. See [Apply scripts](scripts.md). |

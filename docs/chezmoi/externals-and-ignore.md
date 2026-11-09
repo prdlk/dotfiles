@@ -42,7 +42,7 @@ To update explicitly, run `chezmoi apply --refresh-externals` (`-R`), which pull
 
 ## .chezmoiexternals/
 
-Per-app config repos, one file each in `.chezmoiexternals/<app>.toml`. Each is a `git-repo` external with `refreshPeriod = "168h"` and `pull.args = ["--ff-only"]`, so `chezmoi apply` fast-forwards them at most once a week. The repos hold plain config files (no chezmoi prefixes) and are not part of `chezmoi managed` contents. The exception is [`agent-root.toml`](#agent-root), a single downloaded script.
+Per-app config repos, one file each in `.chezmoiexternals/<app>.toml`. Each is a `git-repo` external with `refreshPeriod = "168h"` and `pull.args = ["--ff-only"]`, so `chezmoi apply` fast-forwards them at most once a week. The repos hold plain config files (no chezmoi prefixes) and are not part of `chezmoi managed` contents. The exceptions are [`agent-root.toml`](#agent-root), a single downloaded script, and [`freellmapi.toml`](#freellmapi), an upstream app checkout.
 
 **.chezmoiexternals/tmux.toml**
 
@@ -82,6 +82,10 @@ Edit these in place under `~/.config/<app>`, then commit and push from that chec
     executable = true
     refreshPeriod = "168h"
 ```
+
+### freellmapi
+
+`freellmapi.toml` clones upstream [tashfeenahmed/freellmapi](https://github.com/tashfeenahmed/freellmapi) to `~/.local/share/freellmapi`, same `git-repo` settings as the config repos. Nothing is edited there: [`free-router`](../ai/free-router.md) runs it, installing deps and building the dashboard into gitignored paths, so the checkout stays clean and `--ff-only` pulls apply. Linux desktop/laptop roles only ([role gate](#chezmoiignoretmpl)), together with its service.
 
 ## Submodules
 
@@ -162,10 +166,15 @@ mise tool versions stay local to each machine and are not managed.
 .local/bin/kitty-day-save
 .local/bin/cp-appid
 .local/bin/projects-sync
+.local/bin/free-router
+.local/share/freellmapi
+.local/share/freellmapi/**
+.config/free-router
+.config/free-router/**
 {{ end }}
 ```
 
-The block is emitted, and these paths skipped, unless the OS is `linux` and the role is `desktop` or `laptop`. `server` machines, and any non-Linux machine regardless of role, never receive the Hyprland config (`dot_config/hypr/`), the Waybar config (`dot_config/waybar/`), the uwsm environment (`dot_config/uwsm/`), fontconfig (`dot_config/fontconfig/fonts.conf`), default-app associations (`dot_config/mimeapps.list`, `dot_config/xdg-terminals.list`), the systemd user units (`dot_config/systemd/user/kitty-day-save.service`, `projects-sync.service`, `projects-sync.timer`), or the `agent-root`, `cp-appid`, `kitty-day-save` and `projects-sync` scripts.
+The block is emitted, and these paths skipped, unless the OS is `linux` and the role is `desktop` or `laptop`. `server` machines, and any non-Linux machine regardless of role, never receive the Hyprland config (`dot_config/hypr/`), the Waybar config (`dot_config/waybar/`), the uwsm environment (`dot_config/uwsm/`), fontconfig (`dot_config/fontconfig/fonts.conf`), default-app associations (`dot_config/mimeapps.list`, `dot_config/xdg-terminals.list`), the systemd user units (`dot_config/systemd/user/kitty-day-save.service`, `projects-sync.service`, `projects-sync.timer`, `free-router.service`), the `agent-root`, `cp-appid`, `kitty-day-save`, `projects-sync` and `free-router` scripts, or free-router's settings (`dot_config/free-router/env`) and freellmapi checkout.
 
 | Machine | Desktop layer |
 | --- | --- |

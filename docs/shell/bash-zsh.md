@@ -26,7 +26,7 @@ Interactive shells only (`[[ $- != *i* ]] && return`). In order:
 
 1. **PATH.** Prepends `~/.local/bin` if missing, sources `~/.cargo/env` if present, and appends `~/.maestro/bin` if it exists. Exports `GHQ_ROOT` and `CODE_ROOT` as `~/Code`.
 2. **Go.** `GOPATH=~/.local/share/go`, `GOBIN=$GOPATH/bin`, and `GOBIN` prepended to `PATH`. mise provides `GOROOT`. The same two values are also in `~/.config/go/env` (`dot_config/go/env.tmpl`), Go's own config file, so every `go` invocation uses them even without these variables (cron, `sudo -u`, `env -i`, GUI apps).
-3. **Android SDK.** `ANDROID_HOME` and `ANDROID_SDK_ROOT` set to `~/.local/share/android`. `platform-tools`, `cmdline-tools/latest/bin`, and `emulator` are appended if they exist. Exports `GITHUB_TOKEN` from `gh auth token` unless it is already set.
+3. **Android SDK.** `ANDROID_HOME` and `ANDROID_SDK_ROOT` set to `~/.local/share/android`. `platform-tools`, `cmdline-tools/latest/bin`, and `emulator` are appended if they exist. Exports `GITHUB_TOKEN` from `gh auth token` unless it is already set, and every variable in `~/.config/free-router/env` (`FREE_ROUTER_PORT`, `FREE_ROUTER_API_KEY`; see [free-router](../ai/free-router.md)) if that file exists.
 4. **Aliases.** Sources `~/.config/shell/aliases.sh`.
 5. **Functions.** Sources every `~/.config/bash/functions/*.bash`.
 6. **Flyline.** If `~/.local/lib/libflyline.so` exists, loads it with `enable -f … flyline` for richer line editing.
@@ -39,7 +39,7 @@ Interactive shells only (`[[ $- != *i* ]] && return`). In order:
 
 1. **History.** `HISTFILE=~/.zsh_history`, `HISTSIZE=10000`, `SAVEHIST=10000`, `setopt SHARE_HISTORY HIST_IGNORE_DUPS`.
 2. **Completion.** `autoload -Uz compinit && compinit`.
-3. The same PATH, Go, Android, and `GITHUB_TOKEN` blocks as `.bashrc`, including `GHQ_ROOT` and `CODE_ROOT`.
+3. The same PATH, Go, Android, `GITHUB_TOKEN`, and free-router blocks as `.bashrc`, including `GHQ_ROOT` and `CODE_ROOT`.
 4. Sources `~/.config/shell/aliases.sh`.
 5. Sources every `~/.config/zsh/functions/*.zsh`.
 6. Sources `~/.config/zsh/keybinds.zsh`.

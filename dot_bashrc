@@ -40,6 +40,12 @@ if [ -z "${GITHUB_TOKEN:-}" ] && command -v gh >/dev/null 2>&1; then
     unset _gh_token
 fi
 
+# free-router (localhost freellmapi): FREE_ROUTER_PORT, FREE_ROUTER_API_KEY.
+# Same file free-router.service loads; desktop/laptop roles only.
+if [ -r "$HOME/.config/free-router/env" ]; then
+    set -a; . "$HOME/.config/free-router/env"; set +a
+fi
+
 # Shared aliases (same set as fish/zsh; source of truth: .chezmoidata/aliases.yaml)
 [ -f "$HOME/.config/shell/aliases.sh" ] && . "$HOME/.config/shell/aliases.sh"
 

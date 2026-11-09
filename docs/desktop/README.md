@@ -5,7 +5,7 @@ The Linux desktop layer: Omarchy, the Hyprland config on top of it, the Waybar b
 > [!NOTE]
 > **Role gating**
 >
-> `.chezmoiignore.tmpl` skips the Linux desktop layer unless the machine runs Linux **and** its role is `desktop` or `laptop`. The gated targets are `~/.config/hypr`, `~/.config/waybar`, `~/.config/uwsm`, `~/.config/fontconfig`, `~/.config/mimeapps.list`, `~/.config/xdg-terminals.list`, `~/.config/systemd`, `~/.local/bin/agent-root`, `~/.local/bin/kitty-day-save`, `~/.local/bin/cp-appid`, and `~/.local/bin/projects-sync`. On the `server` role these are not applied.
+> `.chezmoiignore.tmpl` skips the Linux desktop layer unless the machine runs Linux **and** its role is `desktop` or `laptop`. The gated targets are `~/.config/hypr`, `~/.config/waybar`, `~/.config/uwsm`, `~/.config/fontconfig`, `~/.config/mimeapps.list`, `~/.config/xdg-terminals.list`, `~/.config/systemd`, `~/.config/free-router`, `~/.local/bin/agent-root`, `~/.local/bin/kitty-day-save`, `~/.local/bin/cp-appid`, `~/.local/bin/projects-sync`, `~/.local/bin/free-router`, and `~/.local/share/freellmapi`. On the `server` role these are not applied.
 >
 > The `omarchy-*` scripts in `~/.local/bin` are **not** listed there, so chezmoi applies them on every role.
 

@@ -1,0 +1,11 @@
+# freellmapi: OpenAI-compatible router over free LLM tiers. Upstream checkout
+# run by ~/.local/bin/free-router (free-router.service); deps and the dashboard
+# build stay untracked (node_modules/, client/dist/ are gitignored upstream), so
+# --ff-only pulls apply cleanly. desktop/laptop roles only, gated in
+# .chezmoiignore.tmpl.
+[".local/share/freellmapi"]
+    type = "git-repo"
+    url = "https://github.com/tashfeenahmed/freellmapi.git"
+    refreshPeriod = "168h"
+    [".local/share/freellmapi".pull]
+        args = ["--ff-only"]

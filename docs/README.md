@@ -50,9 +50,10 @@ That command installs chezmoi, clones [env/omarchy](https://prad.codes/env/omarc
   - [Hyprland](desktop/hyprland.md)
   - [Waybar](desktop/waybar.md)
   - [Fonts and apps](desktop/fonts-and-apps.md)
-- [AI agents](ai/README.md): Claude Code, omp, and the shared agent skill library.
+- [AI agents](ai/README.md): Claude Code, omp, the shared agent skill library, and the free-router LLM endpoint.
   - [Overview](ai/README.md)
   - [Skills](ai/skills.md)
+  - [free-router](ai/free-router.md)
 
 ## Machine roles
 

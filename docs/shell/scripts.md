@@ -35,6 +35,7 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`c2p`](#c2p) | sh | code2prompt with an fzf-picked template |
 | [`extract_agents`](#extract_agents) | sh | Copy all `AGENTS.md` files into a directory tree |
 | [`fab`](#fab) | sh | fzf picker for Fabric patterns |
+| [`free-router`](#free-router) | bun | Run the freellmapi LLM router on `localhost:$FREE_ROUTER_PORT` |
 | [`gdc`](#gdc) | sh | Discard all git changes after confirmation |
 | [`gh-sonr-org-migrate`](#gh-sonr-org-migrate) | bash | Consolidate `*sonr*` GitHub orgs into `sonr-io` |
 | [`ghg-clone`](#ghg-clone) | sh | `ghq get` and print the clone path |
@@ -307,6 +308,16 @@ Mirrors every repo under the ghq root (`$GHQ_ROOT`, default `~/Code`, laid out `
 Run by `projects-sync.timer` (`dot_config/systemd/user/`, 30 s after login and every 5 minutes), which [`30-user-services`](../chezmoi/scripts.md#30-user-services) enables. ghq clones land two levels below `~/Code`, out of reach of a non-recursive `.path` unit, hence the poll.
 
 **Needs:** GNU `find`. Linux desktop/laptop roles only (`.chezmoiignore.tmpl`).
+
+## free-router
+
+```sh
+free-router
+```
+
+Runs the [freellmapi](https://github.com/tashfeenahmed/freellmapi) router under Bun on `127.0.0.1:$FREE_ROUTER_PORT`, with its API key pinned to `$FREE_ROUTER_API_KEY`. Run by `free-router.service`, which [`30-user-services`](../chezmoi/scripts.md#30-user-services) enables. See [free-router](../ai/free-router.md).
+
+**Needs:** `bun`, `git`, the `~/.local/share/freellmapi` external. Linux desktop/laptop roles only (`.chezmoiignore.tmpl`).
 
 ## mtime-sort
 

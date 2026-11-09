@@ -34,7 +34,7 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
 7. **30-user-services (after, once)**
 
-   Enable systemd user units (kitty-day-save, projects-sync.timer).
+   Enable systemd user units (kitty-day-save, projects-sync.timer, free-router).
 
 8. **40-post (after, onchange)**
 
@@ -136,6 +136,7 @@ The strata flags install the binary, `~/.local/share/applications/io.github.lgse
 
 - Same check for `~/.config/systemd/user/kitty-day-save.service` (from `dot_config/systemd/user/`, so Linux desktop/laptop roles only), then `systemctl --user enable --now kitty-day-save.service`. See [kitty-day-save](../shell/scripts.md#kitty-day-save).
 - Same check for `~/.config/systemd/user/projects-sync.timer`, then `systemctl --user enable --now projects-sync.timer`. See [projects-sync](../shell/scripts.md#projects-sync).
+- Same check for `~/.config/systemd/user/free-router.service`, then `systemctl --user enable --now free-router.service`. See [free-router](../ai/free-router.md).
 - On non-Linux systems it renders to `#!/bin/sh` / `exit 0`.
 
 Other personal automation units (brain-lens, omp-loop, rclone, hermes, voxtype) are deliberately not enabled; the script comment says to enable them by hand per machine. Their unit files are not in the repo, so they have to exist on the machine already.
