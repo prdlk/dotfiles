@@ -83,7 +83,7 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+shift+/` | `prefix ?` | Keybinding help popup |
 | `ctrl+shift+alt+,` | `prefix q` | Reload tmux config |
 | `ctrl+shift+n` | `prefix C` | New session |
-| `ctrl+shift+s` | `prefix s` | Session/window tree |
+| `ctrl+shift+s` | `prefix S` | Toggle the [workmux](../tools/workmux.md) agent sidebar (all sessions); the session/window tree stays on `prefix s` |
 | `ctrl+shift+q` | `prefix d` | Detach (closes the Ghostty window; the session lives on) |
 
 ## Themes

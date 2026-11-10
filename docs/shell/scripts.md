@@ -495,7 +495,7 @@ With no arguments it prints palette items as JSON, grouped by category:
 | Agents | Every agent `workmux status --all --json` tracks in this tmux server: waiting (yellow), done (green), working (blue), then idle, most recent first. Title `<repo>/<handle>`, description status, time since the change, and the pane title | `switch-client` to the agent's pane |
 | Worktrees: `<repo>` | The active pane's repo's worktrees (`workmux list --json`, main checkout left out): branch, open/closed, dirty, path. Open ones are green | `workmux open` (starts the session if closed) |
 | New | **New worktree from a prompt**, when the pane is in a repo | `--prompt` in a popup: `gum write` for the task, then `workmux add -A -p TASK` (omp names the branch, see [workmux](../tools/workmux.md#branch-names)) |
-| Workmux | **Dashboard** (90% popup), **Sidebar** (toggle), **Last done** (`workmux last-done`) | |
+| Workmux | **Dashboard** (90% popup), **Sidebar** (toggle; also tmux `prefix S`, Ghostty <kbd>ctrl+shift+s</kbd>), **Last done** (`workmux last-done`) | |
 | Close | One per open worktree | `workmux close`: ends the session, keeps worktree and branch |
 | Merge | One per worktree | `workmux merge` in a popup |
 | Remove | One per worktree | `workmux remove` in a popup (asks before deleting unmerged commits) |
