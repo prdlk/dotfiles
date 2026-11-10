@@ -140,6 +140,7 @@ packages:
       - suvadu
       - mandible
       - worktrunk
+      - tmux-expose
     # global mise tools: `mise use -g <tool>` (run_onchange_after_15-tools).
     # Registry short names where mise has one (`mise registry <tool>`), else a
     # backend spec; written to ~/.config/mise/config.toml under the same key.

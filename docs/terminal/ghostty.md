@@ -60,12 +60,13 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+plus` / `ctrl+minus` / `ctrl+zero` | Font size +1 / -1 / reset |
 | `ctrl+shift+.` | Reload Ghostty config |
 | `shift+enter` | Sends `ESC[13;2u` (CSI-u Shift+Enter), which tmux passes through to the pane, so coding agents such as omp and Claude Code insert a newline instead of submitting. Not `\n`: that is `ctrl+j`, tmux's pane-down key |
-| `ctrl+space`, `ctrl+backspace` | Sends NUL (tmux `C-Space`): opens the [tmux command palette](tmux.md#command-palette) |
+| `ctrl+space` | Sends NUL (tmux `C-Space`): opens the [tmux command palette](tmux.md#command-palette) |
 
 | Key | Sends | tmux action |
 | --- | --- | --- |
 | `ctrl+shift+t` | `prefix c` | New window (tab) in pane cwd |
 | `ctrl+shift+p` / `ctrl+shift+space` | `prefix t` | Project Tasks palette (pj: install, dev, sync, make, every project task) |
+| `ctrl+backspace` | `prefix E` | [tmux-expose](tmux.md#keybindings): live thumbnails of every session; `ctrl+backspace` again closes it |
 | `ctrl+shift+a` | `prefix w` | [Workmux palette](../shell/scripts.md#workmux-palette): agents by status, worktrees, new worktree from a prompt |
 | `ctrl+shift+f` | `prefix y` | Yazi in a new window, pane cwd |
 | `ctrl+shift+e` | `prefix e` | Neovim in a new window, pane cwd |
