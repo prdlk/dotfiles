@@ -178,7 +178,7 @@ The header comment says the file should stay empty, but it holds the following:
 
 ## Key bindings
 
-`functions/fish_user_key_bindings.fish` turns on **vi mode** (`fish_vi_key_bindings`) first, then adds custom binds in both `insert` and `default` (normal) modes, so they work in either mode.
+`functions/fish_user_key_bindings.fish` turns on **vi mode** (`fish_vi_key_bindings`) first, then adds custom binds in both `insert` and `default` (normal) modes, so they work in either mode. Visual mode is off: the preset `v` bind in normal mode (the only way into it) is erased, so `v` does nothing.
 
 | Key | Action |
 | --- | --- |
