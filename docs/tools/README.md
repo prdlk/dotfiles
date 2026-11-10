@@ -21,6 +21,7 @@ Packages come from `.chezmoidata/packages.yaml` and are installed by `run_onchan
 | [Hunk](hunk.md) | hunk diff viewer | `dot_config/hunk/config.toml` | `auto` |
 | [drydock](drydock.md) | drydock repo fleet view | `dot_config/drydock/config.toml` | n/a |
 | [television](television.md) | tv fuzzy picker, custom cables | external repo via `.chezmoiexternals/television.toml` | `cyberdream-transparent` |
+| [workmux](workmux.md) | worktree + tmux session per agent | `dot_config/workmux/config.yaml` | n/a (palette: cyberdream) |
 | [LeetCode](leetcode.md) | leetcode CLI, `lc-elir` | `dot_leetcode/` | n/a |
 | [SSH and mosh](ssh.md) | ssh, mosh | `private_dot_ssh/config` | n/a |
 

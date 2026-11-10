@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# workmux-palette — workmux as a tmux-palette source (the "workmux" palette,
+# ~/.config/tmux-palette/palettes/workmux.json).
+#
+#   workmux-palette              print palette items (JSON): every agent
+#                                workmux tracks in this tmux server (waiting,
+#                                then done, then working), the worktrees of the
+#                                active pane's repo with Close/Merge/Remove
+#                                items, New from a prompt, and the dashboard,
+#                                sidebar and last-done tools
+#   workmux-palette --add BRANCH the palette's query item (what was typed):
+#                                `workmux add BRANCH` in the active pane's repo
+#   workmux-palette --popup DIR CMD…
+#                                run CMD… in DIR in a popup that closes when it
+#                                succeeds and waits for a key when it fails
+#   workmux-palette --do DIR CMD…
+#                                run CMD… in DIR; a failure shows its last
+#                                output line as a tmux message
+#
+# Lifecycle commands (add, merge, remove) run in a popup: they print hook
+# output and may ask y/n (remove with unmerged commits). Open and close are
+# quick, so they run in place.
+
+set -uo pipefail
+self=$(readlink -f "$0")
+
+case ${1-} in
+--exec) # the popup's command (see --popup)
+    shift
+    "$@"
+    status=$?
+    [ "$status" -eq 0 ] && exit 0
+    printf '\n\033[2m[exit %s] any key to close\033[0m' "$status"
+    read -rsn1
+    exit 0
+    ;;
+--popup)
+    dir=$2
+    shift 2
+    # argv form: tmux runs it without a shell and expands no formats in it.
+    exec tmux display-popup -E -w 80% -h 60% -d "$dir" -T " ${*//#/##} " "$self" --exec "$@"
+    ;;
+--do)
+    cd "$2" || exit 1
+    shift 2
+    if ! out=$("$@" 2>&1); then
+        msg=$(tail -n1 <<<"$out")
+        tmux display-message -d 5000 "workmux: ${msg//#/##}"
+    fi
+    exit 0
+    ;;
+--add)
+    cwd=$(tmux display -p '#{pane_current_path}')
+    exec "$self" --popup "$cwd" workmux add "$2"
+    ;;
+esac
+
+cwd=$(tmux display -p '#{pane_current_path}' 2>/dev/null) || cwd=$PWD
+root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || root=
+worktrees='[]'
+[ -n "$root" ] && worktrees=$(cd "$root" && workmux list --json 2>/dev/null) || worktrees='[]'
+
+workmux status --all --json 2>/dev/null | jq --arg self "$self" --arg home "$HOME" --arg root "$root" \
+    --argjson worktrees "${worktrees:-[]}" '
+    def tilde: if startswith($home) then "~" + .[($home | length):] else . end;
+    def ago: if . < 60 then "\(.)s" elif . < 3600 then "\(. / 60 | floor)m"
+             else "\(. / 3600 | floor)h\(. % 3600 / 60 | floor)m" end;
+    def run($mode; $argv): {shell: ([$self, $mode, $root] + $argv | map(@sh) | join(" "))};
+    # An agent that registered but reported nothing yet has status "-".
+    {working: {icon: "\uf110", color: "#5ea1ff", rank: 2, label: "working"},
+     waiting: {icon: "\uf075", color: "#f1ff5e", rank: 0, label: "waiting"},
+     done:    {icon: "\uf00c", color: "#5eff6c", rank: 1, label: "done"}} as $look
+    | {icon: "\uf544", color: "#7b8496", rank: 3, label: "idle"} as $idle
+    | ($worktrees | map(select(.is_main | not))) as $trees
+    | (if $root == "" then "" else $root | split("/") | last end) as $repo
+    | [
+      ((.agents // []) | map(. + {look: ($look[.status // ""] // $idle)})
+       | sort_by([.look.rank, (.elapsed_secs // 0)])[]
+       | {category: "Agents", icon: .look.icon, iconColor: .look.color,
+          title: (if .worktree == .project then .project else "\(.project)/\(.worktree)" end),
+          description: ([.look.label + (if .elapsed_secs == null then "" else " \(.elapsed_secs | ago)" end),
+                         (if (.title // "") == "" then .session else .title end)] | join(" · ")),
+          action: {tmux: "switch-client -t \(.pane_id | @sh)"}}),
+      ($trees[]
+       | {category: "Worktrees: \($repo)", icon: "\uf126",
+          title: .handle,
+          description: ([.branch, (if .is_open then "open" else "closed" end)]
+                        + (if .has_uncommitted_changes then ["dirty"] else [] end)
+                        + [.path | tilde] | join(" · ")),
+          action: run("--do"; ["workmux", "open", .handle])}
+         + (if .is_open then {iconColor: "#5eff6c"} else {} end)),
+      (if $root == "" then empty else
+        {category: "New", icon: "\uf067", title: "New worktree from a prompt",
+         description: "write the prompt in $EDITOR; omp names the branch · \($repo)",
+         aliases: ["add", "prompt"], action: run("--popup"; ["workmux", "add", "-A", "-e"])}
+       end),
+      {category: "Workmux", icon: "\uf0e4", title: "Dashboard", description: "agents and worktrees TUI in a popup",
+       aliases: ["dash"], action: {tmux: "display-popup -E -w 90% -h 90% workmux dashboard"}},
+      {category: "Workmux", icon: "\uf0db", title: "Sidebar", description: "toggle the agent status sidebar",
+       aliases: ["side"], action: {tmux: "run-shell -b \("workmux sidebar" | @sh)"}},
+      {category: "Workmux", icon: "\uf0e2", title: "Last done", description: "jump to the agent that last finished or is waiting",
+       aliases: ["ld"], action: {tmux: "run-shell -b \("workmux last-done" | @sh)"}},
+      ($trees[] | select(.is_open)
+       | {category: "Close", icon: "\uf00d", title: "Close \(.handle)", description: "close the session, keep the worktree and branch",
+          action: run("--do"; ["workmux", "close", .handle])}),
+      ($trees[]
+       | {category: "Merge", icon: "\uf419", title: "Merge \(.handle)", description: "merge \(.branch) into the main branch, then remove it",
+          action: run("--popup"; ["workmux", "merge", .handle])}),
+      ($trees[]
+       | {category: "Remove", icon: "\uf1f8", title: "Remove \(.handle)", description: "remove the worktree, session and branch without merging",
+          action: run("--popup"; ["workmux", "remove", .handle])})
+    ]'

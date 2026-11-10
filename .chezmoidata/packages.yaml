@@ -152,3 +152,5 @@ packages:
       - crush
       # omp: prebuilt release binaries; not in the mise registry
       - github:can1357/oh-my-pi
+      # workmux: worktree + tmux session per agent (~/.config/workmux, prefix w)
+      - workmux

@@ -1,0 +1,34 @@
+# workmux global config (https://workmux.dev). One tmux session per worktree:
+# an omp window (focused, gets the prompt) and an nvim window. Start work from
+# the Workmux palette (prefix w, or ctrl+space → Workmux; ~/.local/bin/
+# workmux-palette) or `workmux add <branch>` in a repo. A .workmux.yaml in a
+# repo overrides any of this.
+
+nerdfont: true
+
+# Session mode: the session pill and Ghostty's window title read
+# <repo>/<handle>; the tmux-sessions palette lists them like any session.
+mode: session
+window_prefix: "{project}/"
+
+# Next to worktrunk's ~/Work/<repo>-<branch>: ~/Work/<repo>/<handle>.
+worktree_dir: ~/Work/{project}
+
+# New work branches off the main branch, not whatever branch the pane is on.
+base_branch: auto
+
+# omp gets the prompt (-p/-P/-e) and names branches for `add -A`.
+agent: omp
+
+# Windows stay unnamed so tmux.conf's automatic-rename-format labels them
+# (omp icon + repo, nvim icon + file) like every other tab.
+windows:
+  - panes:
+      - command: <agent>
+        focus: true
+  - panes:
+      - command: nvim
+
+# tmux.conf's window-status formats render #{@workmux_status} themselves;
+# workmux's own format would replace the powerline tabs.
+status_format: false

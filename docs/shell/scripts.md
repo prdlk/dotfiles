@@ -54,6 +54,7 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`projects-sync`](#projects-sync) | bash | Symlink every `~/Code` repo into `~/Projects` |
 | [`pj-palette`](#pj-palette) | bash | pj's tasks plus quick actions as a tmux-palette source |
 | [`tmux-sessions`](#tmux-sessions) | bash | Session/window/zoxide switcher as a tmux-palette source |
+| [`workmux-palette`](#workmux-palette) | bash | workmux agents and worktrees as a tmux-palette source |
 | [`yazi-nvim-open`](#yazi-nvim-open) | sh | yazi opener that targets the host Neovim |
 
 ## ai
@@ -474,6 +475,35 @@ pj-palette's background task sessions (`@pj_task`) are left out. Sessions are ta
 **`--dir DIR`** switches to, or starts in DIR, the session named after DIR's basename with dots removed (sessionx's rule).
 
 **Needs:** tmux, `jq`, `zoxide`.
+
+## workmux-palette
+
+```sh
+workmux-palette
+workmux-palette --add BRANCH
+workmux-palette --popup DIR CMD…
+workmux-palette --do DIR CMD…
+```
+
+The source of the **Workmux** [tmux command palette](../terminal/tmux.md#command-palette) (`palettes/workmux.json`) for [workmux](../tools/workmux.md). Open it with tmux `prefix w` or the "Workmux" item in the main palette.
+
+With no arguments it prints palette items as JSON, grouped by category:
+
+| Group | Items | Action |
+| --- | --- | --- |
+| Agents | Every agent `workmux status --all --json` tracks in this tmux server: waiting (yellow), done (green), working (blue), then idle, most recent first. Title `<repo>/<handle>`, description status, time since the change, and the pane title | `switch-client` to the agent's pane |
+| Worktrees: `<repo>` | The active pane's repo's worktrees (`workmux list --json`, main checkout left out): branch, open/closed, dirty, path. Open ones are green | `workmux open` (starts the session if closed) |
+| New | **New worktree from a prompt**, when the pane is in a repo | `workmux add -A -e` in a popup: `$EDITOR` for the prompt, omp names the branch |
+| Workmux | **Dashboard** (90% popup), **Sidebar** (toggle), **Last done** (`workmux last-done`) | |
+| Close | One per open worktree | `workmux close`: ends the session, keeps worktree and branch |
+| Merge | One per worktree | `workmux merge` in a popup |
+| Remove | One per worktree | `workmux remove` in a popup (asks before deleting unmerged commits) |
+
+**`--add BRANCH`** is the palette's `query` item: the typed text, listed after the matches, becomes `workmux add BRANCH` in the active pane's directory, so a branch name that matches nothing creates its worktree and session and switches to it.
+
+**`--popup DIR CMD…`** runs CMD in DIR in an 80% × 60% popup (argv form, so nothing is re-parsed by a shell or by tmux formats). The popup closes when CMD succeeds; on failure it shows `[exit N]` and waits for a key. **`--do DIR CMD…`** runs CMD in place and shows the last output line as a tmux message when it fails.
+
+**Needs:** tmux, `jq`, `git`, `workmux`.
 
 ## yazi-nvim-open
 
