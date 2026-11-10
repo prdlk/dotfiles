@@ -20,7 +20,7 @@ It is the default everywhere a desktop picks a terminal: the first entry of `~/.
 
 | Option | Value |
 | --- | --- |
-| `font-family` / `font-size` | `IoskeleyMonoTerm Nerd Font Mono` / `11` |
+| `font-family` / `font-size` | `VictorMono Nerd Font` / `12` |
 | `adjust-cell-height` | `20%` (line height) |
 | `background-opacity` / `background-blur` | `0.9` / `true` |
 | `window-decoration` | `false`; `gtk-titlebar = false` |
