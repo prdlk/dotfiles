@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle a scratch workspace (scratchpad, home, lmstudio), starting its resident apps when any is missing.
+# omarchy:summary=Toggle a scratch workspace (scratchpad, home, lmstudio, hermes), starting its resident apps when any is missing.
 
 set -uo pipefail
 
-# Usage: omarchy-toggle-scratch [scratchpad|home|lmstudio]
+# Usage: omarchy-toggle-scratch [scratchpad|home|lmstudio|hermes]
 #
 # Each profile is a special workspace, the monitor it opens on, and its
 # resident apps (class pattern -> launch command; the pattern is an anchored
@@ -37,8 +37,13 @@ lmstudio)
   NAME="lmstudio"
   MEMBERS=("ai\.elementlabs\.lmstudio|gtk-launch ai.elementlabs.lmstudio")
   ;;
+hermes)
+  NAME="hermes"
+  # No | in the pattern: it separates pattern from launch command.
+  MEMBERS=("(com\.nousresearch\.)?[Hh]ermes|gtk-launch hermes-desktop")
+  ;;
 *)
-  echo "usage: ${0##*/} [scratchpad|home|lmstudio]" >&2
+  echo "usage: ${0##*/} [scratchpad|home|lmstudio|hermes]" >&2
   exit 2
   ;;
 esac

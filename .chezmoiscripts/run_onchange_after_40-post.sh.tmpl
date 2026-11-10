@@ -7,3 +7,12 @@ if command -v bat >/dev/null 2>&1; then bat cache --build >/dev/null || true; fi
 {{ if eq .chezmoi.os "linux" -}}
 if command -v fc-cache >/dev/null 2>&1; then fc-cache -f >/dev/null || true; fi
 {{ end -}}
+{{ if and (eq .chezmoi.os "linux") (or (eq .role "desktop") (eq .role "laptop")) -}}
+
+# No minimize/maximize/close buttons in client-side title bars: GTK and
+# libadwaita header bars, Chromium/Brave, and Electron 43+ window-controls
+# overlays all read this layout. Windows close with SUPER + Q.
+if command -v gsettings >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.wm.preferences button-layout ':' || true
+fi
+{{ end -}}
