@@ -129,6 +129,7 @@ packages:
         - flea
         - xdg-terminal-exec
         - hyprland-preview-share-picker
+        - hermes-desktop
   shared:
     gh_extensions:
       - davidraviv/gh-clean-branches
