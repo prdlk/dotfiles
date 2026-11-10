@@ -92,9 +92,6 @@
 #custom-windowpill,
 #group-tray-expander,
 #custom-update,
-#custom-voxtype,
-#custom-voxtype.recording,
-#custom-voxtype.transcribing,
 #custom-expand-icon,
 #custom-omarchy,
 #custom-updatespacman,
@@ -203,15 +200,6 @@ tooltip label {
     to {
         color: @background;
     }
-}
-
-#custom-voxtype {
-  min-width: 12px;
-  margin: 0px 0 0 0px;
-}
-
-#custom-voxtype.recording {
-  color: #a55555;
 }
 
 #battery.warning {

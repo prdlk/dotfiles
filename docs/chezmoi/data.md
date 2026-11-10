@@ -38,7 +38,7 @@ One manifest for Arch, plus a `shared` block. Any edit to the file changes the h
 | --- | --- |
 | pacman | `uwsm`, `xdg-user-dirs`; Wayland utilities `wl-clipboard`, `cliphist`, `wtype`, `ydotool`, `grim`, `slurp`, `hyprpicker`, `pamixer`, `brightnessctl`, `libnotify`; apps `nautilus`, `imv`, `mpv`, `evince`, `chromium`, `obsidian`; strata runtime deps `bubblewrap`, `desktop-file-utils`, `fontconfig`, `gstreamer`, `gst-libav`, `gst-plugins-base`, `gst-plugins-good`, `gtk4`, `gtksourceview5`, `gvfs`, `poppler-glib`, `xdg-utils` |
 | AUR (or a sync repo with the same name) | `tldraw-offline-bin`; desktop apps `beeper-bin`, `fastmail`, `1password`, `brave-origin-bin`, `claude-desktop`, `spotify` |
-| `[omarchy]` repo (`packages.arch.desktop.omarchy`, only when `pacman-conf -l` lists that repo) | `herdr`, `flea`, `voxtype-bin`, `xdg-terminal-exec`, `hyprland-preview-share-picker` |
+| `[omarchy]` repo (`packages.arch.desktop.omarchy`, only when `pacman-conf -l` lists that repo) | `herdr`, `flea`, `xdg-terminal-exec`, `hyprland-preview-share-picker` |
 
 Hyprland, Waybar and the `omarchy-*` commands come with the Omarchy install and are not declared. strata (the folder handler) has no package; [15-tools](scripts.md#15-tools) runs its installer.
 

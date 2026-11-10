@@ -18,6 +18,6 @@ export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
 # Vulkan through RADV only, same reasoning. The eGPU exists for LM Studio's
 # CUDA backend; its Vulkan backend surveying the NVIDIA ICD on first start
 # took the machine down (platform reset, no log) while CUDA work on the same
-# card (voxtype/parakeet) runs fine. Games and every other Vulkan app stay
+# card (voxtype/parakeet, since removed) ran fine. Games and every other Vulkan app stay
 # on the iGPU. CUDA does not go through the Vulkan loader.
 export VK_DRIVER_FILES=/usr/share/vulkan/icd.d/radeon_icd.json

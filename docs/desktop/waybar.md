@@ -45,7 +45,6 @@ Bottom Waybar for Hyprland/Omarchy — module layout, a drawer of system indicat
 - separator
 - `tray`
 - separator
-- `custom/voxtype`
 - `custom/update`
 - `custom/screenrecording-indicator`
 - `custom/updatespacman`
@@ -71,7 +70,6 @@ The right side nests groups in vertical wrappers so the drawer and the two-line 
 | `custom/omarchy` | Omarchy logo glyph (`omarchy` font). Click: `omarchy-menu`. Right-click: `xdg-terminal-exec`. Tooltip "Omarchy Menu — Super + Alt + Space" |
 | `hyprland/workspaces` | `format "{icon}"`, click to activate, pointer cursor. Persistent workspaces per output, matching the [Hyprland workspace rules](hyprland.md#workspace-rules): 1–4 on `DP-4` (Studio Display), 5–8 on `eDP-1`. Keyed by connector name, so a re-dock onto another DP port needs the key updated |
 | `tray` | Icon size 12, spacing 5, shows passive items |
-| `custom/voxtype` | `omarchy-voxtype-status` (JSON). Icons for `idle` (none), `recording`, `transcribing`. Click: `omarchy-voxtype-model`. Right-click: `omarchy-voxtype-config` |
 | `custom/update` | `omarchy-update-available` every 6 h (`interval 21600`, `signal 7`). Click runs `omarchy-update` in a floating terminal |
 | `custom/screenrecording-indicator` | `$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh` (JSON, `signal 8`). Click: `omarchy-capture-screenrecording` |
 | `custom/updatespacman` | `waybar-module-pacman-updates --no-zero-output`, only if that binary exists. Shows an icon when updates are pending |
@@ -126,7 +124,6 @@ The import path is hard-coded to `/home/prad`. On another account the import fai
 | Tray | `@background`. Passive items dimmed, attention items highlighted |
 | Tooltips | `@background`, 12px, 8px radius, `1.5px solid rgba(255,255,255,0.25)` border |
 | Screen recording active | `#eb7087`, blinks to `@background` every 0.5 s |
-| Voxtype recording | `#a55555` |
 | Battery warning | `#c95d0f` |
 | Battery critical (not charging) | `#e6d8ba` on transparent, blinking to `#f53c3c` (0.5 s, 12 steps) |
 

@@ -139,7 +139,7 @@ The strata flags install the binary, `~/.local/share/applications/io.github.lgse
 - Same check for `~/.config/systemd/user/free-router.service`, then `systemctl --user enable --now free-router.service`. See [free-router](../ai/free-router.md).
 - On non-Linux systems it renders to `#!/bin/sh` / `exit 0`.
 
-Other personal automation units (brain-lens, omp-loop, rclone, hermes, voxtype) are deliberately not enabled; the script comment says to enable them by hand per machine. Their unit files are not in the repo, so they have to exist on the machine already.
+Other personal automation units (brain-lens, omp-loop, rclone, hermes) are deliberately not enabled; the script comment says to enable them by hand per machine. Their unit files are not in the repo, so they have to exist on the machine already.
 
 ## 40-post
 

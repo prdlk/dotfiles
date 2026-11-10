@@ -25,6 +25,6 @@ The desktop is [Omarchy](https://omarchy.org) (Arch Linux with Hyprland). Omarch
 | --- | --- |
 | pacman | `uwsm`, `xdg-user-dirs`, Wayland utilities (`wl-clipboard`, `cliphist`, `wtype`, `ydotool`, `grim`, `slurp`, `hyprpicker`, `pamixer`, `brightnessctl`, `libnotify`), the bound apps (`nautilus`, `imv`, `mpv`, `evince`, `chromium`, `obsidian`), and strata's runtime deps |
 | AUR via `yay` (a sync repo wins when it has the name) | `tldraw-offline-bin` and the desktop apps `beeper-bin`, `fastmail`, `1password`, `brave-origin-bin`, `claude-desktop`, `spotify` |
-| `[omarchy]` repo, when configured | `herdr`, `flea`, `voxtype-bin`, `xdg-terminal-exec`, `hyprland-preview-share-picker` |
+| `[omarchy]` repo, when configured | `herdr`, `flea`, `xdg-terminal-exec`, `hyprland-preview-share-picker` |
 
 AUR names that an installed package already provides are skipped; with no `yay` or `paru` the script bootstraps `yay` first. strata, the default file manager, comes from its own installer in [15-tools](../chezmoi/scripts.md#15-tools). Hyprland, Waybar, and the `omarchy-*` commands that the scripts call (`omarchy-menu`, `omarchy-launch-or-focus`, and others) come from the Omarchy install. This repo does not install them. See [chezmoi scripts](../chezmoi/scripts.md) for the full install flow and [packages.yaml](../chezmoi/data.md#packagesyaml) for the complete lists.
