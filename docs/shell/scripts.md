@@ -481,6 +481,7 @@ pj-palette's background task sessions (`@pj_task`) are left out. Sessions are ta
 ```sh
 workmux-palette
 workmux-palette --add BRANCH
+workmux-palette --prompt
 workmux-palette --popup DIR CMD…
 workmux-palette --do DIR CMD…
 ```
@@ -493,7 +494,7 @@ With no arguments it prints palette items as JSON, grouped by category:
 | --- | --- | --- |
 | Agents | Every agent `workmux status --all --json` tracks in this tmux server: waiting (yellow), done (green), working (blue), then idle, most recent first. Title `<repo>/<handle>`, description status, time since the change, and the pane title | `switch-client` to the agent's pane |
 | Worktrees: `<repo>` | The active pane's repo's worktrees (`workmux list --json`, main checkout left out): branch, open/closed, dirty, path. Open ones are green | `workmux open` (starts the session if closed) |
-| New | **New worktree from a prompt**, when the pane is in a repo | `workmux add -A -e` in a popup: `$EDITOR` for the prompt, omp names the branch |
+| New | **New worktree from a prompt**, when the pane is in a repo | `--prompt` in a popup: `gum write` for the task, then `workmux add -A -p TASK` (omp names the branch, see [workmux](../tools/workmux.md#branch-names)) |
 | Workmux | **Dashboard** (90% popup), **Sidebar** (toggle), **Last done** (`workmux last-done`) | |
 | Close | One per open worktree | `workmux close`: ends the session, keeps worktree and branch |
 | Merge | One per worktree | `workmux merge` in a popup |
@@ -501,9 +502,11 @@ With no arguments it prints palette items as JSON, grouped by category:
 
 **`--add BRANCH`** is the palette's `query` item: the typed text, listed after the matches, becomes `workmux add BRANCH` in the active pane's directory, so a branch name that matches nothing creates its worktree and session and switches to it.
 
+**`--prompt`** is the New item's popup body. `gum write` takes the task: <kbd>enter</kbd> submits, <kbd>ctrl+j</kbd> inserts a newline, <kbd>ctrl+e</kbd> opens `$EDITOR`, <kbd>esc</kbd> cancels (the popup closes, nothing is created). An empty task does nothing.
+
 **`--popup DIR CMD…`** runs CMD in DIR in an 80% × 60% popup (argv form, so nothing is re-parsed by a shell or by tmux formats). The popup closes when CMD succeeds; on failure it shows `[exit N]` and waits for a key. **`--do DIR CMD…`** runs CMD in place and shows the last output line as a tmux message when it fails.
 
-**Needs:** tmux, `jq`, `git`, `workmux`.
+**Needs:** tmux, `jq`, `git`, `gum`, `workmux`.
 
 ## yazi-nvim-open
 

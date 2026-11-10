@@ -10,6 +10,9 @@
 #                                sidebar and last-done tools
 #   workmux-palette --add BRANCH the palette's query item (what was typed):
 #                                `workmux add BRANCH` in the active pane's repo
+#   workmux-palette --prompt     the New item's popup body: `gum write` the
+#                                task (enter submits, ctrl+j newline, esc
+#                                cancels), then `workmux add -A -p TASK`
 #   workmux-palette --popup DIR CMD…
 #                                run CMD… in DIR in a popup that closes when it
 #                                succeeds and waits for a key when it fails
@@ -38,7 +41,8 @@ case ${1-} in
     dir=$2
     shift 2
     # argv form: tmux runs it without a shell and expands no formats in it.
-    exec tmux display-popup -E -w 80% -h 60% -d "$dir" -T " ${*//#/##} " "$self" --exec "$@"
+    title=${*/#"$self"/${self##*/}}
+    exec tmux display-popup -E -w 80% -h 60% -d "$dir" -T " ${title//#/##} " "$self" --exec "$@"
     ;;
 --do)
     cd "$2" || exit 1
@@ -52,6 +56,15 @@ case ${1-} in
 --add)
     cwd=$(tmux display -p '#{pane_current_path}')
     exec "$self" --popup "$cwd" workmux add "$2"
+    ;;
+--prompt)
+    # The branch name comes from omp under auto_name in workmux's config.yaml.
+    task=$(gum write --width 0 --height 8 \
+        --header "New worktree in ${PWD##*/}: describe the task (enter submits, ctrl+j newline, esc cancels)" \
+        --placeholder "What should the agent do?") || exit 0
+    [ -n "${task//[[:space:]]/}" ] || exit 0
+    printf '→ naming the branch…\n'
+    exec workmux add -A -p "$task"
     ;;
 esac
 
@@ -91,8 +104,8 @@ workmux status --all --json 2>/dev/null | jq --arg self "$self" --arg home "$HOM
          + (if .is_open then {iconColor: "#5eff6c"} else {} end)),
       (if $root == "" then empty else
         {category: "New", icon: "\uf067", title: "New worktree from a prompt",
-         description: "write the prompt in $EDITOR; omp names the branch · \($repo)",
-         aliases: ["add", "prompt"], action: run("--popup"; ["workmux", "add", "-A", "-e"])}
+         description: "type the task (gum write); omp names the branch · \($repo)",
+         aliases: ["add", "prompt"], action: run("--popup"; [$self, "--prompt"])}
        end),
       {category: "Workmux", icon: "\uf0e4", title: "Dashboard", description: "agents and worktrees TUI in a popup",
        aliases: ["dash"], action: {tmux: "display-popup -E -w 90% -h 90% workmux dashboard"}},

@@ -20,6 +20,34 @@ base_branch: auto
 # omp gets the prompt (-p/-P/-e) and names branches for `add -A`.
 agent: omp
 
+# `add -A` (the palette's New item) asks omp for the branch name. The name is
+# the worktree dir, the session <repo>/<name> in the 30-column status-left
+# pill, and the tab label (cut at 27), so keep it to ~16 characters.
+auto_name:
+  system_prompt: |
+    Generate a git branch name for the task below. It is shown in narrow
+    terminal tabs that cut it off after about 16 characters, so it must be
+    short and readable at a glance.
+
+    Rules:
+    - kebab-case: lowercase letters, digits and hyphens only
+    - 1-2 words, 3 only when needed; 16 characters at most
+    - name the thing being changed, not how: drop filler words such as
+      add, implement, make, update, support, feature, the, with
+    - use common short forms when clear: auth, config, nav, anim, perf,
+      deps, docs, ui, api, db
+    - no type prefixes such as feat/ or fix/; use "fix" as a word only
+      when the task is a bug fix
+
+    Examples:
+    - "Make the cards tappable and expandable with an animation" -> card-expand
+    - "Fix the search results not showing" -> search-fix
+    - "Add a dark mode toggle to settings" -> dark-mode
+    - "Refactor the authentication module" -> auth-refactor
+    - "Add CSV export to the reports page" -> csv-export
+
+    Output only the branch name, nothing else.
+
 # Windows stay unnamed so tmux.conf's automatic-rename-format labels them
 # (omp icon + repo, nvim icon + file) like every other tab.
 windows:
