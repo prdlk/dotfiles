@@ -73,7 +73,15 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
 | `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
-| `^kitty(-.*)?$` (kitty and the `kitty-tmux`, `kitty-herdr`, `kitty-goliath` hosts) | `group = "set always"`: opens as a group; with `group.auto_group` on (the default), a kitty opened while a group is focused joins it as a tab |
+| `^kitty(-.*)?$` (kitty and the `kitty-tmux`, `kitty-herdr`, `kitty-goliath` hosts) | `group = "set always"`: opens as a group; with `group.auto_group` on (the default), a kitty opened while a kitty group is focused joins it as a tab |
+| `^com\.mitchellh\.ghostty$` | `group = "set always"`, same as kitty; a Ghostty opened while a Ghostty group is focused joins it as a tab |
+| `^brave-origin$` | `group = "barred deny"`: never opens as a tab of the focused group; no window joins a group Brave starts |
+
+kitty and Ghostty are separate group families, and Brave Origin never shares a group with kitty. Listeners in `hyprland.lua` enforce this beyond what the rules can:
+
+- `window.open_early`: when the new window conflicts with the focused group, `group.auto_group` is switched off for that one map (restored by a 1 ms timer), so the window opens as a group of its own.
+- `window.update_rules` with a group of two or more: the group keeps the family of its first kitty or Ghostty tab that is not the focused window (the one that just arrived); conflicting members are moved out, kitty and Ghostty as a group of their own, Brave as a plain window. This catches the move-into-group dispatchers (`SUPER + ALT + arrows`, `nav.lua`) and groupbar drags.
+- `window.update_rules` on an ungrouped Ghostty: it becomes a group of its own again, so Ghostty is always tabbed, even after `SUPER + ALT + G` (move out of group) or `SUPER + G`.
 
 Scratch residents are placed `silent` so that [`omarchy-toggle-scratch`](#omarchy-toggle-scratch) decides when to reveal them. The YouTube rule matches both `youtube.com` and `www.youtube.com` because Chromium's class changes once a video plays. It excludes the picture-in-picture overlay so Omarchy's own PiP rule still applies. Its size and inset must stay in sync with [`omarchy-pip`](#omarchy-pip).
 
@@ -104,7 +112,7 @@ The layout, touchpad, and gesture examples in the file are commented out. Palm r
 | `decoration.blur` | enabled; `size 5`, `passes 2`, `brightness 0.8`, `contrast 1.1`, `vibrancy 0.15`, `noise 0.01`, `new_optimizations`, `popups = false` |
 | `decoration.shadow` | disabled |
 | `group.groupbar.gradient_rounding` | 0 |
-| `group.groupbar.disable_when_only` | true: no tab bar on a group of one (kitty always opens as a group); it appears when a second window joins |
+| `group.groupbar.disable_when_only` | true: no tab bar on a group of one (kitty and Ghostty always open as a group); it appears when a second window joins |
 | Workspace animation | disabled (`hl.animation({ leaf = "workspaces", enabled = false })`) |
 
 Blur must be enabled globally before any window can use it, so every window tagged `default-opacity` gets `no_blur = true`, and terminals get it back:
@@ -265,7 +273,6 @@ strata is the default file manager: `inode/directory` in `mimeapps.list` and the
 | `SUPER + SHIFT + ALT + S` | `omarchy-capture-screenshot fullscreen` | — |
 | `SUPER + SHIFT + E` | `omarchy-menu toggle system` | Email |
 | `SUPER + SHIFT + Q` | `omarchy-menu toggle system` | — |
-| `SUPER + F24` | `voxtype record toggle --profile hermes` — dictation | — |
 | `SUPER + CTRL + X` | `omarchy-dictation toggle` (only when `o.dictation_installed()`) | — |
 | `F9` (hold) | Push-to-talk: `omarchy-dictation start` on press, `stop` on release (only when `o.dictation_installed()`) | — |
 | `SUPER + SHIFT + SPACE` | Emoji picker (`omarchy-shell shell toggle omarchy.emojis`) | toggle top bar |
