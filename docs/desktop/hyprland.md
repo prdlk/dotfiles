@@ -72,6 +72,7 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^io\.github\.lgse\.Strata$` (strata) | `+floating-window`: Omarchy floats, centers and sizes it 875×600 |
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
+| `^(com\.nousresearch\.)?[Hh]ermes$` (Hermes desktop: `Hermes` from the packaged runtime, `com.nousresearch.hermes` after `hermes update`) | `special:hermes silent` |
 | `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
 | `^kitty(-.*)?$` (kitty and the `kitty-tmux`, `kitty-herdr`, `kitty-goliath` hosts) | `group = "set always"`: opens as a group; with `group.auto_group` on (the default), a kitty opened while a kitty group is focused joins it as a tab |
 | `^com\.mitchellh\.ghostty$` | `group = "set always"`, same as kitty; a Ghostty opened while a Ghostty group is focused joins it as a tab |
@@ -245,7 +246,7 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | --- | --- | --- |
 | `SUPER + CTRL + A` | Claude Desktop: `omarchy-launch-or-focus com.anthropic.Claude claude-desktop`, on its own workspace `name:claude` on `eDP-1` | audio panel |
 | `SUPER + CTRL + G` | Gemini: `omarchy-launch-or-focus gemini "gtk-launch gemini-desktop"` | — |
-| `SUPER + CTRL + ALT + H` | `omarchy-cycle ai` | — |
+| `SUPER + CTRL + ALT + H` | `omarchy-toggle-scratch hermes` (Hermes desktop) | — |
 | `SUPER + CTRL + ALT + J` | `omarchy-cycle-terminal` | — |
 | `SUPER + CTRL + ALT + K` | `omarchy-cycle-browser` | — |
 | `SUPER + CTRL + ALT + G` | `omarchy-cycle ghostty` | — |
@@ -320,7 +321,7 @@ Focuses an app's window, cycles to the next one on repeated presses, or launches
 | `ai` | `claude\|hermes` | `hermes desktop` |
 | anything else | `^APP$` | the argument as a command |
 
-Bound to `SUPER + CTRL + ALT + H` (`ai`), `G` (`ghostty`), and `O` (`obsidian`).
+Bound to `SUPER + CTRL + ALT + G` (`ghostty`) and `O` (`obsidian`).
 
 ### omarchy-cycle-browser / omarchy-cycle-terminal
 
@@ -375,7 +376,7 @@ Runs `omarchy-hyprland-workspace-layout-toggle`, then polls the workspace layout
 ### omarchy-toggle-scratch
 
 ```sh
-omarchy-toggle-scratch [scratchpad|home|lmstudio]
+omarchy-toggle-scratch [scratchpad|home|lmstudio|hermes]
 ```
 
 | Profile | Special workspace | Home monitor | Residents (class → launch) |
@@ -383,8 +384,9 @@ omarchy-toggle-scratch [scratchpad|home|lmstudio]
 | `scratchpad` | `special:scratchpad` | Studio Display, else Samsung ultrawide | `so.stencil.tern` → `tern` |
 | `home` | `special:home` | focused | `brave-home\.google\.com__.*` → `gtk-launch 'Google Home'` |
 | `lmstudio` | `special:lmstudio` | focused | `ai\.elementlabs\.lmstudio` → `gtk-launch ai.elementlabs.lmstudio` |
+| `hermes` | `special:hermes` | focused | `(com\.nousresearch\.)?[Hh]ermes` → `gtk-launch hermes-desktop` |
 
-If the workspace is visible, the script hides it. If not, it launches any resident with no window there, waits up to 8 s for the first new window, and reveals the workspace on the home monitor (or the focused one if the home monitor is absent). Launching only missing residents avoids duplicate web-app windows. Bound to `SUPER + CTRL + S`, `SUPER + A`, `SUPER + CTRL + H`, and `SUPER + CTRL + L`.
+If the workspace is visible, the script hides it. If not, it launches any resident with no window there, waits up to 8 s for the first new window, and reveals the workspace on the home monitor (or the focused one if the home monitor is absent). Launching only missing residents avoids duplicate web-app windows. Bound to `SUPER + CTRL + S`, `SUPER + A`, `SUPER + CTRL + H`, `SUPER + CTRL + L`, and `SUPER + CTRL + ALT + H`.
 
 ## Related
 

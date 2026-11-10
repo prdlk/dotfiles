@@ -83,7 +83,7 @@ The `[data]` table exposes `.name`, `.email`, and `.role` to every template. che
 | `.chezmoi.os` | `.chezmoiignore.tmpl` | Desktop layer requires `linux` |
 | `.chezmoi.os` | `run_onchange_before_10-packages.sh.tmpl` | pacman/yay on `linux` |
 | `.chezmoi.os` | `run_once_after_30-user-services.sh.tmpl` | systemd user units on `linux` only |
-| `.chezmoi.os` | `run_onchange_after_40-post.sh.tmpl` | `fc-cache` on `linux` only |
+| `.chezmoi.os`, `.role` | `run_onchange_after_40-post.sh.tmpl` | `fc-cache` on `linux`; title-bar button layout on `linux` with role `desktop`/`laptop` |
 | `.chezmoi.os`, `.role` | `run_onchange_after_15-tools.sh.tmpl` | strata install on `linux` with role `desktop`/`laptop` |
 
 **dot_gitconfig.tmpl**

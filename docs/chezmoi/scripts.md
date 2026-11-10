@@ -38,7 +38,7 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
 8. **40-post (after, onchange)**
 
-   bat cache, font cache.
+   bat cache, font cache, title-bar button layout.
 
 9. **build-bat-cache (after, onchange)**
 
@@ -149,6 +149,7 @@ Other personal automation units (brain-lens, omp-loop, rclone, hermes) are delib
 | --- | --- | --- |
 | bat cache | `bat` installed | `bat cache --build` |
 | Font cache | Linux, `fc-cache` installed | `fc-cache -f` |
+| Title-bar buttons | Linux, role `desktop`/`laptop`, `gsettings` installed | `gsettings set org.gnome.desktop.wm.preferences button-layout ':'`: no minimize/maximize/close in client-side title bars (GTK/libadwaita header bars, Chromium/Brave, Electron 43+ window-controls overlays). Close windows with `SUPER + Q` |
 
 Each step ignores failures (`|| true`). tpm is cloned by [`.chezmoiexternal.toml`](externals-and-ignore.md#chezmoiexternaltoml), not here.
 
