@@ -66,10 +66,10 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | --- | --- | --- |
 | `ctrl+shift+t` | `prefix c` | New window (tab) in pane cwd |
 | `ctrl+shift+p` / `ctrl+shift+space` | `prefix t` | Project Tasks palette (pj: install, dev, sync, make, every project task) |
+| `ctrl+shift+a` | `prefix w` | [Workmux palette](../shell/scripts.md#workmux-palette): agents by status, worktrees, new worktree from a prompt |
 | `ctrl+shift+f` | `prefix y` | Yazi in a new window, pane cwd |
 | `ctrl+shift+e` | `prefix e` | Neovim in a new window, pane cwd |
 | `ctrl+shift+g` | `prefix g` | Lazygit in a 90% popup, pane cwd |
-| `ctrl+shift+a` | `prefix a` | Toggle omp in a background-session popup (`<session>:omp`), pane cwd |
 | `ctrl+shift+w` | `prefix k` | Kill window (close tab) |
 | `ctrl+shift+r` | `prefix r` | Rename window |
 | `ctrl+tab` / `ctrl+page_down` / `ctrl+shift+right` / `ctrl+shift+k` | `prefix n` | Next window |
