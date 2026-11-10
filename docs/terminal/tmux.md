@@ -80,6 +80,7 @@ Each window reads `<index> <icon> <label>`, updating as you work, the same rule 
 | Pane runs | Label | Source |
 | --- | --- | --- |
 | `nvim`/`vim`/`hx`/`helix`, editing a file | The file name | The title nvim sets (`<file> \| <org/repo>`, astrocore `custom_title`), read from `#{pane_title}` by the format itself, so a buffer switch relabels the tab immediately |
+| A shell with nothing running in the foreground (`fish`, `bash`, `zsh`, `sh`, `nu`, …) | The shell's name (a login shell's leading `-` dropped); the session name already shows the directory | `#{pane_current_command}`, in the format itself |
 | Anything else, or an editor with no file | Repo the cwd belongs to (walks up for `.git`); the directory name outside a repo; `~` at home | `tab-label.sh`, run as an async `#()` job. When its output differs from the current name, it re-arms `automatic-rename` so tmux relabels right after a `cd` instead of on the next keystroke |
 
 Labels longer than 27 characters end in `…`. The icon comes from tmux-nerd-font-window-name.
