@@ -2,6 +2,6 @@
 # GLib's Terminal=true launches): first entry wins.
 
 # Configured by the Vicinae launcher
-kitty.desktop
+com.mitchellh.ghostty.desktop
 com.mitchellh.ghostty.desktop
 kitty.desktop

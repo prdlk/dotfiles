@@ -47,6 +47,7 @@ x-scheme-handler/tern=so.stencil.tern.url.desktop
 x-scheme-handler/openknowledge=openknowledge.desktop
 x-scheme-handler/pumi=dev.pumi.app.desktop
 x-scheme-handler/upnote=upnote.desktop
+x-scheme-handler/superwhisper=superwhisper-url.desktop
 
 [Added Associations]
 x-scheme-handler/http=brave-origin.desktop;userapp-Floorp-8MTFP3.desktop;
