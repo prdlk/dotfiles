@@ -43,7 +43,6 @@ inode/directory=io.github.lgse.Strata.desktop
 x-scheme-handler/fastmail=com.fastmail.Fastmail.desktop
 x-scheme-handler/grokbot=grok-bot.desktop
 x-scheme-handler/sand=grok-bot.desktop
-x-scheme-handler/tern=so.stencil.tern.url.desktop
 x-scheme-handler/openknowledge=openknowledge.desktop
 x-scheme-handler/pumi=dev.pumi.app.desktop
 x-scheme-handler/upnote=upnote.desktop
