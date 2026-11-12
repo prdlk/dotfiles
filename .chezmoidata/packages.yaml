@@ -7,6 +7,9 @@ packages:
       - helix
       - micro
       - tmux
+      # treemux sidebar (tmux prefix BSpace): pynvim for /usr/bin/python3, lsof
+      - python-pynvim
+      - lsof
       # terminals (ghostty is the default)
       - ghostty
       - kitty
