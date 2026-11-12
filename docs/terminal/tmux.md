@@ -75,6 +75,8 @@ Colors are the user options `@tab-bg` (window background: the notch arrow and th
 
 Popups (`prefix g`, `prefix t`, `prefix ?`, tmux-palette) set `popup-style` to `bg=@tab-bg` and `popup-border-style` to `@tab-active-fg` on that background with rounded lines. The explicit background matters under Ghostty: `background-opacity` only applies to cells with the default background, so a default-bg popup shows the pane behind it through the blur.
 
+While a popup is open, the text of the window behind it dims: every pane gets `@popup-dim-style` (`fg=#7b8496`, the muted tab color) as window-level `window-style` and `window-active-style`, and backgrounds stay as they are. Only text in the default color dims: tmux recolors default cells, so programs' own colors (nvim's syntax) keep theirs, and the `dim` attribute in `window-style` is ignored. tmux has no popup hooks, so `command-alias[100]` redefines `display-popup` to set those styles, start `~/.config/tmux/popup-undim.sh <window>` in the background, and run the real command with the caller's arguments (an alias does not re-expand itself, and it also catches the CLI `tmux display-popup` of tmux-palette, pj-palette and workmux-palette). The alias is the first thing in `tmux.conf`: a binding's commands are parsed when it is bound, so bindings defined before the alias would skip it. `popup-undim.sh` finds the popup's process (the tmux server's child on a pty no pane uses), waits for it to exit (a 50 ms poll), and unsets both styles, so the text returns as the popup disappears. `pane-focus-in` is not usable for this: under Ghostty tmux did not raise it when a popup closed.
+
 ### Tab labels
 
 Each window reads `<index> <icon> <label>`, updating as you work, the same rule as kitty's `tab_bar.py`:
