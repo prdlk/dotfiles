@@ -154,7 +154,7 @@ Launched by `super+t`. kitty stays a dumb terminal; tmux owns panes, windows and
 | `ctrl+shift+w`, `super+w` | `prefix x` (kill pane) |
 | `super+left/right/up/down` | `prefix` + `ctrl+arrow` (resize) |
 | `ctrl+shift+g` | `tmux display-popup` 90%×90% running `lazygit` in pane cwd |
-| `ctrl+shift+e` | `tmux new-window` running `nvim` in pane cwd |
+| `ctrl+shift+e` | `prefix BSpace`: toggle the [treemux](tmux.md#treemux-file-tree-sidebar) Neo-tree sidebar and focus it |
 | `ctrl+shift+p` | `tmux split-window -v -l 25%` running `atuin-pick` |
 | `super+n`, `ctrl+shift+space` | New OS window |
 | `super+d` | `prefix d` (detach) |

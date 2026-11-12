@@ -1,6 +1,6 @@
 # Hyprland
 
-Hyprland Lua config layered on Omarchy — master layout, terminal-only blur, monitors, and the omarchy-* helper scripts.
+Hyprland Lua config layered on Omarchy — scrolling layout, centered Ghostty master layout, terminal-only blur, monitors, and the omarchy-* helper scripts.
 
 [Hyprland](https://hypr.land) is a dynamic tiling Wayland compositor. This config uses Hyprland's Lua configuration and sits on top of [Omarchy](https://omarchy.org), which provides the defaults, theme, menus, and `omarchy-*` commands. The files here only override.
 
@@ -20,6 +20,8 @@ Hyprland Lua config layered on Omarchy — master layout, terminal-only blur, mo
 | `dot_config/hypr/looknfeel.lua` | `~/.config/hypr/looknfeel.lua` | Layout, decoration, blur |
 | `dot_config/hypr/monitors.lua` | `~/.config/hypr/monitors.lua` | Monitor modes and positions |
 | `dot_config/hypr/nav.lua` | `~/.config/hypr/nav.lua` | `SUPER + [SHIFT +] H/J/K/L` focus and move |
+| `dot_config/hypr/pip.lua` | `~/.config/hypr/pip.lua` | `SUPER + SHIFT + P` picture-in-picture that follows the focused monitor |
+| `dot_config/hypr/master.lua` | `~/.config/hypr/master.lua` | Keeps Ghostty the master on master-layout workspaces |
 | `dot_config/hypr/hyprsunset.conf` | `~/.config/hypr/hyprsunset.conf` | Night-light profile |
 | `dot_config/hypr/xdph.conf` | `~/.config/hypr/xdph.conf` | xdg-desktop-portal-hyprland |
 | `dot_config/hypr/dot_luarc.json` | `~/.config/hypr/.luarc.json` | Lua language server settings |
@@ -54,7 +56,7 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | --- | --- |
 | 1 (default), 2, 3, 4 | The main external display: `desc:Apple Computer Inc StudioDisplay 0x984262A7` if connected, else `desc:Samsung Electric Company S34CG50 HNTY501103` (Studio Display while neither is). Chosen at config load; `monitors.lua` reloads the config when the main external changes, and existing workspaces 1–4 are moved over |
 | 5 (default), 6, 7, 8 | `eDP-1` |
-| `name:claude`, `name:fastmail`, `name:beeper` | `eDP-1`; created on demand, one per app (window rules below) |
+| `name:claude`, `name:fastmail`, `name:beeper`, `name:youtube` | `eDP-1`; created on demand, one per app (window rules below) |
 
 `default` marks the workspace each monitor shows when it connects.
 
@@ -68,12 +70,12 @@ Omarchy's default bindings stay enabled. `omarchy_default_bindings` and `omarchy
 | `^com\.anthropic\.Claude$` | `name:claude`, maximized (follows the window there) |
 | `^com\.fastmail\.Fastmail$` | `name:fastmail`, maximized (follows) |
 | `^Beeper$` | `name:beeper`, maximized (follows) |
+| `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | `name:youtube`, maximized (follows) |
 | `^(ai\.storyteller\.)?<app>$` for `deckcraft`, `figcraft`, `filmcraft`, `gridcraft`, `pdfcraft`, `photocraft`, `vectorcraft`, `wordcraft` (Craft AppImages in `~/Applications`) | `name:<app>`, one workspace per app on the focused monitor (follows). PdfCraft and PhotoCraft declare a bare `StartupWMClass`, hence the optional prefix |
 | `^io\.github\.lgse\.Strata$` (strata) | `+floating-window`: Omarchy floats, centers and sizes it 875×600 |
 | `^brave-home\.google\.com__.*` | `special:home silent` |
 | `^ai\.elementlabs\.lmstudio$` | `special:lmstudio silent` |
 | `^(com\.nousresearch\.)?[Hh]ermes$` (Hermes desktop: `Hermes` from the packaged runtime, `com.nousresearch.hermes` after `hermes update`) | `special:hermes silent` |
-| `brave-(www\.)?youtube\.com__.*`, title not matching `.*Picture.?in.?[Pp]icture.*` | Float, pin, size 30% × 30% of the monitor, move to `10, monitor_h*0.7-10` (bottom-left corner) |
 | `^kitty(-.*)?$` (kitty and the `kitty-tmux`, `kitty-herdr`, `kitty-goliath` hosts) | `group = "set always"`: opens as a group; with `group.auto_group` on (the default), a kitty opened while a kitty group is focused joins it as a tab |
 | `^com\.mitchellh\.ghostty$` | `group = "set always"`, same as kitty; a Ghostty opened while a Ghostty group is focused joins it as a tab |
 | `^brave-origin$` | `group = "barred deny"`: never opens as a tab of the focused group; no window joins a group Brave starts |
@@ -84,7 +86,7 @@ kitty and Ghostty are separate group families, and Brave Origin never shares a g
 - `window.update_rules` with a group of two or more: the group keeps the family of its first kitty or Ghostty tab that is not the focused window (the one that just arrived); conflicting members are moved out, kitty and Ghostty as a group of their own, Brave as a plain window. This catches the move-into-group dispatchers (`SUPER + ALT + arrows`, `nav.lua`) and groupbar drags.
 - `window.update_rules` on an ungrouped Ghostty: it becomes a group of its own again, so Ghostty is always tabbed, even after `SUPER + ALT + G` (move out of group) or `SUPER + G`.
 
-Scratch residents are placed `silent` so that [`omarchy-toggle-scratch`](#omarchy-toggle-scratch) decides when to reveal them. The YouTube rule matches both `youtube.com` and `www.youtube.com` because Chromium's class changes once a video plays. It excludes the picture-in-picture overlay so Omarchy's own PiP rule still applies. Its size and inset must stay in sync with [`omarchy-pip`](#omarchy-pip).
+Scratch residents are placed `silent` so that [`omarchy-toggle-scratch`](#omarchy-toggle-scratch) decides when to reveal them. The YouTube rule matches both `youtube.com` and `www.youtube.com` because Chromium's class changes once a video plays. It excludes the picture-in-picture overlay so Omarchy's own PiP rule still applies.
 
 ## Input
 
@@ -107,7 +109,10 @@ The layout, touchpad, and gesture examples in the file are commented out. Palm r
 
 | Setting | Value |
 | --- | --- |
-| `general.layout` | `master` (instead of Omarchy's dwindle; per-workspace layouts saved by `omarchy-hyprland-workspace-layout-toggle` still win) |
+| `general.layout` | `scrolling` (instead of Omarchy's dwindle; per-workspace layouts saved by `omarchy-hyprland-workspace-layout-toggle` or `omarchy-toggle-master` still win) |
+| `master.orientation` | `center`: the master column sits in the middle, slaves split left and right of it |
+| `master.slave_count_for_center_master` | 0: centered from the first window on (Hyprland waits for 2 slaves by default); a lone window is centered at `mfact` width |
+| `master.new_status` | `slave` (Omarchy: `master`), so new windows never take the master column from Ghostty |
 | `decoration.rounding` | 0 |
 | `decoration.dim_special` | 0.33 (darkens the desktop behind any open scratch workspace) |
 | `decoration.blur` | enabled; `size 5`, `passes 2`, `brightness 0.8`, `contrast 1.1`, `vibrancy 0.15`, `noise 0.01`, `new_optimizations`, `popups = false` |
@@ -187,17 +192,20 @@ Every binding defined in `bindings.lua`. Bindings not listed here are Omarchy de
 | --- | --- | --- |
 | `SUPER + Q` | Close window | same (made explicit) |
 | `SUPER + W` | `omarchy-toggle-layout` — flip workspace layout | close window |
+| `SUPER + CTRL + W` | `omarchy-toggle-master` — master layout on/off for the active workspace | background switcher |
 | `SUPER + BACKSPACE` | Focus last window | toggle transparency |
-| `SUPER + TAB` | Next window in the active workspace | next workspace |
+| `SUPER + TAB` | Birdseye overview: `omarchy-shell shell toggle erasmus.birdseye` (live thumbnails of every window on every workspace; Tab / arrows select, Enter jumps, Escape closes) | next workspace |
 | `SUPER + SHIFT + TAB` | Previous window in the active workspace | previous workspace |
 | `SUPER + H` / `J` / `K` / `L` | Focus left / down / up / right (`nav.focus`); at the edge, the monitor that way | `J`: toggle split, `K`: keybindings menu, `L`: toggle layout |
 | `SUPER + D` | Toggle split (dwindle `togglesplit`) | — |
 | `SUPER + SHIFT + H` / `L` | Move left / right (`nav.move`): swap the column; at the edge, carry the window to the monitor that way. Floating: bottom-left / bottom-right corner | — |
 | `SUPER + SHIFT + J` / `K` | Move down / up: swap within the column; at its bottom / top, carry the window to the next / previous workspace on this monitor. Floating: top-left / top-right corner | — |
-| `SUPER + SHIFT + T` | `omarchy-pip` — toggle picture-in-picture | — |
+| `SUPER + SHIFT + P` | `pip.toggle` — toggle picture-in-picture (below) | Google Photos |
 | `SUPER + M` | Unbound | minimize window to the dock |
 
-`SUPER + TAB` walks a ring built only from the active workspace's mapped windows, ordered by `stable_id`. Grouped windows stay in the ring and hidden ones are skipped. It raises the focused window afterwards. It avoids `cyclenext`, which would pull in a hidden scratchpad.
+`SUPER + SHIFT + TAB` walks a ring built only from the active workspace's mapped windows, ordered by `stable_id`. Grouped windows stay in the ring and hidden ones are skipped. It raises the focused window afterwards. It avoids `cyclenext`, which would pull in a hidden scratchpad.
+
+`pip.lua` makes the active window a picture-in-picture window: leaves maximized/fullscreen (a maximized window refuses to float or pin), tags it `follow-pip`, floats and pins it, resizes it to a 16:9 box 30% of the focused monitor's width (480×270 on `eDP-1`, 768×432 on the Studio Display), and places it in the bottom-left corner, 10 px (matching `general:gaps_out`) inside the reserved area. Pressing it on a tagged window removes the tag, unpins and re-tiles it. Being pinned, the window shows on every workspace of its monitor; a `monitor.focused` listener moves every `follow-pip` window to the newly focused monitor and refits it there one loop later (Hyprland keeps a floating window's pixel size and offset across monitors). Focus stays where it was. The tag survives `hyprctl reload`. Pin and float are dispatched with `on`/`off` because `set` toggles on Hyprland 0.56.
 
 `nav.lua` picks the neighbor itself rather than using Hyprland's directional focus, which searches the whole layout: on the scrolling tape, `J`/`K` with nothing above or below jumped to an off-screen column. A neighbor must lie past the focused window's centre on the move axis and overlap it on the other axis; inactive group tabs share their group's cell and are skipped. So `J`/`K` stay in the column and `H`/`L` walk the columns.
 
@@ -255,8 +263,8 @@ Named workspaces provide the per-app workspaces. `SUPER + ALT + S` (send to scra
 | `SUPER + CTRL + ALT + E` | Fastmail: `omarchy-launch-or-focus com.fastmail.Fastmail "gtk-launch com.fastmail.Fastmail"`, on `name:fastmail` on `eDP-1` | World clock (`omarchy.elsewhen` panel) |
 | `SUPER + CTRL + ALT + M` | Beeper: `omarchy-launch-or-focus Beeper "gtk-launch beeper"`, on `name:beeper` on `eDP-1` | — |
 | `SUPER + CTRL + L` | `omarchy-toggle-scratch lmstudio` (LM Studio) | toggle window gaps |
-| `SUPER + CTRL + ALT + Y` | `omarchy-summon youtube` | web apps cycle |
-| `SUPER + SHIFT + Y` | `omarchy-summon youtube` | YouTube desktop entry |
+| `SUPER + CTRL + ALT + Y` | YouTube: `omarchy-launch-or-focus 'brave-(www\.)?youtube\.com__' "gtk-launch YouTube"`, on `name:youtube` on `eDP-1` | web apps cycle |
+| `SUPER + SHIFT + Y` | Same as `SUPER + CTRL + ALT + Y` | YouTube desktop entry (new window every press) |
 | `SUPER + CTRL + ALT + T` | tldraw offline: `omarchy-launch-or-focus tldraw-offline "gtk-launch tldraw-offline"` | show time |
 | `SUPER + CTRL + ALT + W` | tldraw: `omarchy-launch-or-focus tldraw "gtk-launch TLDraw"` | toggle weather |
 | `SUPER + CTRL + ALT + SPACE` | Sticky Notes Canvas via `gtk-launch io.github.faridjaff.StickyNotesCanvas` | — |
@@ -276,11 +284,12 @@ strata is the default file manager: `inode/directory` in `mimeapps.list` and the
 | `SUPER + SHIFT + Q` | `omarchy-menu toggle system` | — |
 | `SUPER + CTRL + X` | `omarchy-dictation toggle` (only when `o.dictation_installed()`) | — |
 | `F9` (hold) | Push-to-talk: `omarchy-dictation start` on press, `stop` on release (only when `o.dictation_installed()`) | — |
+| `SUPER + SPACE` | `vicinae toggle` (launcher; server is the `vicinae.service` user unit) | pseudo window |
 | `SUPER + SHIFT + SPACE` | Emoji picker (`omarchy-shell shell toggle omarchy.emojis`) | toggle top bar |
 | `SUPER + P` | Clipboard manager (`omarchy-shell shell toggle omarchy.clipboard`) | pseudo window |
 | `ALT + TAB` | ScrollOverview `toggle all` (only when the plugin is loaded) | Omarchy's two `ALT + TAB` binds |
 
-`SUPER + SPACE` (Omarchy menu) and `SUPER + ALT + SPACE` (apps menu) keep their Omarchy defaults. `SUPER + RETURN` (terminal) and `SUPER + SHIFT + RETURN` (browser) are unbound; terminals and browsers live on `SUPER + CTRL + ALT + J` / `K`.
+`SUPER + ALT + SPACE` (apps menu) keeps its Omarchy default. `SUPER + RETURN` (terminal) and `SUPER + SHIFT + RETURN` (browser) are unbound; terminals and browsers live on `SUPER + CTRL + ALT + J` / `K`.
 
 ### ScrollOverview plugin
 
@@ -349,22 +358,6 @@ Steps the focused window through preset widths `0.333, 0.5, 0.667` of the monito
 
 Indices are stored in `$XDG_STATE_HOME/omarchy/window-sizes/`. Bound to `SUPER + R` and `SUPER + SHIFT + R`.
 
-### omarchy-pip
-
-```sh
-omarchy-pip [toggle|on] [address:0x...]
-```
-
-Picture-in-picture for any window. Floats and pins it, resizes it to 30% of the focused monitor on both axes, and places it in the bottom-left corner with a 10 px inset (matching `general:gaps_out`). `toggle` (the default) unpins and re-tiles a window that is already floating and pinned. `on` always applies the fit. Defaults to the active window. The dispatcher is called with `on`/`off` because `set` toggles on Hyprland 0.56. Bound to `SUPER + SHIFT + T`. `omarchy-summon` also calls it.
-
-### omarchy-summon
-
-```sh
-omarchy-summon [youtube]
-```
-
-The only profile is `youtube`, which matches class `^brave-(www\.)?youtube\.com__.*$` and skips Picture-in-Picture titles. With no window open, it runs `gtk-launch YouTube`, and the window rule in `hyprland.lua` floats and positions it. With a window open, it moves the window to the focused monitor, runs `omarchy-pip on` to refit it (the two panels differ in logical size), and focuses it. Bound to `SUPER + CTRL + ALT + Y` and `SUPER + SHIFT + Y`.
-
 ### omarchy-toggle-layout
 
 ```sh
@@ -372,6 +365,16 @@ omarchy-toggle-layout [width]
 ```
 
 Runs `omarchy-hyprland-workspace-layout-toggle`, then polls the workspace layout (6 × 50 ms). If it became `scrolling`, it runs `colresize all <width>` (default `0.75`). Dwindle needs no widths. Bound to `SUPER + W`.
+
+### omarchy-toggle-master
+
+```sh
+omarchy-toggle-master
+```
+
+Switches the active numbered workspace to the `master` layout through Omarchy's `o.workspace_mode`, saving it in `~/.local/state/omarchy/workspace-layouts/<id>.lua` like `omarchy-hyprland-workspace-layout-toggle`, so it survives reloads and `SUPER + W` sees it. The layout it replaced is kept in `~/.local/state/omarchy/master-toggle/<id>`; the next press restores it (or the default layout if none was kept), and the saved-mode file is removed when that is the default. Named workspaces are skipped, as in Omarchy. Shares Omarchy's layout notification. Switching to master also runs `require("hypr.master").enforce()`, since a layout change fires no event. Bound to `SUPER + CTRL + W`.
+
+`master.lua` makes every Ghostty node (a group counts once) a master and every other window a slave on the active workspace when it uses the master layout and holds a Ghostty window. It runs one loop after `window.open`, `window.move_to_workspace`, `window.destroy`, `workspace.active`, and `config.reloaded`. A Ghostty slave first swaps places with a non-Ghostty master (`window.swap` with `window` and `target`, focus untouched); Ghostty windows left over get `addmaster` and non-Ghostty masters left over get `removemaster`, both of which act on the focused window, so focus visits them and returns to the window that just opened, or else the one that was active. `addmaster` alone fails with two windows: Hyprland refuses to leave no slave while `master:allow_small_split` is off. Only the active workspace is fixed, because focusing a window elsewhere would switch workspace or monitor; other workspaces are fixed when they become active. Several Ghostty nodes stack in the center column.
 
 ### omarchy-toggle-scratch
 

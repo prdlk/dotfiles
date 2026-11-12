@@ -69,7 +69,7 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+backspace` | `prefix E` | [tmux-expose](tmux.md#keybindings): live thumbnails of every session; `ctrl+backspace` again closes it |
 | `ctrl+shift+a` | `prefix w` | [Workmux palette](../shell/scripts.md#workmux-palette): agents by status, worktrees, new worktree from a prompt |
 | `ctrl+shift+f` | `prefix y` | Yazi in a new window, pane cwd |
-| `ctrl+shift+e` | `prefix e` | Neovim in a new window, pane cwd |
+| `ctrl+shift+e` | `prefix BSpace` | Toggle the [treemux](tmux.md#treemux-file-tree-sidebar) Neo-tree sidebar and focus it |
 | `ctrl+shift+g` | `prefix g` | Lazygit in a 90% popup, pane cwd |
 | `ctrl+shift+w` | `prefix k` | Kill window (close tab) |
 | `ctrl+shift+r` | `prefix r` | Rename window |
