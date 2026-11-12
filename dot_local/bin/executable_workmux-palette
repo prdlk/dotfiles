@@ -110,7 +110,7 @@ workmux status --all --json 2>/dev/null | jq --arg self "$self" --arg home "$HOM
       {category: "Workmux", icon: "\uf0e4", title: "Dashboard", description: "agents and worktrees TUI in a popup",
        aliases: ["dash"], action: {tmux: "display-popup -E -w 90% -h 90% workmux dashboard"}},
       {category: "Workmux", icon: "\uf0db", title: "Sidebar", description: "toggle the agent status sidebar",
-       shortcut: "Ctrl+Shift+S", aliases: ["side"], action: {tmux: "run-shell -b \("workmux sidebar" | @sh)"}},
+       shortcut: "Ctrl+Shift+A", aliases: ["side"], action: {tmux: "run-shell -b \("workmux sidebar" | @sh)"}},
       {category: "Workmux", icon: "\uf0e2", title: "Last done", description: "jump to the agent that last finished or is waiting",
        aliases: ["ld"], action: {tmux: "run-shell -b \("workmux last-done" | @sh)"}},
       ($trees[] | select(.is_open)
