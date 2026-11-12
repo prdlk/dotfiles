@@ -441,7 +441,7 @@ The project root is the git toplevel, else the pane's directory.
 
 **Background.** Long-running items, marked `· background`, are `<pm> run dev`, `docker compose up`, and pj tasks named `dev`/`start`/`serve`/`watch`/`preview` or with one of those as a `:` segment (`dev:web`, `api:dev`). They run through `--bg` in a detached session named `<session>:<tool-and-command>` (`leetcode:bun-run-dev`, `leetcode:docker-compose-up`), shown in a rounded 90%×80% popup attached to it. <kbd>q</kbd> detaches the popup and leaves the task running: the session's `key-table` is `pj-task`, which binds only `q` and <kbd>ctrl-c</kbd>, so other keys reach the task instead of root-table bindings (prefix bindings still work). <kbd>ctrl-c</kbd> runs `confirm-before` (`Stop <session>? (y/n)`); <kbd>y</kbd> sends ctrl-c to the task, which stops it and ends the session, closing the popup, and any other key cancels. If the task exits on its own, the `[exit N]` prompt keeps its output until <kbd>enter</kbd>. Picking the item again, or its **Running** entry, reopens the popup instead of starting a second copy. The session has `status off`, `detach-on-destroy on`, and `@pj_task` set to the task's root, which is how the Running group finds it. Session names contain `:`, so the script targets them by id (`$N`).
 
-**omp.** tmux `prefix a` runs `pj-palette --bg <session>:omp <pane cwd> omp`, so omp gets the same kind of background session and Running entry. Its popup docks in the bottom-right corner of the client, 35% wide and 60% tall. omp runs directly (no `[exit N]` prompt) and needs <kbd>q</kbd>, so its session uses the `pj-app` key table instead: <kbd>ctrl-c</kbd> hides the popup, <kbd>ctrl-q</kbd> kills the session (quits omp). `prefix a` inside any session with `@pj_task` also hides, which makes `prefix a` a toggle. The popup border shows only the session name. (Ghostty <kbd>ctrl+shift+a</kbd> opens the [Workmux palette](#workmux-palette) instead.)
+**omp.** tmux `prefix a` runs `pj-palette --bg <session>:omp <pane cwd> omp`, so omp gets the same kind of background session and Running entry. Its popup docks in the bottom-right corner of the client, 35% wide and 60% tall. omp runs directly (no `[exit N]` prompt) and needs <kbd>q</kbd>, so its session uses the `pj-app` key table instead: <kbd>ctrl-c</kbd> hides the popup, <kbd>ctrl-q</kbd> kills the session (quits omp). `prefix a` inside any session with `@pj_task` also hides, which makes `prefix a` a toggle. The popup border shows only the session name. (Ghostty <kbd>ctrl+shift+a</kbd> toggles the workmux agent sidebar instead.)
 
 **omp palette.** `--omp` feeds `palettes/omp.json`, opened by the main palette's **omp** item. It lists every running `<session>:omp` across tmux sessions, with a green icon and `open`/`hidden` state: **This session** first (or a grey `not running · start in <cwd>` item that starts it), then **Running** for the other tmux sessions' agents, then a **Quit** item per session (`kill-session`).
 
@@ -486,7 +486,7 @@ workmux-palette --popup DIR CMD…
 workmux-palette --do DIR CMD…
 ```
 
-The source of the **Workmux** [tmux command palette](../terminal/tmux.md#command-palette) (`palettes/workmux.json`) for [workmux](../tools/workmux.md). Open it with tmux `prefix w`, Ghostty <kbd>ctrl+shift+a</kbd>, or the "Workmux" item in the main palette.
+The source of the **Workmux** [tmux command palette](../terminal/tmux.md#command-palette) (`palettes/workmux.json`) for [workmux](../tools/workmux.md). Open it with tmux `prefix w`, <kbd>ctrl+s</kbd> in a workmux sidebar pane, or the "Workmux" item in the main palette.
 
 With no arguments it prints palette items as JSON, grouped by category:
 
@@ -495,7 +495,7 @@ With no arguments it prints palette items as JSON, grouped by category:
 | Agents | Every agent `workmux status --all --json` tracks in this tmux server: waiting (yellow), done (green), working (blue), then idle, most recent first. Title `<repo>/<handle>`, description status, time since the change, and the pane title | `switch-client` to the agent's pane |
 | Worktrees: `<repo>` | The active pane's repo's worktrees (`workmux list --json`, main checkout left out): branch, open/closed, dirty, path. Open ones are green | `workmux open` (starts the session if closed) |
 | New | **New worktree from a prompt**, when the pane is in a repo | `--prompt` in a popup: `gum write` for the task, then `workmux add -A -p TASK` (omp names the branch, see [workmux](../tools/workmux.md#branch-names)) |
-| Workmux | **Dashboard** (90% popup), **Sidebar** (toggle; also tmux `prefix S`, Ghostty <kbd>ctrl+shift+s</kbd>), **Last done** (`workmux last-done`) | |
+| Workmux | **Dashboard** (90% popup), **Sidebar** (toggle; also tmux `prefix S`, Ghostty <kbd>ctrl+shift+a</kbd> / <kbd>ctrl+shift+s</kbd>), **Last done** (`workmux last-done`) | |
 | Close | One per open worktree | `workmux close`: ends the session, keeps worktree and branch |
 | Merge | One per worktree | `workmux merge` in a popup |
 | Remove | One per worktree | `workmux remove` in a popup (asks before deleting unmerged commits) |

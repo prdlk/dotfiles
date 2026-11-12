@@ -2,7 +2,7 @@
 
 workmux global config: one git worktree and one tmux session per agent, driven from the Workmux palette.
 
-[workmux](https://workmux.dev) pairs each git worktree with a tmux target and starts an agent in it. Here every worktree gets its own tmux session (an omp window and an nvim window), and the [Workmux palette](../shell/scripts.md#workmux-palette) (Ghostty `ctrl+shift+a`, tmux `prefix w`, or `ctrl+space` → Workmux) covers the lifecycle: open, new, close, merge, remove, and jumping to agents by status.
+[workmux](https://workmux.dev) pairs each git worktree with a tmux target and starts an agent in it. Here every worktree gets its own tmux session (an omp window and an nvim window), and the [Workmux palette](../shell/scripts.md#workmux-palette) (tmux `prefix w`, `ctrl+s` in the agent sidebar, or `ctrl+space` → Workmux) covers the lifecycle: open, new, close, merge, remove, and jumping to agents by status.
 
 | | |
 | --- | --- |

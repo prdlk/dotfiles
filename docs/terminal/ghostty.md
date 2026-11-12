@@ -67,7 +67,6 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+shift+t` | `prefix c` | New window (tab) in pane cwd |
 | `ctrl+shift+p` / `ctrl+shift+space` | `prefix t` | Project Tasks palette (pj: install, dev, sync, make, every project task) |
 | `ctrl+backspace` | `prefix E` | [tmux-expose](tmux.md#keybindings): live thumbnails of every session; `ctrl+backspace` again closes it |
-| `ctrl+shift+a` | `prefix w` | [Workmux palette](../shell/scripts.md#workmux-palette): agents by status, worktrees, new worktree from a prompt |
 | `ctrl+shift+f` | `prefix y` | Yazi in a new window, pane cwd |
 | `ctrl+shift+e` | `prefix BSpace` | Toggle the [treemux](tmux.md#treemux-file-tree-sidebar) Neo-tree sidebar and focus it |
 | `ctrl+shift+g` | `prefix g` | Lazygit in a 90% popup, pane cwd |
@@ -84,7 +83,7 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+shift+/` | `prefix ?` | Keybinding help popup |
 | `ctrl+shift+alt+,` | `prefix q` | Reload tmux config |
 | `ctrl+shift+n` | `prefix C` | New session |
-| `ctrl+shift+s` | `prefix S` | Toggle the [workmux](../tools/workmux.md) agent sidebar (all sessions); the session/window tree stays on `prefix s` |
+| `ctrl+shift+a`, `ctrl+shift+s` | `prefix S` | Toggle the [workmux](../tools/workmux.md) agent sidebar (all sessions); the session/window tree stays on `prefix s`. The [Workmux palette](../shell/scripts.md#workmux-palette) has no chord: `prefix w`, or `ctrl+s` inside the sidebar |
 | `ctrl+shift+q` | `prefix d` | Detach (closes the Ghostty window; the session lives on) |
 
 ## Themes
