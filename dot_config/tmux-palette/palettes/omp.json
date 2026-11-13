@@ -1,0 +1,6 @@
+{
+  "title": "omp",
+  "command": "~/.local/bin/pj-palette --omp",
+  "grouped": true,
+  "emptyText": "No omp sessions"
+}

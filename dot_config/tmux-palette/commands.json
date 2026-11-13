@@ -1,0 +1,148 @@
+[
+  {
+    "icon": "",
+    "title": "Lazygit",
+    "shortcut": "Ctrl+Shift+G",
+    "description": "popup in the pane's directory",
+    "category": "Tools",
+    "aliases": ["lg"],
+    "action": {
+      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' lazygit"
+    }
+  },
+  {
+    "icon": "",
+    "title": "Yazi",
+    "shortcut": "Ctrl+Shift+F",
+    "description": "new window in the pane's directory",
+    "category": "Tools",
+    "aliases": ["fm"],
+    "action": { "tmux": "new-window -c '#{pane_current_path}' 'exec yazi'" }
+  },
+  {
+    "icon": "",
+    "title": "btop",
+    "description": "resource monitor in a popup",
+    "category": "Tools",
+    "aliases": ["top", "htop"],
+    "action": { "popup": "btop" }
+  },
+  {
+    "icon": "󰡨",
+    "title": "Lazydocker",
+    "description": "popup in the pane's directory",
+    "category": "Tools",
+    "aliases": ["dd"],
+    "action": {
+      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' lazydocker"
+    }
+  },
+  {
+    "icon": "󰙜",
+    "title": "Portop",
+    "description": "popup in the pane's directory",
+    "category": "Tools",
+    "aliases": ["pp"],
+    "action": {
+      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' portop"
+    }
+  },
+  {
+    "icon": "",
+    "title": "mandible",
+    "description": "CLI reference for a tool, in a popup",
+    "category": "Tools",
+    "aliases": ["man"],
+    "action": { "popup": "~/.local/bin/mandible-pick" }
+  },
+  {
+    "icon": "",
+    "title": "television",
+    "description": "tv channel picker in a new window",
+    "category": "Tools",
+    "aliases": ["tv"],
+    "action": {
+      "tmux": "new-window -c '#{pane_current_path}' 'exec tv channels'"
+    }
+  },
+  {
+    "icon": "",
+    "title": "gitframe",
+    "description": "git diff viewer in a new window",
+    "category": "Tools",
+    "aliases": ["gf"],
+    "action": { "tmux": "new-window -c '#{pane_current_path}' 'exec gitframe'" }
+  },
+  {
+    "icon": "",
+    "title": "Neovim Split",
+    "description": "nvim to the left, 60%",
+    "category": "Tools",
+    "aliases": ["nv"],
+    "action": {
+      "tmux": "split-window -h -b -l 60% -c '#{pane_current_path}' 'exec nvim'"
+    }
+  },
+  {
+    "icon": "",
+    "title": "omp",
+    "description": "omp sessions: this session's agent, every running one, quit",
+    "category": "Tools",
+    "aliases": ["agent", "ai"],
+    "action": { "palette": "omp" }
+  },
+  {
+    "icon": "",
+    "title": "Workmux",
+    "description": "worktree agents: status, open, new, merge, remove, dashboard",
+    "category": "Tools",
+    "aliases": ["wm", "worktree"],
+    "action": { "palette": "workmux" }
+  },
+  {
+    "icon": "",
+    "title": "Shell History (atuin)",
+    "description": "atuin-pick in a split below",
+    "category": "Tools",
+    "aliases": ["hist"],
+    "action": {
+      "tmux": "split-window -v -l 25% -c '#{pane_current_path}' 'exec atuin-pick'"
+    }
+  },
+  {
+    "icon": "",
+    "title": "Project Tasks",
+    "description": "pj: install, dev, make, uv, scripts",
+    "category": "Tools",
+    "shortcut": "Ctrl+Shift+P",
+    "aliases": ["pj", "run"],
+    "action": { "palette": "tasks" }
+  },
+  {
+    "icon": "󱂬",
+    "title": "Sessions",
+    "description": "sessions, windows, zoxide: switch, create, rename, kill",
+    "category": "Sessions",
+    "shortcut": "Ctrl+Shift+O",
+    "aliases": ["sx", "ss"],
+    "action": { "palette": "sessions" }
+  },
+  {
+    "icon": "",
+    "title": "Save Sessions",
+    "description": "tmux-resurrect snapshot now",
+    "category": "Sessions",
+    "action": {
+      "tmux": "run-shell '~/.config/tmux/plugins/tmux-resurrect/scripts/save.sh'"
+    }
+  },
+  {
+    "icon": "",
+    "title": "Restore Sessions",
+    "description": "tmux-resurrect: last snapshot",
+    "category": "Sessions",
+    "action": {
+      "tmux": "run-shell '~/.config/tmux/plugins/tmux-resurrect/scripts/restore.sh'"
+    }
+  }
+]

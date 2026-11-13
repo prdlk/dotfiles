@@ -1,6 +1,0 @@
-[".config/tmux-palette"]
-    type = "git-repo"
-    url = "https://github.com/prdlk/tmux-palette.git"
-    refreshPeriod = "168h"
-    [".config/tmux-palette".pull]
-        args = ["--ff-only"]

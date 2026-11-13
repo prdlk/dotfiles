@@ -1,0 +1,13 @@
+{
+  "title": "Workmux",
+  "command": "~/.local/bin/workmux-palette",
+  "grouped": true,
+  "emptyText": "No agents or worktrees",
+  "query": {
+    "icon": "",
+    "category": "New",
+    "title": "{}",
+    "description": "new worktree and session for branch {} in this repo",
+    "action": { "shell": "~/.local/bin/workmux-palette --add {}" }
+  }
+}

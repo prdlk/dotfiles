@@ -1,0 +1,15 @@
+{
+  "Split Horizontal": "Ctrl+Shift+L",
+  "Split Vertical": "Ctrl+Shift+J",
+  "Close Pane": "Ctrl+Shift+X",
+  "Zoom / Unzoom": "Ctrl+Shift+Z",
+  "Enter Copy Mode": "Ctrl+Shift+PgUp",
+  "New Window": "Ctrl+Shift+T",
+  "Next Window": "Ctrl+Shift+K",
+  "Previous Window": "Ctrl+Shift+H",
+  "Rename Window": "Ctrl+Shift+R",
+  "Close Window": "Ctrl+Shift+W",
+  "New Session": "Ctrl+Shift+N",
+  "Detach": "Ctrl+Shift+Q",
+  "Reload Config": "Ctrl+Shift+Alt+,"
+}

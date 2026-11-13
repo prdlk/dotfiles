@@ -1,0 +1,6 @@
+{
+  "title": "Project Tasks",
+  "command": "~/.local/bin/pj-palette",
+  "grouped": true,
+  "emptyText": "No tasks in this project"
+}

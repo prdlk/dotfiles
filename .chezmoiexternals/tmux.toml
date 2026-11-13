@@ -1,6 +1,0 @@
-[".config/tmux"]
-    type = "git-repo"
-    url = "https://github.com/prdlk/tmux.git"
-    refreshPeriod = "168h"
-    [".config/tmux".pull]
-        args = ["--ff-only"]

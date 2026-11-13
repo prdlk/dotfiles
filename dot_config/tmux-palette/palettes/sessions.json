@@ -1,0 +1,13 @@
+{
+  "title": "Sessions",
+  "command": "~/.local/bin/tmux-sessions",
+  "grouped": true,
+  "emptyText": "No sessions",
+  "query": {
+    "icon": "󰿄",
+    "category": "New",
+    "title": "{}",
+    "description": "switch to, or new session in its zoxide match",
+    "action": { "shell": "~/.local/bin/tmux-sessions --new {}" }
+  }
+}
