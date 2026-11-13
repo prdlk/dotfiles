@@ -1,0 +1,14 @@
+{{- /* Which package manifest a machine uses: "arch" (Arch and derivatives
+such as Omarchy, ID_LIKE=arch), "debian" (Ubuntu, Debian and derivatives),
+"darwin", or "" for anything else. Usage: {{ template "os-family" . }} */ -}}
+{{- if eq .chezmoi.os "darwin" -}}
+darwin
+{{- else if eq .chezmoi.os "linux" -}}
+{{-   $ids := list .chezmoi.osRelease.id -}}
+{{-   if hasKey .chezmoi.osRelease "idLike" }}{{ $ids = concat $ids (splitList " " .chezmoi.osRelease.idLike) }}{{ end -}}
+{{-   if has "arch" $ids -}}
+arch
+{{-   else if or (has "debian" $ids) (has "ubuntu" $ids) -}}
+debian
+{{-   end -}}
+{{- end -}}

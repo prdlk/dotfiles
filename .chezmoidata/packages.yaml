@@ -1,150 +1,103 @@
 packages:
-  arch:
-    pacman:
-      # shell + editors
-      - fish
-      - neovim
-      - helix
-      - micro
-      - tmux
-      # terminals (ghostty is the default)
-      - ghostty
-      - kitty
-      # tui tools (tmux-palette, television cables, fish functions)
-      - yazi
-      - lazygit
-      - lazydocker
-      - docker
-      - docker-compose
-      - btop
-      - fastfetch
-      - onefetch
-      - television
-      - serie
-      - tig
-      - gitui
-      - tldr
-      - navi
-      - mdfried
-      # vcs + forge
-      - git
-      - github-cli
-      - git-delta
-      - diffnav
-      - tea
-      # search / files
-      - fzf
-      - fd
-      - ripgrep
-      - zoxide
-      - eza
-      - bat
-      - jq
-      - duf
-      # media / preview (yazi + tv deps)
-      - ffmpeg
-      - ffmpegthumbnailer
-      - poppler
-      - resvg
-      - imagemagick
-      - chafa
-      - 7zip
-      - unzip
-      # remote
-      - mosh
-      - sshfs
-      - tailscale
-      # misc cli
-      - mise
-      - gum
-      - glow
-      - atuin
-      - wget
-      - starship
-      - zsh-syntax-highlighting
-      # fonts
-      - ttf-victor-mono-nerd
-    aur:
-      - topgrade
-      - portop
-    desktop:
-      # linux desktop layer (role desktop|laptop)
-      pacman:
-        - uwsm
-        - xdg-user-dirs
-        # wayland utilities the compositor configs and ~/.local/bin scripts call
-        - wl-clipboard
-        - cliphist
-        - wtype
-        - ydotool
-        - grim
-        - slurp
-        - hyprpicker
-        - pamixer
-        - brightnessctl
-        - libnotify
-        # desktop apps bound in hypr
-        - nautilus
-        - imv
-        - mpv
-        - evince
-        - chromium
-        - obsidian
-        # strata runtime deps (its installer runs `sudo -n pacman`, which fails
-        # without cached credentials, so they come from here instead)
-        - bubblewrap
-        - desktop-file-utils
-        - fontconfig
-        - gstreamer
-        - gst-libav
-        - gst-plugins-base
-        - gst-plugins-good
-        - gtk4
-        - gtksourceview5
-        - gvfs
-        - poppler-glib
-        - xdg-utils
-        # vicinae-server links libcmark-gfm, which every AUR vicinae PKGBUILD
-        # lists only as a makedepend; explicit here so orphan cleanup
-        # (`pacman -Rns $(pacman -Qdtq)`) cannot remove it again
-        - cmark-gfm
-      # AUR, or a sync repo that ships the same name (yay prefers repos). Only
-      # names no installed package provides are passed on (`pacman -T`).
-      aur:
-        - tldraw-offline-bin
-        # launcher (SUPER + SPACE); vicinae-git also satisfies it (provides=vicinae)
-        - vicinae
-        # desktop apps
-        - beeper-bin
-        - fastmail
-        - 1password
-        - brave-origin-bin
-        - claude-desktop
-        - spotify
-      # [omarchy] pacman repo (pkgs.omarchy.org); installed only when that repo
-      # is configured. Hyprland, waybar and the omarchy-* scripts come with
-      # the Omarchy install itself and are not listed.
-      omarchy:
-        - herdr
-        - flea
-        - xdg-terminal-exec
-        - hyprland-preview-share-picker
-        - hermes-desktop
+  # One entry per tool: how each OS installs it
+  # (.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl, and
+  # run_onchange_after_15-tools.sh.tmpl for `mise`).
+  #   arch: pacman name     aur: AUR name (Arch)
+  #   brew: formula         cask: cask (macOS)
+  #   apt:  Ubuntu package
+  #   mise: mise spec, used on Ubuntu when the entry has no `apt` (apt lacks
+  #         the tool, ships it years behind, or under another binary name)
+  # A missing key: not installed on that OS. Names verified 2026-11-13
+  # against pacman/AUR, formulae.brew.sh and Ubuntu 24.04 (noble).
+  tools:
+    # base: shells, build tools, fetchers
+    - {arch: fish, brew: fish, apt: fish} # Ubuntu: ppa:fish-shell/release-4 (noble's archive has 3.7)
+    - {arch: zsh, apt: zsh} # macOS ships zsh
+    - {arch: git, brew: git, apt: git}
+    - {arch: curl, apt: curl} # macOS ships curl
+    - {arch: wget, brew: wget, apt: wget}
+    - {arch: base-devel, apt: build-essential} # cargo crates compile C; macOS: Xcode CLT, from the Homebrew install
+    - {apt: pkg-config} # Ubuntu: mdfried build (cargo)
+    - {apt: libchafa-dev} # Ubuntu: mdfried build (cargo)
+    - {apt: libglib2.0-dev} # Ubuntu: mdfried build (cargo); chafa.pc requires glib-2.0
+    # editors
+    - {arch: neovim, brew: neovim, mise: "aqua:neovim/neovim"}
+    - {arch: helix, brew: helix, mise: "aqua:helix-editor/helix"}
+    - {arch: micro, brew: micro, apt: micro}
+    - {arch: tmux, brew: tmux, mise: tmux} # noble's 3.4 rejects tmux.conf's extended-keys-format (3.5+); mise: static tmux/tmux-builds
+    # terminals (ghostty is the default; no Ubuntu 24.04 package)
+    - {arch: ghostty, cask: ghostty}
+    - {arch: kitty, cask: kitty, apt: kitty}
+    # tui tools (tmux-palette, television cables, fish functions)
+    - {arch: yazi, brew: yazi, mise: yazi}
+    - {arch: lazygit, brew: lazygit, mise: lazygit}
+    - {arch: lazydocker, brew: lazydocker, mise: lazydocker}
+    - {arch: docker, brew: docker, apt: docker.io} # macOS: CLI only; the daemon needs Docker Desktop, colima or OrbStack
+    - {arch: docker-compose, brew: docker-compose, apt: docker-compose-v2}
+    - {arch: btop, brew: btop, apt: btop}
+    - {arch: fastfetch, brew: fastfetch, mise: fastfetch}
+    - {arch: onefetch, brew: onefetch, mise: onefetch}
+    - {arch: television, brew: television, mise: television}
+    - {arch: serie, brew: serie, mise: "aqua:lusingander/serie"}
+    - {arch: tig, brew: tig, apt: tig}
+    - {arch: gitui, brew: gitui, mise: gitui}
+    - {arch: tldr, brew: tealdeer, apt: tealdeer} # `tldr` binary everywhere
+    - {arch: navi, brew: navi, mise: navi}
+    - {arch: mdfried, brew: mdfried, mise: "cargo:mdfried"}
+    # vcs + forge
+    - {arch: github-cli, brew: gh, mise: gh}
+    - {arch: git-delta, brew: git-delta, apt: git-delta}
+    - {arch: diffnav, brew: diffnav, mise: "aqua:dlvhdr/diffnav"}
+    - {arch: tea, brew: tea, mise: "aqua:gitea.com/gitea/tea@0.16.0"} # apt `tea` is an unrelated editor; aqua needs a pinned version
+    # search / files
+    - {arch: fzf, brew: fzf, mise: fzf} # apt 0.44 predates `fzf --fish` / `--tmux`
+    - {arch: fd, brew: fd, mise: fd} # apt installs it as `fdfind`
+    - {arch: ripgrep, brew: ripgrep, apt: ripgrep}
+    - {arch: zoxide, brew: zoxide, apt: zoxide}
+    - {arch: eza, brew: eza, mise: eza}
+    - {arch: bat, brew: bat, mise: bat} # apt installs it as `batcat`
+    - {arch: jq, brew: jq, apt: jq}
+    - {arch: duf, brew: duf, apt: duf}
+    # media / preview (yazi + tv deps)
+    - {arch: ffmpeg, brew: ffmpeg, apt: ffmpeg}
+    - {arch: ffmpegthumbnailer, brew: ffmpegthumbnailer, apt: ffmpegthumbnailer}
+    - {arch: poppler, brew: poppler, apt: poppler-utils}
+    - {arch: resvg, brew: resvg, mise: resvg}
+    - {arch: imagemagick, brew: imagemagick, mise: "conda:imagemagick"} # apt is ImageMagick 6, no `magick`
+    - {arch: chafa, brew: chafa, apt: chafa}
+    - {arch: 7zip, brew: sevenzip, apt: 7zip}
+    - {arch: unzip, apt: unzip} # macOS ships unzip
+    # remote
+    - {arch: mosh, brew: mosh, apt: mosh}
+    - {arch: sshfs, apt: sshfs} # macOS: needs macFUSE (kernel extension), not installed
+    - {arch: tailscale, brew: tailscale, apt: tailscale} # Ubuntu: pkgs.tailscale.com repo
+    # misc cli
+    - {arch: mise, brew: mise} # Ubuntu: https://mise.run, in 15-tools
+    - {arch: gum, brew: gum, mise: gum}
+    - {arch: glow, brew: glow, mise: glow}
+    - {arch: atuin, brew: atuin, mise: atuin}
+    - {arch: starship, brew: starship, mise: starship}
+    - {arch: zsh-syntax-highlighting, brew: zsh-syntax-highlighting, apt: zsh-syntax-highlighting}
+    - {aur: topgrade, brew: topgrade, mise: topgrade}
+    - {aur: portop, brew: portop, mise: "github:padovanl/portop"}
+    # fonts (Ubuntu: nerd-fonts release download in 10-packages)
+    - {arch: ttf-victor-mono-nerd, cask: font-victor-mono-nerd-font}
   shared:
     gh_extensions:
       - davidraviv/gh-clean-branches
       - prdlk/gh-commit
       - dlvhdr/gh-dash
       - meiji163/gh-notify
-    # cargo installs (run_onchange_after_15-tools, after rustup)
+    # cargo installs (run_onchange_after_15-tools, after rustup), every OS
     cargo:
       - suvadu
       - mandible
       - worktrunk
       - tmux-expose
-    # global mise tools: `mise use -g <tool>` (run_onchange_after_15-tools).
-    # Registry short names where mise has one (`mise registry <tool>`), else a
-    # backend spec; written to ~/.config/mise/config.toml under the same key.
+    # global mise tools on every OS: `mise use -g <tool>`
+    # (run_onchange_after_15-tools). Registry short names where mise has one
+    # (`mise registry <tool>`), else a backend spec; written to
+    # ~/.config/mise/config.toml under the same key.
     mise:
       - ghq
       - bun

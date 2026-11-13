@@ -1,17 +1,34 @@
 #!/bin/sh
-# Tools that come from their own installers rather than pacman:
-# rustup (cargo) and the packages.shared.cargo crates, the
-# packages.shared.mise tools (omp, opencode, …), and strata on Linux desktop
-# roles. Runs before 20-gh-extensions, whose fish session sources
-# ~/.cargo/env.fish (conf.d/rustup.fish) and activates mise.
+# Tools that come from their own installers rather than the OS package
+# manager: rustup (cargo) and the packages.shared.cargo crates, mise itself on
+# Ubuntu, and the global mise tools: packages.shared.mise on every OS plus, on
+# Ubuntu, the packages.tools entries that have a `mise` spec and no `apt`.
+# Runs before 20-gh-extensions, whose fish session sources ~/.cargo/env.fish
+# (conf.d/rustup.fish) and activates mise.
 # cargo hash: {{ .packages.shared.cargo | toJson | sha256sum }}
-# mise hash: {{ .packages.shared.mise | toJson | sha256sum }}
+# tools hash: {{ .packages | toJson | sha256sum }}
+{{- $family := includeTemplate "os-family" . }}
+{{- $mise := .packages.shared.mise }}
+{{- if eq $family "debian" }}
+{{-   range .packages.tools }}
+{{-     if and (hasKey . "mise") (not (hasKey . "apt")) }}{{ $mise = append $mise .mise }}{{ end }}
+{{-   end }}
+{{- end }}
 set -eu
 
-# Where rustup puts cargo; chezmoi's environment can predate the shell config
-# that adds it.
-PATH="$HOME/.cargo/bin:$PATH"
+# Where rustup puts cargo and mise.run puts mise; chezmoi's environment can
+# predate the shell config that adds them.
+PATH="$HOME/.cargo/bin:$HOME/.local/bin:$PATH"
 export PATH
+{{- if eq $family "darwin" }}
+for brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$brew" ] && eval "$("$brew" shellenv)" && break
+done
+{{- else if eq $family "debian" }}
+
+# mise is in neither the Ubuntu archive nor this manifest's apt list.
+command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh
+{{- end }}
 
 # rustup: -y answers its prompt (no tty under chezmoi); --no-modify-path keeps
 # it out of the shell rc files, which are symlinks into this repo and already
@@ -31,12 +48,12 @@ echo "$installed" | grep -qx {{ . | quote }} || cargo install --locked {{ . | qu
 if command -v mise >/dev/null 2>&1; then
     global=$(mise ls --global --json)
     missing=''
-    for tool in{{ range .packages.shared.mise }} {{ . | quote }}{{ end }}; do
-        echo "$global" | jq -e --arg t "$tool" 'has($t)' >/dev/null || missing="$missing $tool"
+    for tool in{{ range $mise }} {{ . | quote }}{{ end }}; do
+        echo "$global" | jq -e --arg t "${tool%@*}" 'has($t)' >/dev/null || missing="$missing $tool"
     done
     # shellcheck disable=SC2086 # one word per tool
     [ -z "$missing" ] || mise use -g $missing
-    mise install{{ range .packages.shared.mise }} {{ . | quote }}{{ end }}
+    mise install{{ range $mise }} {{ . | quote }}{{ end }}
     # omp's own installer (omp.sh/install) put a binary in ~/.local/bin, which
     # precedes mise's shims on PATH; drop it once mise provides omp.
     if [ -f "$HOME/.local/bin/omp" ] && [ ! -L "$HOME/.local/bin/omp" ] && mise which omp >/dev/null 2>&1; then
@@ -45,24 +62,3 @@ if command -v mise >/dev/null 2>&1; then
 else
     echo "warning: mise not installed — skipping mise tools" >&2
 fi
-{{- if and (eq .chezmoi.os "linux") (or (eq .role "desktop") (eq .role "laptop")) }}
-
-# strata (GUI file manager): binary in ~/.local/bin, desktop entry, and the
-# FileManager1 D-Bus service for "Open file location". The inode/directory
-# default is dot_config/mimeapps.list; --with-folder-association is not used
-# because xdg-mime would replace that symlink with a plain file. Runtime deps
-# are in packages.arch.desktop.pacman.
-if [ ! -e "$HOME/.local/bin/strata" ]; then
-    curl -fsSL https://raw.githubusercontent.com/lgse/strata/main/install.sh | bash -s -- --with-desktop-entry --with-file-manager
-fi
-
-# System file chooser: strata serves org.freedesktop.impl.portal.FileChooser
-# for portal-aware apps (browsers, GTK). --install-portal writes the .portal
-# and D-Bus service under ~/.local/share, prepends "strata;" to the
-# FileChooser line of ~/.config/xdg-desktop-portal/<desktop>-portals.conf
-# (copied from the system one if absent; strata owns that file, not chezmoi,
-# so `strata --uninstall-portal` can restore it), and restarts the portal.
-if [ -e "$HOME/.local/bin/strata" ] && [ ! -e "${XDG_DATA_HOME:-$HOME/.local/share}/xdg-desktop-portal/portals/strata.portal" ]; then
-    "$HOME/.local/bin/strata" --install-portal
-fi
-{{- end }}

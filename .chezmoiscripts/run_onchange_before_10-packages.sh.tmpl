@@ -1,43 +1,40 @@
 #!/bin/sh
-# Install packages declared in .chezmoidata/packages.yaml.
+# Install packages.tools from .chezmoidata/packages.yaml with the OS package
+# manager: pacman + AUR on Arch, Homebrew on macOS, apt on Ubuntu. Ubuntu's
+# `mise` entries are installed by 15-tools, after mise itself.
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 set -eu
 
-{{ if eq .chezmoi.os "linux" -}}
-if [ "$(id -u)" -eq 0 ]; then PACMAN="pacman"; else PACMAN="sudo pacman"; fi
+if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
+{{ $family := includeTemplate "os-family" . -}}
+
+{{ if eq $family "arch" -}}
+{{- $pacman := list -}}
+{{- $aur := list -}}
+{{- range .packages.tools -}}
+{{-   if hasKey . "arch" }}{{ $pacman = append $pacman .arch }}{{ end -}}
+{{-   if hasKey . "aur" }}{{ $aur = append $aur .aur }}{{ end -}}
+{{- end -}}
 # Install only what no installed package already provides (`pacman -T`), so a
 # machine with mise-bin or yazi-git is not asked to replace them with mise/yazi.
 install_missing() {
     missing=$(pacman -T "$@" || true)
     # shellcheck disable=SC2086  # word splitting intended
-    [ -z "$missing" ] || $PACMAN -S --needed --noconfirm $missing
+    [ -z "$missing" ] || $SUDO pacman -S --needed --noconfirm $missing
 }
 
-install_missing {{ range .packages.arch.pacman }}{{ . }} {{ end }}
+install_missing {{ $pacman | join " " }}
 
-{{ if or (eq .role "desktop") (eq .role "laptop") -}}
-install_missing {{ range .packages.arch.desktop.pacman }}{{ . }} {{ end }}
-
-# [omarchy] repo packages — only where pacman.conf has that repo
-if pacman-conf -l | grep -qx omarchy; then
-    install_missing {{ range .packages.arch.desktop.omarchy }}{{ . }} {{ end }}
-fi
-
-aur_pkgs="{{ range .packages.arch.desktop.aur }}{{ . }} {{ end }}{{ range .packages.arch.aur }}{{ . }} {{ end }}"
-{{ else -}}
-aur_pkgs="{{ range .packages.arch.aur }}{{ . }} {{ end }}"
-{{ end -}}
 # AUR names no installed package provides yet; ones already installed from a
 # sync repo ([omarchy], extra) are neither rebuilt nor replaced.
-# shellcheck disable=SC2086
-aur_missing=$(pacman -T $aur_pkgs || true)
+aur_missing=$(pacman -T {{ $aur | join " " }} || true)
 if [ -n "$aur_missing" ]; then
     # No AUR helper yet: take yay from a sync repo that ships it, else build
     # yay-bin from the AUR (makepkg refuses root).
     if ! command -v yay >/dev/null 2>&1 && ! command -v paru >/dev/null 2>&1; then
         if pacman -Si yay >/dev/null 2>&1; then
-            $PACMAN -S --needed --noconfirm yay
+            $SUDO pacman -S --needed --noconfirm yay
         elif [ "$(id -u)" -ne 0 ]; then
             install_missing git base-devel
             yay_build=$(mktemp -d)
@@ -56,4 +53,84 @@ if [ -n "$aur_missing" ]; then
         echo "warning: no yay/paru and none could be bootstrapped — skipping AUR packages:" $aur_missing >&2
     fi
 fi
+
+{{ else if eq $family "darwin" -}}
+{{- $brew := list -}}
+{{- $cask := list -}}
+{{- range .packages.tools -}}
+{{-   if hasKey . "brew" }}{{ $brew = append $brew .brew }}{{ end -}}
+{{-   if hasKey . "cask" }}{{ $cask = append $cask .cask }}{{ end -}}
+{{- end -}}
+# Homebrew: install it when missing (its installer also brings the Xcode
+# command line tools), then put it on PATH for the rest of this script.
+for brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$brew" ] && break
+done
+if [ ! -x "$brew" ]; then
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    for brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+        [ -x "$brew" ] && break
+    done
+fi
+eval "$("$brew" shellenv)"
+
+# Only what is not installed yet, so a run never upgrades anything.
+installed=$(brew list --formula -1)
+missing=''
+for f in {{ $brew | join " " }}; do
+    echo "$installed" | grep -qx "$f" || missing="$missing $f"
+done
+# shellcheck disable=SC2086  # one word per formula
+[ -z "$missing" ] || brew install $missing
+
+installed=$(brew list --cask -1)
+missing=''
+for c in {{ $cask | join " " }}; do
+    echo "$installed" | grep -qx "$c" || missing="$missing $c"
+done
+# shellcheck disable=SC2086  # one word per cask
+[ -z "$missing" ] || brew install --cask $missing
+
+{{ else if eq $family "debian" -}}
+{{- $apt := list -}}
+{{- range .packages.tools -}}
+{{-   if hasKey . "apt" }}{{ $apt = append $apt .apt }}{{ end -}}
+{{- end -}}
+export DEBIAN_FRONTEND=noninteractive
+codename={{ .chezmoi.osRelease.versionCodename | quote }}
+
+# Vendor repos for packages the Ubuntu archive lacks or ships too old.
+repos_added=0
+$SUDO apt-get update -qq
+$SUDO apt-get install -y -qq ca-certificates curl gnupg software-properties-common xz-utils >/dev/null
+
+# fish 4 (the archive has 3.7; the fish config targets 4.x).
+if ! grep -rqs fish-shell /etc/apt/sources.list.d/; then
+    $SUDO add-apt-repository -y -n ppa:fish-shell/release-4
+    repos_added=1
+fi
+
+# tailscale: not in the archive.
+if [ ! -f /etc/apt/sources.list.d/tailscale.list ]; then
+    curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/$codename.noarmor.gpg" |
+        $SUDO tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+    curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/$codename.tailscale-keyring.list" |
+        $SUDO tee /etc/apt/sources.list.d/tailscale.list >/dev/null
+    repos_added=1
+fi
+[ "$repos_added" -eq 0 ] || $SUDO apt-get update -qq
+
+# shellcheck disable=SC2086  # one word per package
+$SUDO apt-get install -y -qq {{ $apt | join " " }}
+
+# Victor Mono Nerd Font: no Ubuntu package; the nerd-fonts release.
+fonts="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/VictorMonoNerdFont"
+if [ ! -d "$fonts" ]; then
+    mkdir -p "$fonts"
+    curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/VictorMono.tar.xz |
+        tar -xJ -C "$fonts"
+fi
+
+{{ else -}}
+echo "warning: no package manifest for {{ .chezmoi.os }} {{ if .chezmoi.osRelease }}{{ .chezmoi.osRelease.id }}{{ end }} — skipping packages" >&2
 {{ end -}}

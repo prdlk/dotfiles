@@ -5,6 +5,11 @@
 # skills hash: {{ .skills | toJson | sha256sum }}
 set -u
 
+# node/npx come from mise (packages.shared.mise); chezmoi's environment can
+# predate the shell config that activates it, as on a first apply.
+PATH="$HOME/.local/share/mise/shims:$PATH"
+export PATH
+
 command -v npx >/dev/null 2>&1 || { echo "warning: npx not found — skipping skills sync" >&2; exit 0; }
 command -v jq >/dev/null 2>&1 || { echo "warning: jq not found — skipping skills sync" >&2; exit 0; }
 

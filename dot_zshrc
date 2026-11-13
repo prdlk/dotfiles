@@ -12,6 +12,14 @@ autoload -Uz compinit && compinit
 # PATH extras / tool envs (machine-optional, guarded)
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$HOME/.local/bin:$PATH" ;; esac
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+# Homebrew (macOS) and mise: where .chezmoidata/packages.yaml puts the tools
+# that are not in /usr/bin (mise also holds the Ubuntu TUIs and the global
+# tools). Before every `command -v` below.
+for _brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [ -x "$_brew" ] && eval "$("$_brew" shellenv)" && break
+done
+unset _brew
+command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
 [ -d "$HOME/.maestro/bin" ] && PATH="$PATH:$HOME/.maestro/bin"
 
 # Go — GOPATH/GOBIN under ~/.local/share to keep $HOME clean.
@@ -111,7 +119,8 @@ command -v tv >/dev/null 2>&1 && eval "$(tv init zsh)"
 # (keybinds, compinit, suv/starship hooks).
 for _zsh_hl in \
     /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh \
-    /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh; do
+    /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh \
+    "${HOMEBREW_PREFIX:-/usr/local}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"; do
     [ -r "$_zsh_hl" ] && . "$_zsh_hl" && break
 done
 unset _zsh_hl
