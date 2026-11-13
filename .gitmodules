@@ -1,3 +1,0 @@
-[submodule "dot_config/fish"]
-	path = dot_config/fish
-	url = https://github.com/prdlk/fish.git

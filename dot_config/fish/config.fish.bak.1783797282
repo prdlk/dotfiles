@@ -1,0 +1,27 @@
+# Config is split into autoloaded files (see `man fish` → Configuration files):
+#   conf.d/00-path.fish          PATH entries
+#   conf.d/10-env.fish           environment + fish_greeting + fzf theme
+#   conf.d/20-aliases.fish       aliases
+#   conf.d/40-tools.fish         starship / zoxide / mise / hishtory init
+#   conf.d/50-terminal-title.fish tmux window title
+#   conf.d/secrets.fish          API keys (gitignored)
+#   functions/                   one autoloaded function per file
+#   functions/fish_user_key_bindings.fish  key bindings
+#
+# Nothing needs to live here; keep it empty so startup stays fast.
+
+function starship_transient_prompt_func
+  starship module character
+end
+
+function starship_transient_rprompt_func
+  starship module time
+end
+
+starship init fish | source
+enable_transience
+
+# Pin the prompt to the bottom of the terminal (FISH_BOTTOM_PROMPT=1, the
+# default from conf.d/10-env.fish; set 0 for the normal top prompt).
+# functions/clear.fish and the ctrl-l binding re-pin it after clearing.
+status is-interactive; and test "$FISH_BOTTOM_PROMPT" = 1; and tput cup $LINES 0

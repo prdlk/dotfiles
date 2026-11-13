@@ -1,0 +1,1 @@
+omp completions fish | source

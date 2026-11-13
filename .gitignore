@@ -1,5 +1,9 @@
 /dot_config/lazygit/dot_omc
 
+# fish runtime state and local tokens (never committed)
+/dot_config/fish/conf.d/secrets.fish
+/dot_config/fish/fish_variables
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db
