@@ -1,6 +1,5 @@
 {{- $name := promptStringOnce . "name" "Full name" "Prad Nukala" -}}
 {{- $email := promptStringOnce . "email" "Email" "prad@sonr.io" -}}
-{{- $role := promptChoiceOnce . "role" "Machine role" (list "desktop" "laptop" "server") "desktop" -}}
 
 mode = "symlink"
 encryption = "age"
@@ -13,4 +12,3 @@ encryption = "age"
 [data]
     name = {{ $name | quote }}
     email = {{ $email | quote }}
-    role = {{ $role | quote }}

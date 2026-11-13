@@ -4,7 +4,7 @@ CLAUDE.md
 AGENTS.md
 docs
 
-# Compositor hook shipped by the shared fish submodule; never applied here
+# Niri compositor hook kept in the fish config; never applied here
 .config/fish/auto-Niri.fish
 
 # Runtime/plugin state living inside managed trees — not managed
@@ -25,31 +25,4 @@ docs
 # mise tool versions — kept local per-machine, not managed
 .config/mise
 .config/mise/**
-
-{{ if or (ne .chezmoi.os "linux") (and (ne .role "desktop") (ne .role "laptop")) }}
-# Arch desktop layer — linux desktop/laptop roles only
-.config/hypr
-.config/hypr/**
-.config/waybar
-.config/waybar/**
-.config/uwsm
-.config/uwsm/**
-.config/vicinae
-.config/vicinae/**
-.local/bin/agent-root
-.config/fontconfig
-.config/fontconfig/**
-.config/mimeapps.list
-.config/xdg-terminals.list
-.config/systemd
-.config/systemd/**
-.local/bin/kitty-day-save
-.local/bin/cp-appid
-.local/bin/projects-sync
-.local/bin/free-router
-.local/share/freellmapi
-.local/share/freellmapi/**
-.config/free-router
-.config/free-router/**
-{{ end }}
 

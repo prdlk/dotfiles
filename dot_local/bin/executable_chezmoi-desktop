@@ -1,0 +1,11 @@
+#!/bin/sh
+# chezmoi for the Omarchy desktop layer (https://prad.codes/env/omarchy-desktop),
+# a second chezmoi source with its own source dir, config and state, so it
+# never shares chezmoi state with these dotfiles. Same arguments as chezmoi:
+#   chezmoi-desktop init https://prad.codes/env/omarchy-desktop.git
+#   chezmoi-desktop diff | apply | cd | managed
+exec chezmoi \
+    --source "$HOME/.local/share/omarchy-desktop" \
+    --config "$HOME/.config/chezmoi/omarchy-desktop.toml" \
+    --persistent-state "$HOME/.config/chezmoi/omarchy-desktop.boltdb" \
+    "$@"

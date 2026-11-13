@@ -1,6 +1,0 @@
-[Unit]
-Description=Symlink ~/Code repos into ~/Projects
-
-[Service]
-Type=oneshot
-ExecStart=%h/.local/bin/projects-sync

@@ -1,4 +1,0 @@
-# free-router settings: read by free-router.service (EnvironmentFile=) and
-# exported by fish, bash, and zsh. KEY=VALUE only; no quotes or expansion.
-FREE_ROUTER_PORT=9876
-FREE_ROUTER_API_KEY=sk_gz58b6RRX5
