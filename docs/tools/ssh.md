@@ -1,6 +1,6 @@
 # SSH and mosh
 
-`~/.ssh/config` with the goliath host, and mosh for the interactive session behind `SUPER + SHIFT + G`.
+`~/.ssh/config` with the goliath host, and the interactive session behind `SUPER + SHIFT + G`: `kitten ssh` at home, mosh elsewhere.
 
 | | |
 | --- | --- |
@@ -20,9 +20,18 @@ Keys, `known_hosts` and the agent socket are not managed; only `config` is. The 
 | `IdentityFile` / `IdentitiesOnly` | `~/.ssh/id_ed25519` / `yes` | Offers one key instead of trying every default |
 | `ControlMaster` / `ControlPath` / `ControlPersist` | `auto` / `~/.ssh/cm-%C` / `10m` | One shared connection: later ssh, scp and git runs skip the handshake, and it stays up 10 minutes after the last one exits |
 
-## mosh
+## goliath sessions: kitten ssh or mosh
 
-On Omarchy, `SUPER + SHIFT + G` ([Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md), desktop layer) opens `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`; new tabs and splits in that window are mosh sessions too (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
+On Omarchy, `SUPER + SHIFT + G` ([Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md), desktop layer) opens `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf goliath`; new tabs and splits in that window run `goliath` too (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). [`goliath`](../shell/scripts.md#goliath) reads the active Wi-Fi SSID and connects:
+
+| Network | Transport | Why |
+| --- | --- | --- |
+| `Fios-kM4W5` (home) | `kitten ssh goliath` (plain `ssh` outside kitty) | Same LAN, stable link: kitty's ssh kitten gives the full kitty terminal on goliath (graphics, undercurl, keyboard protocol, clipboard) and shares one connection per window (`share_connections yes` in `ssh.conf`) |
+| Anything else | `mosh goliath` | Roaming: the session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow |
+
+`goliath --ssh` / `goliath --mosh` (or `GOLIATH_TRANSPORT=ssh|mosh`) force one; `GOLIATH_HOME_SSID` changes the home network.
+
+For mosh: it logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale.
 
 - mosh's bootstrap ssh runs with `-S none`, so it never uses the shared connection; key auth through the agent must work non-interactively.
 - goliath runs no firewall, and Tailscale carries the UDP traffic.

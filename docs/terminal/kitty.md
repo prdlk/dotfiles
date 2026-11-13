@@ -188,13 +188,13 @@ Launched by `super+a`. Class `kitty-herdr`, `tab_bar_style hidden` (herdr draws 
 
 ### Goliath (`SUPER + SHIFT + G`)
 
-On Omarchy, [Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md) (the desktop layer) starts `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`: a login shell on goliath over mosh, no tmux; it survives suspend and network changes, and closing the window ends it. `goliath.conf` is `include kitty.conf` (same tab bar, keys and theme) plus overrides:
+On Omarchy, [Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md) (the desktop layer) starts `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf goliath`: a login shell on goliath, no tmux, and closing the window ends it. [`goliath`](../shell/scripts.md#goliath) picks the transport: `kitten ssh` on the home Fios Wi-Fi (full kitty features: graphics, undercurl, the keyboard protocol, clipboard), mosh anywhere else (survives suspend and network changes). `goliath.conf` is `include kitty.conf` (same tab bar, keys and theme) plus overrides:
 
-- The launch aliases (`launch_tb`, `launch_hs`, `launch_vs`, `launch_vs50`, `launch_os`, `launch_ov`, `launch_mn`) run `mosh goliath`, and `ctrl+shift+t` maps to `launch_tb`, so every new tab, split, window and overlay is another goliath session. Maps that pass a program (`ctrl+shift+g` lazygit, `ctrl+shift+f` yazi, `ctrl+shift+e` nvim, `ctrl+shift+p` atuin-pick) run it on goliath.
-- New sessions start in goliath's home directory: kitty's `--cwd=current` only clones `kitten ssh` sessions, and mosh does not forward the remote shell's cwd (OSC 7).
-- `env MOSH_TITLE_NOPREFIX=1` drops mosh's `[mosh] ` title prefix, so tabs get goliath's `goliath:<dir>` title.
+- `exe_search_path +~/.local/bin`, because a kitty started by the compositor may not have `~/.local/bin` on `PATH`.
+- The launch aliases (`launch_tb`, `launch_hs`, `launch_vs`, `launch_vs50`, `launch_os`, `launch_ov`, `launch_mn`) run `goliath`, and `ctrl+shift+t` maps to `launch_tb`, so every new tab, split, window and overlay is another goliath session over whichever transport the network calls for at that moment. Maps that pass a program (`ctrl+shift+g` lazygit, `ctrl+shift+f` yazi, `ctrl+shift+e` nvim, `ctrl+shift+p` atuin-pick) run it on goliath.
+- New sessions start in goliath's home directory: the aliases run a command, so kitty's `--cwd=current` cloning (which only understands `kitten ssh`) does not apply, and mosh does not forward the remote shell's cwd (OSC 7) anyway.
 
-Host settings and mosh caveats (`TERM` is `xterm-256color` inside) are in [SSH and mosh](../tools/ssh.md). `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
+Host settings and the transport caveats are in [SSH and mosh](../tools/ssh.md). `--session=none` keeps this kitty from claiming today's [daily session](#daily-sessions); `--title` keeps the OS window titled `goliath` (`os_window_title.py` skips kitties started with `--title`).
 
 ### ssh.conf
 

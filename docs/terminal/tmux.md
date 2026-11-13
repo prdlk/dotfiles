@@ -6,12 +6,12 @@ Terminal multiplexer. [Ghostty](ghostty.md) runs nothing but tmux, and Ghostty's
 
 | | |
 | --- | --- |
-| Source | `dot_config/tmux/` in this repo: `tmux.conf`, `tmux-nerd-font-window-name.yml`, `treemux_init.lua`, `popup-undim.sh`, `tab-label.sh` |
+| Source | `dot_config/tmux/` in this repo: `tmux.conf`, `tmux-nerd-font-window-name.yml`, `treemux_init.lua`, `popup-undim.sh` |
 | Palette source | `dot_config/tmux-palette/`: `commands.json`, `hidden.json`, `shortcuts.json`, `theme.json`, `palettes/*.json` |
 | Target | `~/.config/tmux/` and `~/.config/tmux-palette/` |
 | Install | `tmux` in `.chezmoidata/packages.yaml` (pacman, Homebrew; mise on Ubuntu, whose apt tmux 3.4 is too old for `tmux.conf`) |
 
-tmux and tmux-palette are plain files in this repo, not externals. chezmoi symlinks them into `~/.config` (symlink mode; the two scripts are `executable_` and so are real files), so edit them in place or in the source tree and commit here. After editing an `executable_` script in place, run `chezmoi re-add` on it. tpm is the only external: a `git-repo` in `.chezmoiexternal.toml`, cloned to `~/.config/tmux/plugins/tpm` when missing. `tmux.conf` ends with `run '~/.config/tmux/plugins/tpm/tpm'`. Plugins installed by tpm (`prefix I`) land next to it; chezmoi ignores `plugins/` (apart from tpm), so they are never committed. The [palette](#command-palette) config is the `tmux-palette` directory.
+tmux and tmux-palette are plain files in this repo, not externals. chezmoi symlinks them into `~/.config` (symlink mode; `popup-undim.sh` is `executable_` and so is a real file), so edit them in place or in the source tree and commit here. After editing an `executable_` script in place, run `chezmoi re-add` on it. tpm is the only external: a `git-repo` in `.chezmoiexternal.toml`, cloned to `~/.config/tmux/plugins/tpm` when missing. `tmux.conf` ends with `run '~/.config/tmux/plugins/tpm/tpm'`. Plugins installed by tpm (`prefix I`) land next to it; chezmoi ignores `plugins/` (apart from tpm), so they are never committed. The [palette](#command-palette) config is the `tmux-palette` directory.
 
 ## Options
 
@@ -28,7 +28,7 @@ The prefix is `ctrl+b` (the byte Ghostty's `ctrl+shift` chords send). `ctrl+spac
 | `update-environment` | `TERM` and `TERM_PROGRAM` appended, so programs see the outer terminal (Ghostty/kitty) |
 | `mode-keys` | `vi` |
 | `set-titles` | `on`, `#S`: the terminal window title is the session name, so compositor window groups list sessions (one per Ghostty window) instead of `host:window` |
-| `automatic-rename-format` | `#{window_icon} <label>`: Nerd Font icon, then the dynamic label described under [Window tabs](#window-tabs) |
+| `automatic-rename-format` | `#{window_icon} #{s/^-//:pane_current_command}`: Nerd Font icon, then the program running in the active pane (see [Tab labels](#tab-labels)) |
 | `history-limit` | `50000` |
 | `detach-on-destroy` | `no-detached` (killing a session switches only to a detached session, else detaches, so a Ghostty window never lands on another window's session) |
 
@@ -80,15 +80,7 @@ While a popup is open, the text of the window behind it dims: every pane gets `@
 
 ### Tab labels
 
-Each window reads `<index> <icon> <label>`, updating as you work, the same rule as kitty's `tab_bar.py`:
-
-| Pane runs | Label | Source |
-| --- | --- | --- |
-| `nvim`/`vim`/`hx`/`helix`, editing a file | The file name | The title nvim sets (`<file> \| <org/repo>`, astrocore `custom_title`), read from `#{pane_title}` by the format itself, so a buffer switch relabels the tab immediately |
-| A shell with nothing running in the foreground (`fish`, `bash`, `zsh`, `sh`, `nu`, …) | The shell's name (a login shell's leading `-` dropped); the session name already shows the directory | `#{pane_current_command}`, in the format itself |
-| Anything else, or an editor with no file | Repo the cwd belongs to (walks up for `.git`); the directory name outside a repo; `~` at home | `tab-label.sh`, run as an async `#()` job. When its output differs from the current name, it re-arms `automatic-rename` so tmux relabels right after a `cd` instead of on the next keystroke |
-
-Labels longer than 27 characters end in `…`. The icon comes from tmux-nerd-font-window-name.
+Each window reads `<index> <icon> <name>`. The name is the program running in the window's active pane, `#{pane_current_command}` (`omp`, `nvim`, `fish`, `lazygit`, `workmux`, …), with a login shell's leading `-` dropped. It shows no file names, repos or terminal titles. The icon comes from tmux-nerd-font-window-name, which looks up that same `#{pane_current_command}` in `tmux-nerd-font-window-name.yml`, so a name always has its icon (programs not listed there get the fallback icon). `automatic-rename` updates the name when the foreground program changes.
 
 A window whose agent workmux tracks shows its status icon after the label (`#{@workmux_status}`: working, waiting, done; waiting and done clear when the window gets focus). workmux's own `status_format` is off so it does not rewrite these formats. See [workmux](../tools/workmux.md#agent-status).
 
@@ -122,7 +114,7 @@ Speed: opening takes ~100 ms to the drawn tree, closing ~10 ms, and a `cd` in th
 
 | File | Contents |
 | --- | --- |
-| `commands.json` | The kitty launchers ported as palette items: **Lazygit** (90% popup in the pane's cwd; kitty `ctrl+shift+g`), **Yazi** (new window; kitty `ctrl+shift+f`), **Neovim Split** (nvim in a split to the left, 60% of the pane; alias `nv`; kitty `ctrl+shift+e`), **Shell History (atuin)** (`atuin-pick` in a 25% split below; kitty `ctrl+shift+p`). Also **btop** (80% popup; aliases `top`, `htop`), **Lazydocker** (90% popup in the pane's cwd; alias `dd`), **mandible** (80% popup running [`mandible-pick`](../shell/scripts.md#mandible-pick); alias `man`), **television** (`tv channels`, the [channel picker](../tools/television.md), in a new window in the pane's cwd; alias `tv`), **gitframe** (git diff viewer in a new window in the pane's cwd; alias `gf`), **omp** (opens the omp palette; aliases `agent`, `ai`), **Workmux** (opens the workmux palette; aliases `wm`, `worktree`), **Project Tasks** (opens the tasks palette), **Sessions** (opens the sessions palette; aliases `sx`, `ss`), **Save Sessions**, and **Restore Sessions** (resurrect). Programs are started with `exec`, so the tab icon is the program's, not the shell's |
+| `commands.json` | The kitty launchers ported as palette items: **Lazygit** (90% popup in the pane's cwd; kitty `ctrl+shift+g`), **Yazi** (new window; kitty `ctrl+shift+f`), **Neovim Split** (nvim in a split to the left, 60% of the pane; alias `nv`; kitty `ctrl+shift+e`), **Shell History (atuin)** (`atuin-pick` in a 25% split below; kitty `ctrl+shift+p`). Also **btop** (80% popup; aliases `top`, `htop`), **Lazydocker** (90% popup in the pane's cwd; alias `dd`), **mandible** (80% popup running [`mandible-pick`](../shell/scripts.md#mandible-pick); alias `man`), **television** (`tv channels`, the [channel picker](../tools/television.md), in a new window in the pane's cwd; alias `tv`), **gitframe** (git diff viewer in a new window in the pane's cwd; alias `gf`), **omp** (opens the omp palette; aliases `agent`, `ai`), **Workmux** (opens the workmux palette; aliases `wm`, `worktree`), **Project Tasks** (opens the tasks palette), **Sessions** (opens the sessions palette; alias `sx`), **Save Sessions** (alias `ss`), and **Restore Sessions** (resurrect). Programs are started with `exec`, so the tab icon is the program's, not the shell's |
 | `palettes/tasks.json` | The **Project Tasks** palette (`prefix t`, Ghostty `ctrl+shift+p` / `ctrl+shift+space`), fed by [`pj-palette`](../shell/scripts.md#pj-palette): running background tasks under Running, then `bun install`, `bun run dev`, `uv sync`, `uv run python`, `make`, `go run .`, `cargo run`, `docker compose up` as Quick items when the project has them, then every task `pj` finds, grouped by tool. One-off tasks run in a full-width split along the bottom (25% of the window) in their directory; `ctrl-c` stops a running task, and once it has exited, `enter` or `ctrl-c` closes the pane. Dev servers (`dev`/`start`/`serve`/`watch`/`preview` tasks) and `docker compose up` run in a background session `<session>:<tool-and-command>` shown in a popup: `q` hides it with the task still running, `ctrl-c` asks `Stop <session>? (y/n)` and on `y` stops the task and closes it |
 | `palettes/omp.json` | The **omp** palette, fed by [`pj-palette --omp`](../shell/scripts.md#pj-palette): this tmux session's `<session>:omp` (open it, or start it when not running), every other tmux session's running omp, and a Quit item per session. Running agents have a green icon and show `open` or `hidden` |
 | `palettes/workmux.json` | The **Workmux** palette (`prefix w`, or `ctrl+s` in a workmux sidebar pane), fed by [`workmux-palette`](../shell/scripts.md#workmux-palette): Agents (by status), Worktrees of the pane's repo, New, Workmux tools, Close, Merge, Remove. Its `query` item lists the typed text last; `enter` on it runs `workmux-palette --add <text>` (new worktree and session for that branch) |
@@ -137,5 +129,5 @@ resurrect saves sessions, windows, panes, cwds, pane contents, and a default set
 
 ## tmux-nerd-font-window-name.yml
 
-`show-name: false`, because `automatic-rename-format` supplies the label. The icon sits on the left, with a fallback icon and a blank multi-pane icon. Icons are defined for `mprocs`, `mm`, `macmon`, `make`, `zsh`, `nvim`, `devbox`, `psql`, `yazi`, `lazygit`, `gh`, `tv`, `docker`, `bun`, `node`, `npm`, `pnpm`, `go`, `bunx`, `claude`, `omp`, and `gitframe`. The plugin parses the YAML with awk and does not interpret `\U` escapes, so the glyphs are literal characters.
+`show-name: false`, because `automatic-rename-format` supplies the name. The icon sits on the left, with a fallback icon and a blank multi-pane icon. Icons are defined for `mprocs`, `mm`, `macmon`, `make`, `zsh`, `nvim`, `devbox`, `psql`, `yazi`, `lazygit`, `gh`, `tv`, `docker`, `bun`, `node`, `npm`, `pnpm`, `go`, `bunx`, `claude`, `omp`, and `gitframe`. The plugin parses the YAML with awk and does not interpret `\U` escapes, so the glyphs are literal characters.
 

@@ -37,6 +37,7 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`ghg-clone`](#ghg-clone) | sh | `ghq get` and print the clone path |
 | [`ghn`](#ghn) | sh | Create a private repo, clone it, print the path |
 | [`git-summary`](#git-summary) | sh | Aggregate a repo's `AGENTS.md` files with code2prompt |
+| [`goliath`](#goliath) | sh | Shell on goliath: `kitten ssh` on the home Wi-Fi, mosh elsewhere |
 | [`gop`](#gop) | sh | Open the current repo's web page |
 | [`launch_omp_livediff_overlay`](#launch_omp_livediff_overlay) | sh | omp overlay plus a livediff split in kitty |
 | [`lc-elir`](#lc-elir) | sh | Run `/leetcode-eli5` via omp on picked solutions |
@@ -215,6 +216,24 @@ git-summary [code2prompt flags…]
 From anywhere inside a git repo, runs `code2prompt <repo-root> --include AGENTS.md --include "**/AGENTS.md" --template ~/.config/code2prompt/agents-md.hbs`. Extra flags such as `--output-file` or `--tokens` are passed through.
 
 **Needs:** `git`, `code2prompt`, and the `agents-md.hbs` template.
+
+## goliath
+
+```sh
+goliath                  # kitten ssh on Fios-kM4W5, mosh on any other network
+goliath --ssh | --mosh   # force a transport
+goliath [--ssh|--mosh] <command…>   # run a remote command instead of a shell
+```
+
+Connects to goliath (host settings in `~/.ssh/config`), choosing the transport by the active Wi-Fi SSID: from `nmcli` on Linux (the active connection's `802-11-wireless.ssid`, without the `nmcli dev wifi` rescan), from `ipconfig getsummary en0` on macOS.
+
+- On the home network (`Fios-kM4W5`, or `$GOLIATH_HOME_SSID`), it runs `kitten ssh goliath` inside kitty (`$KITTY_WINDOW_ID` set), else plain `ssh goliath`.
+- Anywhere else, or with no Wi-Fi, it runs `mosh goliath` with `MOSH_TITLE_NOPREFIX=1` (no `[mosh] ` title prefix). If `mosh` is missing it uses ssh.
+- `GOLIATH_TRANSPORT=ssh|mosh` works like the flags.
+
+It is what the goliath kitty window runs, for its first shell and for every new tab and split ([kitty](../terminal/kitty.md#goliath-super--shift--g), [SSH and mosh](../tools/ssh.md)). Run it from a kitty started outside tmux: a `TMUX` variable inherited from elsewhere makes `kitten ssh` wrap its escapes for tmux, which kitty then rejects.
+
+**Needs:** `ssh`; `kitten` (kitty) for the home transport, `mosh` for the away one.
 
 ## gop
 
