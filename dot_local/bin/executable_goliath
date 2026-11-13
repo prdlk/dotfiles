@@ -1,0 +1,62 @@
+#!/bin/sh
+# Shell on goliath, the home server (host settings in ~/.ssh/config). Picks the
+# transport by network:
+#
+#   home Wi-Fi (Fios-kM4W5)  kitten ssh: kitty's ssh kitten (shell integration,
+#                            clipboard, remote cwd for new tabs and splits);
+#                            plain ssh outside kitty
+#   anywhere else            mosh: the session survives roaming, sleep and
+#                            dropped connections (over Tailscale)
+#
+# Overrides: `goliath --ssh` / `goliath --mosh`, or GOLIATH_TRANSPORT=ssh|mosh.
+# GOLIATH_HOME_SSID changes which network counts as home. With mosh missing,
+# ssh is used. Arguments after the flag run as a remote command.
+#
+# Usage: goliath [--ssh|--mosh] [command...]
+set -eu
+
+home_ssid=${GOLIATH_HOME_SSID:-Fios-kM4W5}
+transport=${GOLIATH_TRANSPORT:-}
+case ${1:-} in
+--ssh) transport=ssh; shift ;;
+--mosh) transport=mosh; shift ;;
+esac
+
+# SSID of the active Wi-Fi connection, empty when there is none. NetworkManager
+# (Linux) or ipconfig (macOS); `nmcli dev wifi` is avoided because it can
+# trigger a rescan that takes seconds.
+current_ssid() {
+    if command -v nmcli >/dev/null 2>&1; then
+        name=$(nmcli -t -f TYPE,NAME connection show --active 2>/dev/null | sed -n 's/^802-11-wireless://p' | head -n1)
+        [ -n "$name" ] && nmcli -t -g 802-11-wireless.ssid connection show "$name" 2>/dev/null
+    elif [ "$(uname -s)" = Darwin ]; then
+        ipconfig getsummary en0 2>/dev/null | sed -n 's/^ *SSID : //p' | head -n1
+    fi
+}
+
+if [ -z "$transport" ]; then
+    if [ "$(current_ssid || true)" = "$home_ssid" ]; then transport=ssh; else transport=mosh; fi
+fi
+if [ "$transport" = mosh ] && ! command -v mosh >/dev/null 2>&1; then
+    transport=ssh
+fi
+
+case $transport in
+ssh)
+    if [ -n "${KITTY_WINDOW_ID:-}" ] && command -v kitten >/dev/null 2>&1; then
+        exec kitten ssh goliath "$@"
+    fi
+    exec ssh goliath "$@"
+    ;;
+mosh)
+    # mosh otherwise prefixes every remote window title with "[mosh] ".
+    MOSH_TITLE_NOPREFIX=1
+    export MOSH_TITLE_NOPREFIX
+    if [ $# -gt 0 ]; then exec mosh goliath -- "$@"; fi
+    exec mosh goliath
+    ;;
+*)
+    echo "goliath: unknown transport '$transport' (ssh or mosh)" >&2
+    exit 2
+    ;;
+esac
