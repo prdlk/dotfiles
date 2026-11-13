@@ -19,10 +19,11 @@ fish_add_path $HOME/.grok/bin
 fish_add_path $HOME/.opencode/bin
 fish_add_path -a $HOME/.foundry/bin
 
-# Android SDK (relocated under ~/.local/share/android)
-fish_add_path -a $HOME/.local/share/android/platform-tools
-fish_add_path -a $HOME/.local/share/android/cmdline-tools/latest/bin
-fish_add_path -a $HOME/.local/share/android/emulator
+# Android SDK under ~/.local/share/android-sdk. Prepended so they win over the
+# legacy AUR android-sdk tools (/opt/android-sdk/tools) a login PATH may carry.
+fish_add_path $HOME/.local/share/android-sdk/platform-tools
+fish_add_path $HOME/.local/share/android-sdk/cmdline-tools/latest/bin
+fish_add_path $HOME/.local/share/android-sdk/emulator
 fish_add_path -a $HOME/local/share/pnpm
 
 # pnpm

@@ -32,13 +32,16 @@ case ":$PATH:" in *":$GOBIN:"*) ;; *) PATH="$GOBIN:$PATH" ;; esac
 export GHQ_ROOT="$HOME/Code"
 export CODE_ROOT="$HOME/Code"
 
-# Android SDK — relocated under ~/.local/share/android.
-export ANDROID_HOME="$HOME/.local/share/android"
+# Android SDK under ~/.local/share/android-sdk. Prepended so they win over the
+# legacy AUR android-sdk tools that /etc/profile.d/android-sdk.sh appends.
+export ANDROID_HOME="$HOME/.local/share/android-sdk"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
-for _adir in "$ANDROID_HOME/platform-tools" "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/emulator"; do
-    case ":$PATH:" in *":$_adir:"*) ;; *) [ -d "$_adir" ] && PATH="$PATH:$_adir" ;; esac
+for _adir in "$ANDROID_HOME/emulator" "$ANDROID_HOME/cmdline-tools/latest/bin" "$ANDROID_HOME/platform-tools"; do
+    case ":$PATH:" in *":$_adir:"*) ;; *) [ -d "$_adir" ] && PATH="$_adir:$PATH" ;; esac
 done
 unset _adir
+# Gradle/AGP builds (React Native, Expo) need JDK 17; the system default `java` stays as is.
+[ -d /usr/lib/jvm/java-17-openjdk ] && export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
 
 # GITHUB_TOKEN from gh's keyring login — never stored on disk. An inherited
 # value wins, so nested shells skip the gh call.

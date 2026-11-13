@@ -37,9 +37,11 @@ set -gx VISUAL nvim
 # mise's fish hook re-applies env each prompt and would clobber a shell-set
 # GOBIN. GOROOT is provided by mise (toolchain under ~/.local/share/mise).
 
-# Android SDK — relocated under ~/.local/share/android.
-set -gx ANDROID_HOME $HOME/.local/share/android
+# Android SDK under ~/.local/share/android-sdk.
+set -gx ANDROID_HOME $HOME/.local/share/android-sdk
 set -gx ANDROID_SDK_ROOT $ANDROID_HOME
+# Gradle/AGP builds (React Native, Expo) need JDK 17; the system default `java` stays as is.
+test -d /usr/lib/jvm/java-17-openjdk; and set -gx JAVA_HOME /usr/lib/jvm/java-17-openjdk
 
 # Git hosts (non-secret; tokens are in secrets.fish)
 set -gx GITEA_LOGIN prad.codes
