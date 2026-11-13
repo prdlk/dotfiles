@@ -1,17 +1,17 @@
 # dots (omarchy)
 
-prdlk's dotfiles for [Omarchy](https://omarchy.org) (Arch Linux + Hyprland), managed with chezmoi. One command installs chezmoi and applies the whole setup.
+prdlk's cross-platform developer environment for Arch, macOS and Ubuntu, managed with chezmoi. On [Omarchy](https://omarchy.org) machines (Arch Linux + Hyprland) the desktop layer from [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop) is applied on top. One command installs chezmoi and applies the whole setup.
 
 ```sh
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://prad.codes/env/omarchy.git
 ```
 
-That command installs chezmoi, clones [env/omarchy](https://prad.codes/env/omarchy) together with its submodules, asks three questions (name, email, machine role), installs packages, and applies every config. See [Installation](installation.md) for prerequisites, the age key step, and the options.
+That command installs chezmoi, clones [env/omarchy](https://prad.codes/env/omarchy), asks two questions (name, email), installs packages with the OS package manager, and applies every config. See [Installation](installation.md) for prerequisites, the age key step, and the options.
 
 ## Table of contents
 
-- [Installation](installation.md): Omarchy first, then the one-liner, the age key, roles, and updating.
-- [How it works](chezmoi/README.md): chezmoi layout, machine roles, symlink mode, age encryption, package manifests, apply scripts, and externals.
+- [Installation](installation.md): prerequisites per OS, the one-liner, the age key, what differs per OS, the Omarchy desktop layer, and updating.
+- [How it works](chezmoi/README.md): chezmoi layout, the OS-family template, symlink mode, age encryption, package manifests, apply scripts, and externals.
   - [Overview](chezmoi/README.md)
   - [Configuration](chezmoi/config.md)
   - [Data files](chezmoi/data.md)
@@ -45,28 +45,24 @@ That command installs chezmoi, clones [env/omarchy](https://prad.codes/env/omarc
   - [hunk](tools/hunk.md)
   - [drydock](tools/drydock.md)
   - [LeetCode](tools/leetcode.md)
-- [Desktop](desktop/README.md): Omarchy, Hyprland, Waybar, fonts, and default apps.
-  - [Overview](desktop/README.md)
-  - [Hyprland](desktop/hyprland.md)
-  - [Waybar](desktop/waybar.md)
-  - [Fonts and apps](desktop/fonts-and-apps.md)
-- [AI agents](ai/README.md): Claude Code, omp, the shared agent skill library, and the free-router LLM endpoint.
+- [AI agents](ai/README.md): Claude Code, omp, and the shared agent skill library.
   - [Overview](ai/README.md)
   - [Skills](ai/skills.md)
-  - [free-router](ai/free-router.md)
 
-## Machine roles
+The Omarchy desktop layer (Hyprland, Waybar, fonts and default apps, the `omarchy-*` scripts, free-router) is documented in the [env/omarchy-desktop docs](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/README.md).
 
-The first apply asks for a role. It controls which parts of the repo land on the machine.
+## What differs per OS
 
-| Role | Platform | Gets |
+There are no machine roles. The first apply asks for name and email only; the OS decides the rest.
+
+| OS | Packages | Desktop layer |
 | --- | --- | --- |
-| `desktop` | Omarchy (Arch Linux) | Everything: universal toolset plus the Linux desktop layer |
-| `laptop` | Omarchy (Arch Linux) | Same as `desktop` |
-| `server` | Any Linux | Universal toolset only |
+| Arch / Omarchy | pacman and AUR | Applied when `omarchy` is on `PATH` |
+| macOS | Homebrew formulae and casks | None |
+| Ubuntu | apt, with mise for tools apt lacks | None |
 
-The default is `desktop`. See [Configuration](chezmoi/config.md) and [Ignore rules](chezmoi/externals-and-ignore.md).
+See [Installation](installation.md#what-differs-per-os) and [Configuration](chezmoi/config.md#os-family).
 
 ## Theme
 
-The terminal and agent palette is **cyberdream** ([cyberdream.nvim](https://github.com/scottmckendry/cyberdream.nvim); background `#16181a`, foreground `#ffffff`, accent `#5ea1ff`). Ghostty selects its `cyberdream` theme, tmux colors its tab bar, popups, and command palette with it, atuin selects `cyberdream`, television selects `cyberdream-transparent` (no background, so the terminal's shows through), lazygit and lazydocker use its border and selection colors, Starship selects its `cyberdream` palette, omp selects its `cyberdream` dark theme, and nvim, bat, and yazi select it too; fish ships a cyberdream theme but does not select it. kitty takes its colors from the active Omarchy theme (also cyberdream). The CherryBlossom variants stay shipped but unselected for ghostty, atuin, television, yazi, and omp, as do the koda and ii-auto variants for ghostty, kitty, and yazi. The font is **Victor Mono Nerd Font**.
+The terminal and agent palette is **cyberdream** ([cyberdream.nvim](https://github.com/scottmckendry/cyberdream.nvim); background `#16181a`, foreground `#ffffff`, accent `#5ea1ff`). Ghostty selects its `cyberdream` theme, tmux colors its tab bar, popups, and command palette with it, atuin selects `cyberdream`, television selects `cyberdream-transparent` (no background, so the terminal's shows through), lazygit and lazydocker use its border and selection colors, Starship selects its `cyberdream` palette, omp selects its `cyberdream` dark theme, and nvim, bat, and yazi select it too; fish ships a cyberdream theme but does not select it. kitty takes its colors from the active Omarchy theme on Omarchy machines (also cyberdream). The CherryBlossom variants stay shipped but unselected for ghostty, atuin, television, yazi, and omp, as do the koda and ii-auto variants for ghostty, kitty, and yazi. The font is **Victor Mono Nerd Font**.

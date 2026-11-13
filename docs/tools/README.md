@@ -2,9 +2,9 @@
 
 CLI and TUI tools the repo installs and configures, with the settings applied to each.
 
-This section covers the command-line and terminal-UI tools outside the shell, terminal, and desktop layers. Every tool here is universal: none of it is gated by machine role, so `desktop`, `laptop`, and `server` machines all get it (see [Installation](../installation.md)).
+This section covers the command-line and terminal-UI tools outside the shell and terminal sections. Every tool here is universal: it is installed on Arch, macOS and Ubuntu alike, with a few per-OS gaps noted on the tool's page (see [Installation](../installation.md#what-differs-per-os)). Omarchy-only pieces (Hyprland, Waybar, fonts and default apps) are documented in the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/README.md).
 
-Packages come from `.chezmoidata/packages.yaml` and are installed by `run_onchange_before_10-packages.sh.tmpl` (pacman plus yay for the AUR). See [chezmoi scripts](../chezmoi/scripts.md).
+Packages come from `.chezmoidata/packages.yaml` and are installed by `run_onchange_before_10-packages.sh.tmpl` (pacman plus yay for the AUR on Arch, Homebrew on macOS, apt on Ubuntu, with mise for tools apt lacks). See [chezmoi scripts](../chezmoi/scripts.md).
 
 ## Configured tools
 
@@ -37,13 +37,13 @@ These packages are declared in `.chezmoidata/packages.yaml` but have no config f
 | Tool | Role | Wired in |
 | --- | --- | --- |
 | `fzf` | Fuzzy finder | `FZF_DEFAULT_OPTS` in `dot_config/fish/conf.d/10-env.fish` (rounded border, cyberdream colors: highlight `#5ef1ff`, pointer `#ffaecf`, marker `#5eff6c`). Used by fish functions `c2p`, `cp-appid`, `fab`, `gtm`, `mdp`, `lc-elir`, by `~/.local/bin` scripts (`lc-elir`), and as `fuzzy_cmd` of the yazi bunny plugin. The shell pickers (`gho`, `pj`, <kbd>ctrl-e</kbd>) use [television](television.md). |
-| `fd` | File finder | `c2p`, `cp-appid`, `extract_agents`, `mdp`, `lc-elir`, `conf.d/pnpm-filter.fish`. |
-| `ripgrep` | Content search | `cp-appid`, `gtm`, `gh-sonr-org-migrate` fish functions. |
+| `fd` | File finder | `c2p`, `cp-appid` (desktop layer), `extract_agents`, `mdp`, `lc-elir`, `conf.d/pnpm-filter.fish`. |
+| `ripgrep` | Content search | `cp-appid` (desktop layer), `gtm`, `gh-sonr-org-migrate` fish functions. |
 | `zoxide` | Frecency `cd` | `zoxide init fish` in `conf.d/40-tools.fish`; the `cd` function in fish/bash/zsh falls back to `zoxide query` when the argument is not a directory, and `ghg-clone` registers new clones. |
 | `eza` | `ls` replacement | Interactive shells alias `ls` to `eza --icons` (fish `conf.d/20-aliases.fish`, `~/.config/shell/aliases.sh`). |
 | `jq` | JSON processor | `fab`, `gtm`, `gh-sonr-org-migrate`, `pnpm-filter`. |
 | `duf` | Disk usage overview | Not referenced by any config. |
-| `btop` | Resource monitor | Waybar modules launch it on click (`omarchy-launch-or-focus-tui btop`); kitty tab bar shows an icon for it. |
+| `btop` | Resource monitor | On Omarchy, the desktop layer's Waybar modules launch it on click (`omarchy-launch-or-focus-tui btop`); kitty tab bar shows an icon for it. |
 | `fastfetch` | System info | Not referenced by any config. |
 | `gum` | Shell prompts and pickers | `gdc` (confirm before `git reset --hard`), `ghn` (host and org pickers), `gtm`, `ai`, `pnpm-filter`, nvm activation messages. |
 | `glow` | Markdown renderer | Kitty tab-bar icon only. |

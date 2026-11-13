@@ -112,7 +112,7 @@ Colors are upstream `extras/lazygit/cyberdream.yml` from [cyberdream.nvim](https
 | `os.copyToClipboardCmd` / `readFromClipboardCmd` | `wl-copy` / `wl-paste` |
 
 > [!NOTE]
-> The link opener and the `wl-copy`/`wl-paste` clipboard commands are Wayland/Omarchy-specific. On a `server` role machine they are unavailable, so opening links and clipboard actions fail there.
+> The link opener (`omarchy-launch-webapp`) and the `wl-copy`/`wl-paste` clipboard commands are Wayland/Omarchy-specific. On macOS and Ubuntu, and on Arch without Omarchy, they are unavailable, so opening links and clipboard actions fail there.
 
 ## Custom commands
 

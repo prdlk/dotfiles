@@ -28,10 +28,12 @@ fish is the main interactive shell. bash and zsh are set up to feel the same: th
 
 fish syntax colors, `FZF_DEFAULT_OPTS`, the starship palette, and the atuin theme all use **cyberdream** ([cyberdream.nvim](https://github.com/scottmckendry/cyberdream.nvim)). In fish, `40-tools.fish` also replays quickshell's wallpaper-generated terminal color sequences if that file exists.
 
-## Role gating
+## Platforms
 
-Everything in this section applies on every role (`desktop`, `laptop`, `server`). The desktop helpers in `~/.local/bin` are the exception; they come with the rest of the [desktop layer](../desktop/README.md).
+Everything in this section applies on Arch, macOS and Ubuntu. The desktop helpers (`omarchy-*`, `kitty-day-save`, `projects-sync`, `cp-appid`, `free-router`) are not in this repo; they come with the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/scripts.md) on Omarchy machines. A few helpers assume Wayland: `mdcp` and the `cpy`/`pst` aliases use `wl-copy`/`wl-paste`.
+
+On macOS, bash, zsh and fish put Homebrew on `PATH` (`brew shellenv`), and bash and zsh run `mise activate`.
 
 ## Packages
 
-`.chezmoidata/packages.yaml` supplies the shell tooling through pacman: `fish`, `starship`, `atuin`, `zoxide`, `fzf`, `fd`, `ripgrep`, `eza`, `bat`, `jq`, `gum`, `glow`, `yazi`, `lazygit`, and `zsh-syntax-highlighting`. See [chezmoi scripts](../chezmoi/scripts.md).
+`.chezmoidata/packages.yaml` supplies the shell tooling through the OS package manager (pacman, Homebrew or apt; mise for Ubuntu tools apt lacks): `fish`, `starship`, `atuin`, `zoxide`, `fzf`, `fd`, `ripgrep`, `eza`, `bat`, `jq`, `gum`, `glow`, `yazi`, `lazygit`, and `zsh-syntax-highlighting`. See [chezmoi scripts](../chezmoi/scripts.md).

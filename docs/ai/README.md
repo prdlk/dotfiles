@@ -1,18 +1,18 @@
 # AI agents
 
-The shared agent skill library, a local free-tier LLM router, and the shell entry points for coding agents.
+The shared agent skill library and the shell entry points for coding agents. The local free-tier LLM router (free-router) belongs to the Omarchy desktop layer.
 
 The repo manages the agent skill library only. Claude Code (`~/.claude`) and omp (`~/.omp`) configs are not in this repo. omp, opencode, and crush are global mise tools (`packages.shared.mise`, installed by [15-tools](../chezmoi/scripts.md#15-tools)) and are updated by topgrade's `mise upgrade`; no other agent CLI is installed by chezmoi.
 
 - [Skills](skills.md): Every agent skill in [prdlk/skills](https://github.com/prdlk/skills), installed into `~/.agents/skills` and `~/.claude/skills` by an apply script.
-- [free-router](free-router.md): The freellmapi router on `localhost:9876` as a systemd user service, with `FREE_ROUTER_API_KEY` exported to every shell.
+- [free-router](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/free-router.md): The freellmapi router on `localhost:9876` as a systemd user service, with `FREE_ROUTER_API_KEY` exported to every shell. Part of the Omarchy desktop layer, so it is documented in [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop).
 
 ## Pages
 
 | Page | Source in repo | Target in `$HOME` | Covers |
 | --- | --- | --- | --- |
 | [Skills](skills.md) | `.chezmoidata/skills.yaml`, `.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` | `~/.agents/skills/`, `~/.claude/skills/` | The prdlk/skills source and skill list; installed by the Skills CLI, not vendored |
-| [free-router](free-router.md) | `dot_config/free-router/env`, `dot_local/bin/executable_free-router`, `dot_config/systemd/user/free-router.service`, `.chezmoiexternals/freellmapi.toml` | `~/.config/free-router/env`, `~/.local/bin/free-router`, `~/.local/share/freellmapi` | freellmapi under Bun on `localhost:9876`, the pinned API key, the service, updates |
+| [free-router](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/free-router.md) | In [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop): `dot_config/free-router/env`, `dot_local/bin/executable_free-router`, `dot_config/systemd/user/free-router.service`, `.chezmoiexternals/freellmapi.toml` | `~/.config/free-router/env`, `~/.local/bin/free-router`, `~/.local/share/freellmapi` | freellmapi under Bun on `localhost:9876`, the pinned API key, the service, updates. Omarchy machines only |
 
 ## Shell entry points
 

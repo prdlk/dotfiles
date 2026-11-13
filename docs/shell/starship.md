@@ -8,7 +8,7 @@ The cross-shell prompt — a minimal left prompt, a clock on the right, and a cy
 | --- | --- |
 | `dot_config/starship.toml` | `~/.config/starship.toml` |
 
-The file is not a template and applies on every role. `starship` is in `.chezmoidata/packages.yaml` for pacman and is installed by `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl`.
+The file is not a template and applies on every OS. `starship` is in `.chezmoidata/packages.yaml` (pacman, Homebrew, and mise on Ubuntu) and is installed by `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` (or `15-tools` on Ubuntu).
 
 ## Shell integration
 

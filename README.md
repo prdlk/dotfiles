@@ -1,8 +1,8 @@
 # omarchy
 
-chezmoi source for an [Omarchy](https://omarchy.org) machine (Arch + Hyprland), hosted at <https://prad.codes/env/omarchy>.
+chezmoi source for a cross-platform developer environment (shells, editors, terminals, tmux, TUI tools, agent tooling) on Arch, macOS and Ubuntu, hosted at <https://prad.codes/env/omarchy>.
 
-Install Omarchy first, then on that machine:
+On an [Omarchy](https://omarchy.org) machine (Arch + Hyprland) the desktop layer from [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop) is applied automatically after the dotfiles.
 
 ```sh
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://prad.codes/env/omarchy.git
@@ -10,17 +10,21 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://prad.codes/env/omar
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply git@prad.codes:env/omarchy.git
 ```
 
-chezmoi clones the `dot_config/fish` and `dot_config/hypr` submodules during `init`.
+First apply prompts once for name and email. There are no machine roles: what differs per machine is decided by the OS.
 
-First apply prompts once for name, email, and machine role
-(`desktop` | `laptop` | `server`, default `desktop`). `desktop` and `laptop` get
-the Omarchy layer (Hyprland config, Waybar, uwsm env, fontconfig, mimeapps,
-systemd user units, `omarchy-*` scripts); `server` gets the universal toolset only.
+| | Arch / Omarchy | macOS | Ubuntu |
+| --- | --- | --- | --- |
+| System packages | pacman + AUR (`yay`/`paru`, `yay` bootstrapped) | Homebrew (installed if missing): formulae and casks | apt, with the fish PPA and the tailscale repo |
+| Tools missing from apt | n/a | n/a | mise (installed from `mise.run`) |
+| Victor Mono Nerd Font | `ttf-victor-mono-nerd` | `font-victor-mono-nerd-font` cask | downloaded into `~/.local/share/fonts` |
+| Desktop layer | Applied when `omarchy` is on `PATH` | None | None |
 
 ## Prerequisites
 
-- **Omarchy** installed (provides Hyprland, Waybar, the `omarchy-*` commands and `yay`).
-  `sudo` for pacman; if no `yay`/`paru` exists the install script bootstraps `yay`.
+- **Arch / Omarchy**: `sudo` for pacman. Omarchy provides `yay`; on plain Arch the install script bootstraps it.
+- **GitHub credentials (all OSes)**: the prdlk/kitty, ghostty, television, yazi and omp externals are private (on Omarchy, also prdlk/hypr and prdlk/omarchy in the desktop layer; prdlk/nvim and prdlk/herdr are public). Without credentials the first apply fails with `could not read Username for https://github.com`. Before the one-liner, install `gh` and run `gh auth login` (it configures git's credential helper), or set up another credential helper or token.
+- **macOS**: `curl`. The package script installs Homebrew, which brings the Xcode command line tools.
+- **Ubuntu**: `sudo`, `curl` and `git`.
 - **Secrets**: `age`-encrypted files need the key at
   `~/.config/chezmoi/key.txt`. Copy it there **before** `chezmoi apply`
   (distributed manually, never committed):
@@ -33,7 +37,7 @@ systemd user units, `omarchy-*` scripts); `server` gets the universal toolset on
 
 ## What's managed
 
-Universal: fish, bash + zsh (starship prompt, shared aliases), nvim, tmux,
+fish, bash + zsh (starship prompt, shared aliases), nvim, tmux (+ tmux-palette),
 kitty, ghostty, yazi, lazygit, lazydocker, gh (+ extensions), topgrade, git,
 ssh config, Claude Code and agent skills.
 Packages are declared in `.chezmoidata/packages.yaml` and installed by
@@ -54,20 +58,36 @@ Agent skills are not vendored: they all come from
 it with the Skills CLI (removing skills from any other source) whenever
 `.chezmoidata/skills.yaml` changes.
 
-Omarchy layer (roles `desktop`/`laptop`): `dot_config/hypr` (submodule),
-`dot_config/waybar`, `dot_config/uwsm`, fontconfig, mimeapps,
-`xdg-terminals.list`, systemd user units, and the `omarchy-*` scripts in
-`dot_local/bin`.
+## Omarchy desktop layer
 
-## Submodules and externals
+Hyprland, Waybar, uwsm, vicinae, fontconfig, default apps, systemd user units, the `omarchy-*` scripts and `~/.config/omarchy` live in a second chezmoi source,
+[env/omarchy-desktop](https://prad.codes/env/omarchy-desktop), checked out at `~/.local/share/omarchy-desktop`.
+It has its own config and state, so the two never share chezmoi state. `~/.local/bin/chezmoi-desktop` is chezmoi pointed at it:
 
-- Submodules: `dot_config/fish` (prdlk/fish), `dot_config/hypr` (prdlk/hypr).
-- Externals (`.chezmoiexternals/`): kitty, ghostty, tmux, tmux-palette,
-  television, yazi, herdr, omp, omarchy (`~/.config/omarchy`), agent-root,
-  plus nvim, tpm and a bat syntax in `.chezmoiexternal.toml`.
+```sh
+chezmoi-desktop diff     # same arguments as chezmoi
+chezmoi-desktop apply
+chezmoi-desktop cd
+```
+
+`.chezmoiscripts/run_after_50-omarchy-desktop.sh` runs after every apply when `omarchy` is on `PATH`: the first time it runs `chezmoi-desktop init --apply https://prad.codes/env/omarchy-desktop.git`, afterwards `chezmoi-desktop apply`. It never pulls the checkout; commit and push there as in this repo. On macOS, Ubuntu and Arch without Omarchy it does nothing. Docs: [Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md), [Waybar](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/waybar.md), [fonts and apps](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/fonts-and-apps.md), [free-router](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/free-router.md), [scripts](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/scripts.md).
+
+## Externals
+
+- Externals (`.chezmoiexternals/`): kitty, ghostty, television, yazi, herdr, omp,
+  plus nvim, tpm and a bat syntax in `.chezmoiexternal.toml`. Every one pulls with `--ff-only --no-rebase`.
+- tmux (`dot_config/tmux`) and tmux-palette (`dot_config/tmux-palette`) are plain files in this repo.
 
 `gh` needs `gh auth login` once per machine; the extension install script
 skips gracefully until then and re-runs on the next apply.
+
+## Known OS gaps
+
+- No ghostty package on Ubuntu 24.04.
+- `sshfs` is not installed on macOS (it needs macFUSE).
+- macOS gets the docker CLI only, no daemon (Docker Desktop, colima or OrbStack).
+- `mdcp` and the `cpy`/`pst` aliases use `wl-copy`/`wl-paste` (Wayland).
+- lazygit's link opener is Omarchy-specific.
 
 ## Docs
 

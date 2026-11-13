@@ -13,11 +13,11 @@ fish is the primary interactive shell. The config is split into autoloaded files
 | `dot_config/fish/themes/cyberdream.theme` | `~/.config/fish/themes/cyberdream.theme` |
 | `dot_config/fish/fish_plugins` | `~/.config/fish/fish_plugins` |
 
-`dot_config/fish` is a git submodule ([prdlk/fish](https://github.com/prdlk/fish)). Edit inside the submodule, commit there, then commit the updated pointer in the chezmoi repo. None of these files are templates. chezmoi runs in symlink mode, so each target is a symlink back into the source tree and edits to `~/.config/fish/...` land in the submodule directly. `~/.config/fish/fish_variables` (universal variables, including the selected theme) is listed in `.chezmoiignore.tmpl` and stays local to each machine. `~/.config/fish/conf.d/secrets.fish` is local-only: it is listed in `.chezmoiignore.tmpl` and in the fish repo's `.gitignore`, and never committed.
+`dot_config/fish` is part of this repo (it used to be the [prdlk/fish](https://github.com/prdlk/fish) submodule); edit and commit it here. None of these files are templates. chezmoi runs in symlink mode, so each target is a symlink back into the source tree and edits to `~/.config/fish/...` land in the repo directly. `~/.config/fish/fish_variables` (universal variables, including the selected theme) is listed in `.chezmoiignore.tmpl` and stays local to each machine. `~/.config/fish/conf.d/secrets.fish` is local-only: it is listed in `.chezmoiignore.tmpl` and in the root `.gitignore`, and never committed.
 
 ## Installation
 
-`fish` is in `.chezmoidata/packages.yaml` under `packages.arch.pacman`; `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` installs it with pacman. The tools that fish initializes (starship, zoxide, atuin, fzf, eza, gum, yazi, television, mise) come from the same manifest; Bun is a global mise tool (`packages.shared.mise`) and rustup comes from [15-tools](../chezmoi/scripts.md#15-tools). hishtory, envman, and the Go, Android, and Foundry toolchains are not in the manifest; fish initializes each one only if it is present.
+`fish` is in `.chezmoidata/packages.yaml` under `packages.tools` (pacman, Homebrew, or apt through the fish 4 PPA on Ubuntu); `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` installs it. The tools that fish initializes (starship, zoxide, atuin, fzf, eza, gum, yazi, television, mise) come from the same manifest; Bun is a global mise tool (`packages.shared.mise`) and rustup comes from [15-tools](../chezmoi/scripts.md#15-tools). hishtory, envman, and the Go, Android, and Foundry toolchains are not in the manifest; fish initializes each one only if it is present.
 
 ### Plugins
 
@@ -58,13 +58,15 @@ Runs for every shell, including non-interactive ones, so scripts get the same `P
 
 | Entry | Position |
 | --- | --- |
+| `~/.local/bin` | prepended first, so `40-tools.fish` finds a `mise` installed by `mise.run` (Ubuntu); `inir-path.fish` adds it again only if missing |
+| Homebrew's prefix (`brew shellenv fish`, macOS) | evaluated next |
 | `~/.bun/bin`, `~/.local/share/go/bin`, `~/.maestro/bin`, `~/.grok/bin`, `~/.opencode/bin` | prepended |
 | `~/.foundry/bin` | appended |
 | `~/.local/share/android/platform-tools`, `cmdline-tools/latest/bin`, `emulator` | appended |
 | `~/local/share/pnpm` | appended (note the missing dot; this path does not match `PNPM_HOME`) |
 | `$PNPM_HOME/bin` | prepended; `PNPM_HOME=~/.local/share/pnpm` |
 
-`~/.local/bin` comes from `inir-path.fish` and `~/.cargo/bin` from `rustup.fish`.
+`~/.cargo/bin` comes from `rustup.fish`. `40-tools.fish` runs `mise activate fish` only when `mise` is on `PATH`.
 
 ### 10-env.fish
 
@@ -81,7 +83,7 @@ Runs for every shell, including non-interactive ones, so scripts get the same `P
 | `GITEA_LOGIN` | `prad.codes` |
 | `GITLAB_HOST` | `git.sonr.org` |
 | `GITHUB_TOKEN` | `gh auth token`, unless already set and only if `gh` is logged in |
-| `FREE_ROUTER_PORT`, `FREE_ROUTER_API_KEY` | each `KEY=VALUE` line of `~/.config/free-router/env`, if it exists. See [free-router](../ai/free-router.md) |
+| `FREE_ROUTER_PORT`, `FREE_ROUTER_API_KEY` | each `KEY=VALUE` line of `~/.config/free-router/env`, if it exists. The file comes from the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/free-router.md), so it only exists on Omarchy machines |
 | `EDITOR`, `VISUAL` | `nvim` |
 | `BROWSER` | `/usr/bin/brave-origin` if that binary exists |
 | `CHROME_EXECUTABLE` | `/usr/bin/chromium` if it exists |
@@ -115,7 +117,7 @@ set -gx FZF_DEFAULT_OPTS "
 
 Editor, Bun, directory-jump, and tool aliases, followed by:
 
-- `cpy`/`pst`: `wl-copy`/`wl-paste` when `wl-copy` exists.
+- `cpy`/`pst`: `wl-copy`/`wl-paste` when `wl-copy` exists (Wayland; not defined on macOS).
 - `q`: exits the shell. If `$YAZI_ID` is set and `ya` exists, it first runs `ya emit quit` so the yazi that spawned the shell quits too.
 - Interactive only: `celar` and `claer` → `clear`, and `ls` → `eza --icons` when eza is installed. `clear` itself is not aliased, because an alias would shadow `functions/clear.fish`.
 
@@ -284,7 +286,7 @@ Every file in `functions/` is autoloaded by name. Several also exist as POSIX sc
 | `cd` | `builtin cd`. If that fails, `zoxide query` the argument. Every successful cd is recorded with `zoxide add` |
 | `clear` | Prints `ESC[2J ESC[3J ESC[1;1H` to clear the screen and kitty scrollback, then re-pins the prompt if `FISH_BOTTOM_PROMPT=1`. Falls back to `command clear` when not interactive |
 | `clip-last` | Re-runs `$history[1]`, pipes the output to `cpy`, and sends a `notify-send` notification |
-| `cp-appid` | fzf-pick a `.desktop` app ID and copy it with `wl-copy` (desktop helper in `~/.local/bin`) |
+| `cp-appid` | fzf-pick a `.desktop` app ID and copy it with `wl-copy`; runs the `cp-appid` script from the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/scripts.md#cp-appid), so it only works on Omarchy machines |
 | `czs` | chezmoi sync: `chezmoi status`, `chezmoi re-add` of drifted files, commit the source repo, then `git pull --rebase --autostash` and `git push` if ahead. Optional targets scope it (for example `czs ~/.config/fish`). Messages print with a `chs:` prefix |
 | `extract_agents <dir>` | Copies every `AGENTS.md` under the current tree into `<dir>`, preserving paths |
 | `fab` | fzf-pick a Fabric pattern from `~/.config/fabric/pattern_explainations.json` (description in the preview, <kbd>ctrl-/</kbd> toggles it) and run it, feeding piped stdin if any |

@@ -4,10 +4,7 @@ The shell-agnostic executables in ~/.local/bin — usage, behavior, and dependen
 
 `dot_local/bin/` holds standalone `sh`, `bash`, and `python3` executables. The `executable_` prefix is a chezmoi attribute that sets the executable bit and is dropped from the target name, so `dot_local/bin/executable_pj` becomes `~/.local/bin/pj`. bash, zsh, and fish all put `~/.local/bin` on `PATH`, so every shell runs the same implementation.
 
-This page covers the general-purpose scripts. The desktop scripts in the same directory are documented with their compositor:
-
-- `cp-appid`: fzf-pick a `.desktop` app ID and copy it with `wl-copy`. Desktop roles only.
-- `omarchy-*`: [Hyprland](../desktop/hyprland.md)
+This page covers the general-purpose scripts. The Omarchy desktop scripts (`cp-appid`, `free-router`, `kitty-day-save`, `projects-sync`, `omarchy-*`) are part of the desktop layer and are documented in [its Scripts page](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/scripts.md); `~/.local/bin/chezmoi-desktop` runs chezmoi against that layer ([Installation](../installation.md#omarchy-desktop-layer)).
 
 ## Why some helpers are shell functions
 
@@ -35,14 +32,12 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`c2p`](#c2p) | sh | code2prompt with an fzf-picked template |
 | [`extract_agents`](#extract_agents) | sh | Copy all `AGENTS.md` files into a directory tree |
 | [`fab`](#fab) | sh | fzf picker for Fabric patterns |
-| [`free-router`](#free-router) | bun | Run the freellmapi LLM router on `localhost:$FREE_ROUTER_PORT` |
 | [`gdc`](#gdc) | sh | Discard all git changes after confirmation |
 | [`gh-sonr-org-migrate`](#gh-sonr-org-migrate) | bash | Consolidate `*sonr*` GitHub orgs into `sonr-io` |
 | [`ghg-clone`](#ghg-clone) | sh | `ghq get` and print the clone path |
 | [`ghn`](#ghn) | sh | Create a private repo, clone it, print the path |
 | [`git-summary`](#git-summary) | sh | Aggregate a repo's `AGENTS.md` files with code2prompt |
 | [`gop`](#gop) | sh | Open the current repo's web page |
-| [`kitty-day-save`](#kitty-day-save) | bash | Save kitty's daily session right before shutdown/reboot |
 | [`launch_omp_livediff_overlay`](#launch_omp_livediff_overlay) | sh | omp overlay plus a livediff split in kitty |
 | [`lc-elir`](#lc-elir) | sh | Run `/leetcode-eli5` via omp on picked solutions |
 | [`mandible-pick`](#mandible-pick) | bash | fzf-pick a command, then open it in mandible |
@@ -51,7 +46,6 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`mtime-sort`](#mtime-sort) | sh + perl | Sort path lines newest-first by mtime |
 | [`omp-session`](#omp-session) | python3 | Resume or start omp for the current repo; backend of the `omp-sessions` cable |
 | [`pj`](#pj) | bash | Task runner across every project task source, on a tv cable |
-| [`projects-sync`](#projects-sync) | bash | Symlink every `~/Code` repo into `~/Projects` |
 | [`pj-palette`](#pj-palette) | bash | pj's tasks plus quick actions as a tmux-palette source |
 | [`tmux-sessions`](#tmux-sessions) | bash | Session/window/zoxide switcher as a tmux-palette source |
 | [`workmux-palette`](#workmux-palette) | bash | workmux agents and worktrees as a tmux-palette source |
@@ -235,17 +229,6 @@ Opens a repo's web page for any forge whose URL layout is `https://<host>/<owner
 
 **Needs:** `git`, a browser or `xdg-open`.
 
-## kitty-day-save
-
-```sh
-kitty-day-save         # hold a logind delay lock, flush on shutdown, exit
-kitty-day-save --now   # flush every running kitty immediately
-```
-
-Run by `kitty-day-save.service` (`dot_config/systemd/user/`, `WantedBy=graphical-session.target`, `Restart=always` after 10 s). It wraps itself in `systemd-inhibit --what=shutdown --mode=delay` and waits on `gdbus monitor` for login1's `PrepareForShutdown (true,)`. logind sends that before anything is killed and waits for the lock (`InhibitDelayMaxSec`, 5 s by default), so every kitty still has all its windows. It then sends `kitten day_session.py flush` over remote control to each `@kitty-<pid>` socket in `/proc/net/unix` (3 s timeout each) and exits, which releases the lock. The kitty that owns today's session saves it and holds further saves for 60 s; other kitties ignore the flush. See [kitty daily sessions](../terminal/kitty.md#daily-sessions).
-
-**Needs:** `systemd-inhibit`, `gdbus`, `kitten`. Linux desktop/laptop roles only (`.chezmoiignore.tmpl`).
-
 ## launch_omp_livediff_overlay
 
 ```sh
@@ -284,9 +267,9 @@ mandible-pick
 mdcp <url>
 ```
 
-Fetches the URL as Markdown with `curl.md`, copies it with `wl-copy`, then pastes it back into `mdfried` for a rendered preview.
+Fetches the URL as Markdown with `curl.md`, copies it with `wl-copy`, then pastes it back with `wl-paste` into `mdfried` for a rendered preview.
 
-**Needs:** `curl.md`, `mdfried`, and `wl-clipboard`.
+**Needs:** `curl.md`, `mdfried`, and `wl-clipboard` (`wl-copy`/`wl-paste`, Wayland). It does not work on macOS.
 
 ## mdp
 
@@ -297,28 +280,6 @@ mdp
 Lists `*.md` files up to 3 directories deep with `fd`. fzf shows an `mdfried` preview (right, 60%, wrapped), and the pick opens in `mdfried`.
 
 **Needs:** `fd`, `fzf`, `mdfried`.
-
-## projects-sync
-
-```sh
-projects-sync
-```
-
-Mirrors every repo under the ghq root (`$GHQ_ROOT`, default `~/Code`, laid out `<host>/<owner>/<repo>`) as `~/Projects/<repo>` → the repo. Repos with the same name under different owners become `<owner>-<repo>`. Links pointing into `~/Code` whose repo is gone are removed; real files, real directories, and links pointing elsewhere in `~/Projects` are never touched.
-
-Run by `projects-sync.timer` (`dot_config/systemd/user/`, 30 s after login and every 5 minutes), which [`30-user-services`](../chezmoi/scripts.md#30-user-services) enables. ghq clones land two levels below `~/Code`, out of reach of a non-recursive `.path` unit, hence the poll.
-
-**Needs:** GNU `find`. Linux desktop/laptop roles only (`.chezmoiignore.tmpl`).
-
-## free-router
-
-```sh
-free-router
-```
-
-Runs the [freellmapi](https://github.com/tashfeenahmed/freellmapi) router under Bun on `127.0.0.1:$FREE_ROUTER_PORT`, with its API key pinned to `$FREE_ROUTER_API_KEY`. Run by `free-router.service`, which [`30-user-services`](../chezmoi/scripts.md#30-user-services) enables. See [free-router](../ai/free-router.md).
-
-**Needs:** `bun`, `git`, the `~/.local/share/freellmapi` external. Linux desktop/laptop roles only (`.chezmoiignore.tmpl`).
 
 ## mtime-sort
 

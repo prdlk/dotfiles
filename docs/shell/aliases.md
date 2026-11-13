@@ -39,14 +39,14 @@ A ✓ means the alias exists in that shell with the command shown. Where fish us
 | `e` | `nvim` | ✓ |
 | `e.d` | `cd ~/.config/dotstate/storage/Rogz/.config && yazi` | not defined |
 | `e.f` | `cd ~/.config/fish && yazi` | `cd ~/.local/share/chezmoi/dot_config/fish && yazi` |
-| `e.h` | not defined | `cd ~/.local/share/chezmoi/dot_config/hypr && yazi` |
+| `e.h` | not defined | `cd ~/.local/share/omarchy-desktop/dot_config/hypr && yazi` |
 | `e.k` | `yazi ~/.config/kitty` | ✓ |
 | `e.v` | `yazi ~/.config/nvim/lua` | ✓ |
 | `e.y` | `yazi ~/.config/yazi` | ✓ |
 | `e.t` | `nvim ~/.config/tmux/tmux.conf` | ✓ |
 | `hx` | `helix` | ✓ (listed under Tools in fish) |
 
-The fish `e.f`, `e.h`, and `e.k` aliases open the chezmoi source tree directly. In symlink mode, `~/.config/<tool>` files are symlinks into that tree, so both versions edit the same files. yazi and tmux are external checkouts in `~/.config`, so `e.y` and `e.t` open them there.
+The fish `e.f`, `e.h`, and `e.k` aliases open source trees directly: `e.f` and `e.k` the chezmoi source, `e.h` the Hyprland config in the desktop layer's checkout (`~/.local/share/omarchy-desktop`, [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop)). In symlink mode, `~/.config/<tool>` files are symlinks into those trees, so both versions edit the same files. yazi is an external checkout in `~/.config`, so `e.y` opens it there; `~/.config/tmux/tmux.conf` is a symlink into this repo.
 
 ### Quick directory jumps
 
@@ -102,8 +102,8 @@ All three shells define these outside the YAML: in `20-aliases.fish` for fish, a
 
 | Name | Kind | Definition |
 | --- | --- | --- |
-| `cpy` | alias | `wl-copy` if available |
-| `pst` | alias | `wl-paste` if available |
+| `cpy` | alias | `wl-copy` if available (Wayland; not defined on macOS, or on Ubuntu without wl-clipboard) |
+| `pst` | alias | `wl-paste` if available (same) |
 | `q` | function | `exit`. Runs `ya emit quit` first when `$YAZI_ID` is set, so the parent yazi also quits |
 | `celar`, `claer` | alias | `clear` (interactive only) |
 | `ls` | alias | `eza --icons` when eza is installed (interactive only) |

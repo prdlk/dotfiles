@@ -11,7 +11,7 @@ Agent skills are folders with a `SKILL.md` file (frontmatter `name` and `descrip
 | `.chezmoidata/skills.yaml` | chezmoi data `.skills` | CLI version, agents, and the one source |
 | `.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` | runs `skills add` / `skills remove` | Re-runs when `.skills` changes; see [Scripts](../chezmoi/scripts.md#25-skills) |
 
-Not role-gated; the sync runs on every machine. Installed skill files are machine state, not repo files:
+Not OS-gated; the sync runs on every machine. Installed skill files are machine state, not repo files:
 
 | Path | Written by | Contents |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ skills:
 
 ### Not managed
 
-`omarchy`, `omarchy-app` and `diagnose-crash` (symlinks into `/usr/share/omarchy`) and `terminal-browser` are installed by other packages. They are not in the CLI's lock file, so the sync never touches them.
+On Omarchy, `omarchy`, `omarchy-app` and `diagnose-crash` (symlinks into `/usr/share/omarchy`) and `terminal-browser` are installed by other packages. They are not in the CLI's lock file, so the sync never touches them.
 
 ## Managing skills
 

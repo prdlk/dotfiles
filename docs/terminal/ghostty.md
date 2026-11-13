@@ -4,13 +4,13 @@ Ghostty as a tmux-only terminal — every window attaches to tmux, and ctrl+shif
 
 Ghostty is the default terminal and only a [tmux](tmux.md) client. tmux owns tabs (windows), splits (panes), sessions, and persistence. Ghostty draws the text and handles the clipboard and font size.
 
-It is the default everywhere a desktop picks a terminal: the first entry of `~/.config/xdg-terminals.list` (`dot_config/xdg-terminals.list`, desktop roles only) is what `xdg-terminal-exec` and `omarchy-launch-terminal` launch.
+On Omarchy it is the default terminal: the first entry of `~/.config/xdg-terminals.list` (in the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/fonts-and-apps.md)) is what `xdg-terminal-exec` and `omarchy-launch-terminal` launch.
 
 | | |
 | --- | --- |
 | Source | [prdlk/ghostty](https://github.com/prdlk/ghostty) via `.chezmoiexternals/ghostty.toml`: `config`, `themes/` |
 | Target | `~/.config/ghostty/` |
-| Install | `ghostty` in `packages.arch.pacman` |
+| Install | `ghostty` in `.chezmoidata/packages.yaml`: pacman on Arch, the `ghostty` cask on macOS. No Ubuntu 24.04 package, so Ubuntu has no ghostty (use kitty) |
 
 `~/.config/ghostty` is a `git-repo` external checkout, not chezmoi-managed contents; edit it in place and commit and push from there.
 

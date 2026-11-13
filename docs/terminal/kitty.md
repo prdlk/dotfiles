@@ -2,13 +2,13 @@
 
 kitty configuration, host variants, custom kittens and the Python tab bar.
 
-GPU terminal emulator and the primary terminal on every role.
+GPU terminal emulator and the primary terminal on every OS.
 
 | | |
 | --- | --- |
 | Source | [prdlk/kitty](https://github.com/prdlk/kitty) via `.chezmoiexternals/kitty.toml` |
 | Target | `~/.config/kitty/` |
-| Install | `kitty` in `.chezmoidata/packages.yaml` (pacman), plus `ttf-victor-mono-nerd` for the font |
+| Install | `kitty` in `.chezmoidata/packages.yaml` (pacman, the `kitty` cask on macOS, apt on Ubuntu), plus Victor Mono Nerd Font for the font |
 
 ```text
 ~/.config/kitty/
@@ -43,7 +43,7 @@ Every config ends with:
 include ~/.local/state/omarchy/current/theme/kitty.conf
 ```
 
-Colors come from the active Omarchy theme; it is included last so it wins. `current-theme.conf` is a symlink committed in the repo, pointing at `themes/cyberdream.conf`. Only the legacy `~/.config/herdr/kitty.conf` ([prdlk/herdr](https://github.com/prdlk/herdr)) includes `current-theme.conf`; the main config does not. `themes/` holds `cyberdream`, `koda-dark`, and `koda-light` color files.
+Colors come from the active Omarchy theme; it is included last so it wins. kitty ignores the include where the file does not exist (macOS, Ubuntu), so those machines keep `kitty.conf`'s own colors. `current-theme.conf` is a symlink committed in the repo, pointing at `themes/cyberdream.conf`. Only the legacy `~/.config/herdr/kitty.conf` ([prdlk/herdr](https://github.com/prdlk/herdr)) includes `current-theme.conf`; the main config does not. `themes/` holds `cyberdream`, `koda-dark`, and `koda-light` color files.
 
 ## kitty.conf
 
@@ -66,7 +66,7 @@ Colors come from the active Omarchy theme; it is included last so it wins. `curr
 | OS window title | The active tab's repo name (`watcher os_window_title.py`), like Ghostty's tmux session title; program titles (fish's path, omp's spinner, nvim's file) only reach the tab bar |
 
 > [!NOTE]
-> Transparency uses kitty's own alpha, so text stays opaque. This alpha is also what lets the compositor blur the window: Hyprland enables blur globally and opts out every window except terminal classes.
+> Transparency uses kitty's own alpha, so text stays opaque. This alpha is also what lets the compositor blur the window: on Omarchy, Hyprland (see the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md)) enables blur globally and opts out every window except terminal classes.
 
 The socket also exports `KITTY_LISTEN_ON` into each pane. nvim reads it to know kitty owns the panes and hands `ctrl+h/j/k/l` back to kitty at an edge.
 
@@ -123,7 +123,7 @@ The tmux and herdr hosts are separate kitty processes because `launch` cannot ta
 
 Earlier days open with the [`kitty-days`](../tools/television.md#kitty-days) tv cable (`tv kitty-days`), each in its own kitty (`kitty --session <file>`). A past day is a read-only snapshot: nothing in that kitty saves it back. Today's file opened that way, while no kitty owns it, becomes the live day again.
 
-Before shutdown or reboot, the `kitty-day-save.service` user unit runs [`kitty-day-save`](../shell/scripts.md#kitty-day-save) under a logind delay inhibitor. On `PrepareForShutdown(true)` it sends `kitten day_session.py flush` to every `@kitty-<pid>` socket: the owning kitty saves at once (all windows are still alive), then skips saves for 60 s so windows dying during the shutdown can't shrink the file. [`30-user-services`](../chezmoi/scripts.md#30-user-services) enables the unit.
+On Omarchy, before shutdown or reboot, the `kitty-day-save.service` user unit runs [`kitty-day-save`](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/scripts.md#kitty-day-save) under a logind delay inhibitor. On `PrepareForShutdown(true)` it sends `kitten day_session.py flush` to every `@kitty-<pid>` socket: the owning kitty saves at once (all windows are still alive), then skips saves for 60 s so windows dying during the shutdown can't shrink the file. The [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts) enables the unit. Elsewhere the session is saved by kitty's own watcher only.
 
 What a restored window gets back:
 
@@ -188,7 +188,7 @@ Launched by `super+a`. Class `kitty-herdr`, `tab_bar_style hidden` (herdr draws 
 
 ### Goliath (`SUPER + SHIFT + G`)
 
-[Hyprland](../desktop/hyprland.md) starts `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`: a login shell on goliath over mosh, no tmux; it survives suspend and network changes, and closing the window ends it. `goliath.conf` is `include kitty.conf` (same tab bar, keys and theme) plus overrides:
+On Omarchy, [Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md) (the desktop layer) starts `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`: a login shell on goliath over mosh, no tmux; it survives suspend and network changes, and closing the window ends it. `goliath.conf` is `include kitty.conf` (same tab bar, keys and theme) plus overrides:
 
 - The launch aliases (`launch_tb`, `launch_hs`, `launch_vs`, `launch_vs50`, `launch_os`, `launch_ov`, `launch_mn`) run `mosh goliath`, and `ctrl+shift+t` maps to `launch_tb`, so every new tab, split, window and overlay is another goliath session. Maps that pass a program (`ctrl+shift+g` lazygit, `ctrl+shift+f` yazi, `ctrl+shift+e` nvim, `ctrl+shift+p` atuin-pick) run it on goliath.
 - New sessions start in goliath's home directory: kitty's `--cwd=current` only clones `kitten ssh` sessions, and mosh does not forward the remote shell's cwd (OSC 7).
@@ -212,4 +212,4 @@ Kitten `ssh` config: for `hostname goliath`, `share_connections yes`.
 | `os_window_title.py` | Global watcher. On every `on_tab_bar_dirty` (tab switch, focus change, any program title change; also fires while the bar is hidden) it sets the OS window title to `tab_bar.py`'s `wd_label` for the active window's cwd: the repo root name, `~` at home, the dir name outside a repo. An empty label clears the override, so kitty falls back to the program's title. Does nothing in a kitty started with `--title` (the goliath window). |
 | `day_session.py` | Daily sessions: `geninclude` script, global watcher and the `flush` no-UI kitten in one file. See [Daily sessions](#daily-sessions). |
 
-Related: the [tmux](tmux.md) `is_vim` check and herdr's `vim-herdr-navigation` plugin complete the `ctrl+h/j/k/l` chain. Hyprland window rules can match the `kitty`, `kitty-tmux` and `kitty-herdr` app-ids ([Hyprland](../desktop/hyprland.md)).
+Related: the [tmux](tmux.md) `is_vim` check and herdr's `vim-herdr-navigation` plugin complete the `ctrl+h/j/k/l` chain. Hyprland window rules can match the `kitty`, `kitty-tmux` and `kitty-herdr` app-ids ([Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md)).

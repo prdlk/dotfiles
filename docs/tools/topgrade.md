@@ -2,13 +2,13 @@
 
 Topgrade config for Omarchy (Arch) machines, with yay as the package manager, chezmoi re-add before upgrades, and post-upgrade hooks.
 
-[Topgrade](https://github.com/topgrade-rs/topgrade) runs every updater on the machine in one pass: system packages, cargo, firmware, git repos, flatpak, and custom commands. The config is written for an Omarchy (Arch) box running fish; most keys are left at topgrade's defaults.
+[Topgrade](https://github.com/topgrade-rs/topgrade) runs every updater on the machine in one pass: system packages, cargo, firmware, git repos, flatpak, and custom commands. The config is written for an Omarchy (Arch) box running fish, with the `[linux]` keys specific to Arch; most keys are left at topgrade's defaults.
 
 | | |
 | --- | --- |
 | Source | `dot_config/topgrade.toml` |
 | Target | `~/.config/topgrade.toml` |
-| Packages | `topgrade` (AUR, via yay) |
+| Packages | `topgrade` (AUR via yay on Arch, `topgrade` formula on macOS, mise on Ubuntu) |
 
 > [!NOTE]
 > The file's comments say topgrade on the owner's machine is cargo-installed, and that `cargo install-update` keeps it current. That is why self-update is off.
@@ -30,8 +30,8 @@ The Python pip/conda steps stay off (topgrade's default), which protects a pinne
 
 | Key | Value | Why |
 | --- | --- | --- |
-| `arch_package_manager` | `"yay"` | Pins Omarchy's AUR helper so topgrade does not fall back to bare `pacman`, which would skip the AUR. |
-| `show_arch_news` | `true` | Prints archlinux.org news before upgrading; Omarchy tracks Arch, so manual-intervention notices still apply. |
+| `arch_package_manager` | `"yay"` | Pins Omarchy's AUR helper so topgrade does not fall back to bare `pacman`, which would skip the AUR. Ignored on macOS and Ubuntu. |
+| `show_arch_news` | `true` | Prints archlinux.org news before upgrading; Omarchy tracks Arch, so manual-intervention notices still apply. Arch only. |
 
 ## Other steps
 

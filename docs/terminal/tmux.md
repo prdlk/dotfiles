@@ -6,11 +6,12 @@ Terminal multiplexer. [Ghostty](ghostty.md) runs nothing but tmux, and Ghostty's
 
 | | |
 | --- | --- |
-| Source | [prdlk/tmux](https://github.com/prdlk/tmux) via `.chezmoiexternals/tmux.toml`: `tmux.conf`, `tmux-nerd-font-window-name.yml`, `tab-label.sh` |
-| Target | `~/.config/tmux/` |
-| Install | `tmux` in `.chezmoidata/packages.yaml` (pacman) |
+| Source | `dot_config/tmux/` in this repo: `tmux.conf`, `tmux-nerd-font-window-name.yml`, `treemux_init.lua`, `popup-undim.sh`, `tab-label.sh` |
+| Palette source | `dot_config/tmux-palette/`: `commands.json`, `hidden.json`, `shortcuts.json`, `theme.json`, `palettes/*.json` |
+| Target | `~/.config/tmux/` and `~/.config/tmux-palette/` |
+| Install | `tmux` in `.chezmoidata/packages.yaml` (pacman, Homebrew; mise on Ubuntu, whose apt tmux 3.4 is too old for `tmux.conf`) |
 
-`~/.config/tmux` is a `git-repo` external checkout, not chezmoi-managed contents; edit it in place and commit and push from there. tpm is a separate `git-repo` external in `.chezmoiexternal.toml`, cloned to `~/.config/tmux/plugins/tpm` inside that checkout when missing. `tmux.conf` ends with `run '~/.config/tmux/plugins/tpm/tpm'`. Plugins installed by tpm (`prefix I`) land next to it; the tmux repo's `.gitignore` excludes `plugins/` and chezmoi ignores them. [prdlk/tmux-palette](https://github.com/prdlk/tmux-palette) (`.chezmoiexternals/tmux-palette.toml`, → `~/.config/tmux-palette/`) holds the [palette](#command-palette) config.
+tmux and tmux-palette are plain files in this repo, not externals. chezmoi symlinks them into `~/.config` (symlink mode; the two scripts are `executable_` and so are real files), so edit them in place or in the source tree and commit here. After editing an `executable_` script in place, run `chezmoi re-add` on it. tpm is the only external: a `git-repo` in `.chezmoiexternal.toml`, cloned to `~/.config/tmux/plugins/tpm` when missing. `tmux.conf` ends with `run '~/.config/tmux/plugins/tpm/tpm'`. Plugins installed by tpm (`prefix I`) land next to it; chezmoi ignores `plugins/` (apart from tpm), so they are never committed. The [palette](#command-palette) config is the `tmux-palette` directory.
 
 ## Options
 
@@ -117,7 +118,7 @@ Speed: opening takes ~100 ms to the drawn tree, closing ~10 ms, and a `cd` in th
 
 ### Command palette
 
-`ctrl+space` opens tmux-palette, a fuzzy command list in a popup. Its user config lives in `~/.config/tmux-palette/` (the [prdlk/tmux-palette](https://github.com/prdlk/tmux-palette) external):
+`ctrl+space` opens tmux-palette, a fuzzy command list in a popup. Its user config lives in `~/.config/tmux-palette/` (`dot_config/tmux-palette/` in this repo, symlinked; edit it in place and commit here):
 
 | File | Contents |
 | --- | --- |

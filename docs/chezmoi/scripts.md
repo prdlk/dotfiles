@@ -1,8 +1,8 @@
 # Apply scripts
 
-Every run_ script chezmoi executes during apply, when each one fires, and what it does on each OS and role.
+Every run_ script chezmoi executes during apply, when each one fires, and what it does on each OS.
 
-Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a directory whose scripts run as if they sat at the source root without creating a matching target directory. Two sit at the repo root. All eight are templates; `20-gh-extensions` is a fish script, the rest use `#!/bin/sh` with `set -eu` (except `25-skills`, which uses `set -u`).
+Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a directory whose scripts run as if they sat at the source root without creating a matching target directory. Two sit at the repo root. All are templates except `50-omarchy-desktop`; `20-gh-extensions` is a fish script, the rest use `#!/bin/sh` with `set -eu` (except `25-skills`, which uses `set -u`).
 
 ## Execution order
 
@@ -14,7 +14,7 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
 2. **10-packages (before, onchange)**
 
-   Install system packages from `packages.yaml`.
+   Install system packages from `packages.yaml` with pacman and AUR, Homebrew, or apt.
 
 3. **Files, symlinks, externals**
 
@@ -22,7 +22,7 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
 4. **15-tools (after, onchange)**
 
-   rustup and cargo crates, omp, global mise tools, strata on Linux desktops.
+   mise (Ubuntu), rustup and cargo crates, omp, global mise tools.
 
 5. **20-gh-extensions (after, onchange)**
 
@@ -32,13 +32,13 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
    Install every skill in prdlk/skills, remove skills from other sources.
 
-7. **30-user-services (after, once)**
+7. **40-post (after, onchange)**
 
-   Enable systemd user units (kitty-day-save, projects-sync.timer, free-router).
+   bat cache, font cache (Linux).
 
-8. **40-post (after, onchange)**
+8. **50-omarchy-desktop (after, every apply)**
 
-   bat cache, font cache, title-bar button layout.
+   Clone and apply the Omarchy desktop layer when `omarchy` is on `PATH`.
 
 9. **build-bat-cache (after, onchange)**
 
@@ -51,12 +51,12 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 | Script | Phase | Frequency | Re-run trigger |
 | --- | --- | --- | --- |
 | `.chezmoiscripts/run_before_05-externals.sh.tmpl` | before | every apply | Always runs; cheap unless a target is in the way |
-| `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` | before | onchange | sha256 of `.chezmoidata/packages.yaml`; also the role and OS, which change the rendered package list |
-| `.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` | after | onchange | sha256 of `packages.shared.cargo` and `packages.shared.mise` as JSON; also the OS and role, which add the strata step |
+| `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` | before | onchange | sha256 of `.chezmoidata/packages.yaml`; also the OS family, which changes the rendered install commands |
+| `.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` | after | onchange | sha256 of `packages.shared.cargo` and of the whole `.packages` data as JSON; also the OS family |
 | `.chezmoiscripts/run_onchange_after_20-gh-extensions.sh.tmpl` | after | onchange | sha256 of `packages.shared.gh_extensions` as JSON |
 | `.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` | after | onchange | sha256 of `.skills` as JSON |
-| `.chezmoiscripts/run_once_after_30-user-services.sh.tmpl` | after | once | Runs once per distinct rendered content |
 | `.chezmoiscripts/run_onchange_after_40-post.sh.tmpl` | after | onchange | Edits to the script itself or an OS change |
+| `.chezmoiscripts/run_after_50-omarchy-desktop.sh` | after | every apply | Always runs; exits at once unless `omarchy` is on `PATH` |
 | `run_onchange_after_build-bat-cache.sh.tmpl` | after | onchange | sha256 of `dot_config/bat/themes/cyberdream.tmTheme` and `dot_config/bat/config` |
 | `run_onchange_after_install-yazi-plugins.sh.tmpl` | after | onchange | sha256 of `~/.config/yazi/package.toml` (empty when the file is absent) |
 
@@ -70,7 +70,7 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
 ## 05-externals
 
-`.chezmoiscripts/run_before_05-externals.sh.tmpl` clears the way for the `git-repo` externals in `.chezmoiexternals/*.toml` and `.chezmoiexternal.toml` (its list is rendered from those files, so new externals are covered without edits). chezmoi clones an external only into a missing or empty target and pulls only in an existing checkout; any other directory at the target stops the apply with a git error. A fresh Omarchy install ships its own `~/.config/kitty`, `ghostty`, `omarchy`, and others, so the first apply would stop there.
+`.chezmoiscripts/run_before_05-externals.sh.tmpl` clears the way for the `git-repo` externals in `.chezmoiexternals/*.toml` and `.chezmoiexternal.toml` (its list is rendered from those files, so new externals are covered without edits). chezmoi clones an external only into a missing or empty target and pulls only in an existing checkout; any other directory at the target stops the apply with a git error. A fresh Omarchy install ships its own `~/.config/kitty`, `ghostty`, and others, so the first apply would stop there.
 
 - Runs before every apply (`run_before_`). With every target missing, empty, or already a checkout it only stats directories and exits 0.
 - For each target that exists otherwise (a non-empty directory without `.git`, a file, or a symlink), it asks on the terminal: `<target> exists and is not a git checkout. Replace it with <url> (old copy kept as <target>.bak-<time>)? [y/N]`.
@@ -80,33 +80,45 @@ Eight scripts run during `chezmoi apply`. Six live in `.chezmoiscripts/`, a dire
 
 ## 10-packages
 
-`.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` installs everything in [`packages.yaml`](data.md#packagesyaml). It runs before files are applied so the tools exist when configs land. On a non-Linux OS it renders to just the shebang and does nothing.
+`.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` installs the `packages.tools` entries of [`packages.yaml`](data.md#packagesyaml) with the OS package manager, chosen by the [os-family template](config.md#os-family). It runs before files are applied so the tools exist when configs land. For any other OS it prints a warning and installs nothing. The script uses `sudo` unless it runs as root.
 
-### Steps
+### Arch (`arch`)
 
-1. Uses `pacman` directly when running as root, otherwise `sudo pacman`.
-2. `pacman -T` filters each list down to names no installed package provides (so `mise-bin` satisfies `mise`, `yazi-git` satisfies `yazi`), then `pacman -S --needed --noconfirm` installs the rest of `packages.arch.pacman`.
-3. For roles `desktop` and `laptop`, the same for `packages.arch.desktop.pacman`, and for `packages.arch.desktop.omarchy` when `pacman-conf -l` lists an `omarchy` repo.
-4. Builds the AUR list: `packages.arch.desktop.aur` plus `packages.arch.aur` for `desktop`/`laptop`, only `packages.arch.aur` for other roles, then drops every name `pacman -T` says is already provided. Desktop apps already installed from a sync repo (`[omarchy]`) are therefore neither rebuilt nor replaced.
-5. If anything is left and neither `yay` nor `paru` is installed, bootstraps `yay`: from a sync repo when `pacman -Si yay` finds one, otherwise by building `yay-bin` from the AUR with `makepkg -si` (installs `git` and `base-devel` first; skipped as root, since makepkg refuses root). Omarchy ships `yay`, so this is normally a no-op.
-6. Runs `yay -S --needed --noconfirm` on the remaining names, falling back to `paru`. yay prefers a sync repo over the AUR when both have the name. If no helper could be bootstrapped it prints `warning: no yay/paru and none could be bootstrapped — skipping AUR packages: …` and continues.
+1. `pacman -T` filters the `arch` names down to those no installed package provides (so `mise-bin` satisfies `mise`, `yazi-git` satisfies `yazi`), then `pacman -S --needed --noconfirm` installs the rest.
+2. Builds the AUR list from the `aur` keys and drops every name `pacman -T` says is already provided, so packages already installed from a sync repo (`[omarchy]`) are neither rebuilt nor replaced.
+3. If anything is left and neither `yay` nor `paru` is installed, bootstraps `yay`: from a sync repo when `pacman -Si yay` finds one, otherwise by building `yay-bin` from the AUR with `makepkg -si` (installs `git` and `base-devel` first; skipped as root, since makepkg refuses root). Omarchy ships `yay`, so this is normally a no-op.
+4. Runs `yay -S --needed --noconfirm` on the remaining names, falling back to `paru`. If no helper could be bootstrapped it prints `warning: no yay/paru and none could be bootstrapped — skipping AUR packages: …` and continues.
+
+### macOS (`darwin`)
+
+1. Looks for Homebrew at `/opt/homebrew/bin/brew` or `/usr/local/bin/brew`. If missing, runs Homebrew's official non-interactive installer (`NONINTERACTIVE=1`), which also installs the Xcode command line tools. That is why macOS needs nothing but `curl`.
+2. Evaluates `brew shellenv` so `brew` is on `PATH` for the rest of the script.
+3. Installs the `brew` formulae not yet in `brew list --formula`, then the `cask` entries not yet in `brew list --cask`. Nothing already installed is upgraded.
+
+### Ubuntu (`debian`)
+
+1. `apt-get update`, then installs `ca-certificates`, `curl`, `gnupg`, `software-properties-common` and `xz-utils`.
+2. Adds `ppa:fish-shell/release-4` when no fish-shell source is configured (the noble archive has fish 3.7; the fish config targets 4.x).
+3. Adds the pkgs.tailscale.com apt repo for the release codename (its keyring and `tailscale.list`) when `/etc/apt/sources.list.d/tailscale.list` is missing. Runs `apt-get update` again if a repo was added.
+4. `apt-get install -y` of every `apt` entry.
+5. If `~/.local/share/fonts/VictorMonoNerdFont` does not exist, downloads the nerd-fonts `VictorMono.tar.xz` release into it. [40-post](#40-post) refreshes the font cache.
+
+Ubuntu's `mise` entries are installed by [15-tools](#15-tools), after mise itself.
 
 ## 15-tools
 
-`.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` installs the tools that do not come from pacman. It prepends `~/.cargo/bin` to `PATH`, since chezmoi's environment can predate the shell config that adds it. Any failing step aborts the script, so chezmoi keeps the old hash and retries on the next apply.
+`.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` installs the tools that do not come from the OS package manager. It prepends `~/.cargo/bin` and `~/.local/bin` to `PATH`, since chezmoi's environment can predate the shell config that adds them. Any failing step aborts the script, so chezmoi keeps the old hash and retries on the next apply.
 
 | Step | Condition | Action |
 | --- | --- | --- |
+| Homebrew environment | macOS | Evaluates `brew shellenv` so `cargo`, `mise` and `jq` from Homebrew are found |
+| mise | Ubuntu, `mise` not on `PATH` | `curl -fsSL https://mise.run \| sh` (mise is in neither apt nor the manifest's apt list; Arch and macOS get it from pacman/Homebrew) |
 | rustup | `cargo` not on `PATH` | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y --no-modify-path`. `-y` because there is no prompt under chezmoi; `--no-modify-path` because the shell rc files are symlinks into this repo and already source `~/.cargo/env` |
 | cargo crates | every OS | `cargo install --locked <crate>` for each `packages.shared.cargo` entry missing from `cargo install --list` |
-| mise tools | `mise` installed (warning otherwise) | `mise use -g <tools…>` for each `packages.shared.mise` entry absent from `mise ls --global --json`, then `mise install <tools…>`. A tool already in the global config keeps its pinned version. omp and opencode come from here |
+| mise tools | `mise` installed (warning otherwise) | `mise use -g <tools…>` for each entry absent from `mise ls --global --json`, then `mise install <tools…>`. The list is `packages.shared.mise` on every OS plus, on Ubuntu, the `mise` spec of each `packages.tools` entry that has no `apt`. A tool already in the global config keeps its pinned version. omp and opencode come from here |
 | old omp binary | `~/.local/bin/omp` is a regular file and `mise which omp` resolves | Deletes it: a copy from omp's own installer (`omp.sh/install`) sits ahead of mise's shims on `PATH` |
-| strata | Linux, roles `desktop`/`laptop`, no `~/.local/bin/strata` | `curl -fsSL https://raw.githubusercontent.com/lgse/strata/main/install.sh \| bash -s -- --with-desktop-entry --with-file-manager` |
-| strata file chooser | Linux, roles `desktop`/`laptop`, `~/.local/bin/strata` exists and `~/.local/share/xdg-desktop-portal/portals/strata.portal` does not | `strata --install-portal` |
 
-The strata flags install the binary, `~/.local/share/applications/io.github.lgse.Strata.desktop`, and the `org.freedesktop.FileManager1` D-Bus service in `~/.local/share/dbus-1/services` ("Open file location" from other apps). The folder default (`inode/directory`) comes from the managed `~/.config/mimeapps.list` instead of `--with-folder-association`, because `xdg-mime default` would replace that symlink with a plain file. The installer's own dependency step runs `sudo -n pacman`, which fails without cached credentials, so its runtime packages are declared in `packages.arch.desktop.pacman` and are already present when it runs.
-
-`strata --install-portal` makes strata the system file chooser for portal-aware apps (browsers, GTK file dialogs). It writes `strata.portal` and the `org.freedesktop.impl.portal.desktop.strata` D-Bus service under `~/.local/share`, prepends `strata;` to the `org.freedesktop.impl.portal.FileChooser` line of `~/.config/xdg-desktop-portal/<desktop>-portals.conf` (`hyprland-portals.conf`, copied from `/usr/share/xdg-desktop-portal/` when absent, so the compositor's backends stay as fallbacks), marks the in-app offer answered (`~/.config/strata/portal-opt-in-v1`), and restarts `xdg-desktop-portal.service`. That config file is strata's, not chezmoi's: `strata --uninstall-portal` restores it. Check: `gdbus call --session --dest org.freedesktop.impl.portal.desktop.strata --object-path /org/freedesktop/portal/desktop --method org.freedesktop.DBus.Properties.Get org.freedesktop.impl.portal.FileChooser version` prints `uint32 4`. Apps that draw their own picker instead of calling the portal are unchanged.
+The re-run triggers are hashes of `packages.shared.cargo` and of the whole `.packages` data, and the OS family. strata (the folder handler) is no longer installed here; it moved to the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts).
 
 ## 20-gh-extensions
 
@@ -124,34 +136,35 @@ The strata flags install the binary, `~/.local/share/applications/io.github.lgse
 
 `.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` installs every agent skill in the one source in [`skills.yaml`](data.md#skillsyaml), [prdlk/skills](https://github.com/prdlk/skills), with the Skills CLI (`npx -y skills@1.7.0`). See [Skills](../ai/skills.md).
 
-- Exits 0 with a warning if `npx` or `jq` is missing.
+- Puts `~/.local/share/mise/shims` first on `PATH` (node/npx come from mise, and a first apply runs before any shell has activated it), then exits 0 with a warning if `npx` or `jq` is still missing.
 - One-time migration: deletes any directory in `~/.agents/skills` or `~/.claude/skills` that contains symlinks into the chezmoi source directory (the old vendored layout), removes `~/.agents/.skill-lock.json` if it is a symlink into the source directory, and deletes the old state file `~/.local/state/chezmoi/skills.txt`.
 - Runs `skills add <source> -g -y -a <agents> --skill '*'`.
 - Reads the CLI's lock (`${XDG_STATE_HOME:-~/.local/state}/skills/.skill-lock.json`) and removes every skill whose recorded source is not `prdlk/skills`, with `skills remove -g -y`. Skills installed by packages are not in the lock and stay.
 - Exits 1 if the install or the removal failed, so chezmoi keeps the old hash and retries on the next apply. A failed install removes nothing.
 
-## 30-user-services
-
-`.chezmoiscripts/run_once_after_30-user-services.sh.tmpl` enables session-critical systemd user units on Linux.
-
-- Same check for `~/.config/systemd/user/kitty-day-save.service` (from `dot_config/systemd/user/`, so Linux desktop/laptop roles only), then `systemctl --user enable --now kitty-day-save.service`. See [kitty-day-save](../shell/scripts.md#kitty-day-save).
-- Same check for `~/.config/systemd/user/projects-sync.timer`, then `systemctl --user enable --now projects-sync.timer`. See [projects-sync](../shell/scripts.md#projects-sync).
-- Same check for `~/.config/systemd/user/free-router.service`, then `systemctl --user enable --now free-router.service`. See [free-router](../ai/free-router.md).
-- On non-Linux systems it renders to `#!/bin/sh` / `exit 0`.
-
-Other personal automation units (brain-lens, omp-loop, rclone, hermes) are deliberately not enabled; the script comment says to enable them by hand per machine. Their unit files are not in the repo, so they have to exist on the machine already.
-
 ## 40-post
 
-`.chezmoiscripts/run_onchange_after_40-post.sh.tmpl` is post-apply housekeeping. It re-runs when the script is edited.
+`.chezmoiscripts/run_onchange_after_40-post.sh.tmpl` is post-apply housekeeping. It re-runs when the script's rendered content changes, which includes the OS.
 
 | Step | Condition | Action |
 | --- | --- | --- |
 | bat cache | `bat` installed | `bat cache --build` |
 | Font cache | Linux, `fc-cache` installed | `fc-cache -f` |
-| Title-bar buttons | Linux, role `desktop`/`laptop`, `gsettings` installed | `gsettings set org.gnome.desktop.wm.preferences button-layout ':'`: no minimize/maximize/close in client-side title bars (GTK/libadwaita header bars, Chromium/Brave, Electron 43+ window-controls overlays). Close windows with `SUPER + Q` |
 
-Each step ignores failures (`|| true`). tpm is cloned by [`.chezmoiexternal.toml`](externals-and-ignore.md#chezmoiexternaltoml), not here.
+Each step ignores failures (`|| true`). tpm is cloned by [`.chezmoiexternal.toml`](externals-and-ignore.md#chezmoiexternaltoml), not here. The title-bar button layout setting that used to be here moved to the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts).
+
+## 50-omarchy-desktop
+
+`.chezmoiscripts/run_after_50-omarchy-desktop.sh` applies the Omarchy desktop layer, [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop), a second chezmoi source. It is a plain `#!/bin/sh` script (not a template) and runs after every apply, not just when something changed.
+
+- Exits 0 at once unless `omarchy` is on `PATH`, so macOS, Ubuntu and Arch without Omarchy skip it.
+- If `~/.local/share/omarchy-desktop/.git` exists, runs `~/.local/bin/chezmoi-desktop apply`.
+- Otherwise runs `~/.local/bin/chezmoi-desktop init --apply https://prad.codes/env/omarchy-desktop.git`, which clones the layer and applies it.
+- Never pulls the checkout: commit and push in `~/.local/share/omarchy-desktop`, as in this repo.
+
+`chezmoi-desktop` (`dot_local/bin/executable_chezmoi-desktop`, applied before this script runs) is chezmoi with `--source ~/.local/share/omarchy-desktop --config ~/.config/chezmoi/omarchy-desktop.toml --persistent-state ~/.config/chezmoi/omarchy-desktop.boltdb`, so the two sources never share chezmoi state. Use it by hand like chezmoi: `chezmoi-desktop diff`, `chezmoi-desktop apply`, `chezmoi-desktop cd`.
+
+The desktop layer's own scripts (the strata install, systemd user services, font and title-bar housekeeping) are documented in the [desktop layer README](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts). `run_once_after_30-user-services` and the strata steps of 15-tools moved there.
 
 ## build-bat-cache
 

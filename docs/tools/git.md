@@ -24,7 +24,7 @@ Git's global config is a single chezmoi template. It sets the commit identity fr
 	name = {{ .name }}
 ```
 
-`.name` and `.email` are prompted once by `.chezmoi.toml.tmpl` on the first `chezmoi init` and stored in the local chezmoi config. No role or OS condition changes this file.
+`.name` and `.email` are prompted once by `.chezmoi.toml.tmpl` on the first `chezmoi init` and stored in the local chezmoi config. No OS condition changes this file.
 
 ## Pagers
 

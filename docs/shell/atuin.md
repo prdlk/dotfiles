@@ -9,11 +9,11 @@ Shell history search with a daemon, directory-scoped up-arrow, tmux popups, a cy
 | `dot_config/atuin/private_config.toml` | `~/.config/atuin/config.toml` | `private_`: written as a regular `0600` file, not a symlink |
 | `dot_config/atuin/themes/cherry-blossom.toml`, `dot_config/atuin/themes/cyberdream.toml` | `~/.config/atuin/themes/*.toml` | symlinks |
 
-chezmoi runs in symlink mode, but `private_` files are written as real files, so edits to `~/.config/atuin/config.toml` do not reach the repo on their own. Copy them back with `chezmoi re-add` (or `czs`, see [fish](fish.md#functions)). None of the files are templates, and they apply on every role.
+chezmoi runs in symlink mode, but `private_` files are written as real files, so edits to `~/.config/atuin/config.toml` do not reach the repo on their own. Copy them back with `chezmoi re-add` (or `czs`, see [fish](fish.md#functions)). None of the files are templates, and they apply on every OS.
 
 ## Installation
 
-`atuin` is listed in `.chezmoidata/packages.yaml` for pacman, and the shells use that package's binary (`/usr/bin/atuin` on Arch). Each shell runs `atuin init` only if `atuin` is on `PATH`.
+`atuin` is listed in `.chezmoidata/packages.yaml` (pacman, Homebrew, and mise on Ubuntu), and the shells use that binary (`/usr/bin/atuin` on Arch). Each shell runs `atuin init` only if `atuin` is on `PATH`.
 
 > [!NOTE]
 > **No standalone install**

@@ -6,9 +6,9 @@
 | --- | --- |
 | Source | `private_dot_ssh/config` |
 | Target | `~/.ssh/config` (symlink; `private_` keeps `~/.ssh` at `0700`) |
-| Packages | `mosh`, `tailscale` (pacman, every role, so goliath has `mosh-server` too) |
+| Packages | `mosh`, `tailscale` (every OS, so goliath has `mosh-server` too; Ubuntu's tailscale comes from the pkgs.tailscale.com repo) |
 
-Keys, `known_hosts` and the agent socket are not managed; only `config` is. The agent comes from fish's [`30-ssh-agent.fish`](../shell/fish.md#30-ssh-agentfish). Keepalives come from Omarchy's `/etc/ssh/ssh_config.d/20-omarchy-keepalive.conf` (`ServerAliveInterval 15`, `ServerAliveCountMax 3`, `ConnectTimeout 10`).
+Keys, `known_hosts` and the agent socket are not managed; only `config` is. The agent comes from fish's [`30-ssh-agent.fish`](../shell/fish.md#30-ssh-agentfish). On Omarchy, keepalives come from `/etc/ssh/ssh_config.d/20-omarchy-keepalive.conf` (`ServerAliveInterval 15`, `ServerAliveCountMax 3`, `ConnectTimeout 10`).
 
 ## Host goliath
 
@@ -22,7 +22,7 @@ Keys, `known_hosts` and the agent socket are not managed; only `config` is. The 
 
 ## mosh
 
-`SUPER + SHIFT + G` ([Hyprland](../desktop/hyprland.md)) opens `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`; new tabs and splits in that window are mosh sessions too (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
+On Omarchy, `SUPER + SHIFT + G` ([Hyprland](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/hyprland.md), desktop layer) opens `kitty --class=kitty-goliath --title=goliath --session=none --config ~/.config/kitty/goliath.conf mosh goliath`; new tabs and splits in that window are mosh sessions too (see [kitty](../terminal/kitty.md#goliath-super--shift--g)). mosh logs in over ssh with this host block (`%h` is the Tailscale IP), starts `mosh-server` on goliath, which binds UDP 60000–61000 on `100.115.218.84`, and the session runs over Tailscale. The session survives suspend, Wi-Fi changes and dropped links, and echoes keystrokes locally while the link is slow.
 
 - mosh's bootstrap ssh runs with `-S none`, so it never uses the shared connection; key auth through the agent must work non-interactively.
 - goliath runs no firewall, and Tailscale carries the UDP traffic.

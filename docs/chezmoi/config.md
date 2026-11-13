@@ -1,8 +1,8 @@
-# Config and roles
+# Config and OS family
 
-The .chezmoi.toml.tmpl config template, its three prompts, symlink mode, age encryption, and where the resulting data is used.
+The .chezmoi.toml.tmpl config template, its two prompts, the os-family template, symlink mode, age encryption, and where the resulting data is used.
 
-`.chezmoi.toml.tmpl` is rendered once by `chezmoi init` into `~/.config/chezmoi/chezmoi.toml`. It asks three questions, turns on symlink mode and age encryption, and stores the answers as template data for every other `.tmpl` file.
+`.chezmoi.toml.tmpl` is rendered once by `chezmoi init` into `~/.config/chezmoi/chezmoi.toml`. It asks two questions, turns on symlink mode and age encryption, and stores the answers as template data for every other `.tmpl` file. There are no machine roles; per-OS behavior comes from the [os-family template](#os-family).
 
 ## Source
 
@@ -11,8 +11,6 @@ The .chezmoi.toml.tmpl config template, its three prompts, symlink mode, age enc
 ```toml
 {{- $name := promptStringOnce . "name" "Full name" "Prad Nukala" -}}
 {{- $email := promptStringOnce . "email" "Email" "prad@sonr.io" -}}
-{{- $roleDefault := "desktop" -}}
-{{- $role := promptChoiceOnce . "role" "Machine role" (list "desktop" "laptop" "server") $roleDefault -}}
 
 mode = "symlink"
 encryption = "age"
@@ -25,7 +23,6 @@ encryption = "age"
 [data]
     name = {{ $name | quote }}
     email = {{ $email | quote }}
-    role = {{ $role | quote }}
 ```
 
 ## Prompts
@@ -34,19 +31,21 @@ encryption = "age"
 | --- | --- | --- | --- |
 | `name` | `Full name` | `promptStringOnce` | `Prad Nukala` |
 | `email` | `Email` | `promptStringOnce` | `prad@sonr.io` |
-| `role` | `Machine role` | `promptChoiceOnce` from `desktop`, `laptop`, `server` | `desktop` |
 
-The `*Once` functions only prompt when the key is missing from the existing config, so re-running `chezmoi init` keeps earlier answers. `chezmoi init --prompt` forces all three prompts again. Changing the role changes the rendered ignore file and package script, so the next `chezmoi apply` adds or drops the desktop layer and re-runs the package install.
+The `*Once` functions only prompt when the key is missing from the existing config, so re-running `chezmoi init` keeps earlier answers. `chezmoi init --prompt` forces both prompts again.
 
-### Machine roles
+## os-family
 
-| Role | Intended platform | Linux desktop layer | Desktop packages (`packages.arch.desktop`) |
-| --- | --- | --- | --- |
-| `desktop` | Arch Linux | Applied | Installed |
-| `laptop` | Arch Linux | Applied | Installed |
-| `server` | Omarchy/Arch Linux, headless | Skipped | Skipped |
+`.chezmoitemplates/os-family` renders to one word that scripts and templates use to pick a package manifest. Call it with `{{ template "os-family" . }}` (or `includeTemplate "os-family" .` to store the result).
 
-`desktop` and `laptop` behave identically in the current templates; nothing branches on one without the other. The desktop layer is also skipped whenever the OS is not Linux, whatever the role. See [the ignore rules](externals-and-ignore.md#chezmoiignoretmpl) for the exact list of gated paths.
+| Output | Machines |
+| --- | --- |
+| `arch` | Linux whose `osRelease.id` or `idLike` contains `arch`: Arch and derivatives such as Omarchy |
+| `debian` | Linux whose `id` or `idLike` contains `debian` or `ubuntu`: Ubuntu, Debian and derivatives |
+| `darwin` | macOS |
+| empty | Anything else; the package script prints a warning and installs nothing |
+
+What differs by family is covered in [Apply scripts](scripts.md) and [Data files](data.md#per-os-install-keys). The Omarchy desktop layer is not selected here: [`run_after_50-omarchy-desktop.sh`](scripts.md#50-omarchy-desktop) checks for the `omarchy` command at run time.
 
 ## Mode
 
@@ -71,20 +70,16 @@ chmod 600 ~/.config/chezmoi/key.txt
 
 ## Template data
 
-The `[data]` table exposes `.name`, `.email`, and `.role` to every template. chezmoi also merges `.chezmoidata/*.yaml` into the same namespace (`.packages`, `.aliases`; see [Packages and aliases](data.md)) and provides built-ins such as `.chezmoi.os`.
+The `[data]` table exposes `.name` and `.email` to every template. chezmoi also merges `.chezmoidata/*.yaml` into the same namespace (`.packages`, `.aliases`, `.skills`; see [Data files](data.md)) and provides built-ins such as `.chezmoi.os` and `.chezmoi.osRelease`.
 
 | Variable | Consumed by | Use |
 | --- | --- | --- |
 | `.name` | `dot_gitconfig.tmpl` | `[user] name` in `~/.gitconfig` |
 | `.email` | `dot_gitconfig.tmpl` | `[user] email` in `~/.gitconfig` |
-| `.role` | `.chezmoiignore.tmpl` | Skips the Linux desktop layer unless role is `desktop` or `laptop` |
-| `.role` | `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` | Adds the `arch.desktop` pacman and AUR packages for `desktop`/`laptop` |
-| `.chezmoi.os` | `.chezmoi.toml.tmpl` | Role default (`desktop`) |
-| `.chezmoi.os` | `.chezmoiignore.tmpl` | Desktop layer requires `linux` |
-| `.chezmoi.os` | `run_onchange_before_10-packages.sh.tmpl` | pacman/yay on `linux` |
-| `.chezmoi.os` | `run_once_after_30-user-services.sh.tmpl` | systemd user units on `linux` only |
-| `.chezmoi.os`, `.role` | `run_onchange_after_40-post.sh.tmpl` | `fc-cache` on `linux`; title-bar button layout on `linux` with role `desktop`/`laptop` |
-| `.chezmoi.os`, `.role` | `run_onchange_after_15-tools.sh.tmpl` | strata install on `linux` with role `desktop`/`laptop` |
+| `os-family` | `run_onchange_before_10-packages.sh.tmpl` | Chooses pacman + AUR, Homebrew or apt |
+| `os-family` | `run_onchange_after_15-tools.sh.tmpl` | Installs mise on Ubuntu and adds the `mise` specs of `packages.tools`; sources Homebrew's environment on macOS |
+| `.chezmoi.os` | `run_onchange_after_40-post.sh.tmpl` | `fc-cache` on `linux` only |
+| `.chezmoi.osRelease` | `run_onchange_before_10-packages.sh.tmpl` | Ubuntu codename for the tailscale repo |
 
 **dot_gitconfig.tmpl**
 

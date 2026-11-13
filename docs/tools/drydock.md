@@ -18,6 +18,6 @@ drydock lists what is uncommitted, unpushed, and unreleased across every repo un
 roots = ["~/Code"]
 ```
 
-Only `roots` is set; everything else stays at drydock's defaults (`drydock config show` prints the effective config). The root is the ghq root, where repos sit at `<host>/<owner>/<repo>`, within the default `max_depth = 4`. `~/Projects` would find nothing: it holds only symlinks (made by [`projects-sync`](../shell/scripts.md#projects-sync)), and drydock does not follow symlinks by default (`follow_symlinks = false`).
+Only `roots` is set; everything else stays at drydock's defaults (`drydock config show` prints the effective config). The root is the ghq root, where repos sit at `<host>/<owner>/<repo>`, within the default `max_depth = 4`. `~/Projects` would find nothing: it holds only symlinks (made by [`projects-sync`](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/scripts.md#projects-sync) in the desktop layer), and drydock does not follow symlinks by default (`follow_symlinks = false`).
 
 `drydock --root <path>` replaces the configured roots for one run.

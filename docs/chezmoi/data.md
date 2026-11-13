@@ -12,35 +12,41 @@ Files in `.chezmoidata/` are merged into chezmoi's template data on every run. N
 
 ## packages.yaml
 
-One manifest for Arch, plus a `shared` block. Any edit to the file changes the hash embedded in the package script, so the next `chezmoi apply` re-runs the install. Installs are idempotent (`pacman --needed`, `yay`/`paru --needed`). The lists are derived from what the configs actually invoke: tmux-palette items, television cable `requirements`, fish functions, `~/.local/bin` scripts, and compositor bindings.
+`packages.tools` is one list with an entry per tool saying how each OS gets it, plus a `shared` block that is the same on every OS. Any edit to the file changes the hash embedded in the package script, so the next `chezmoi apply` re-runs the install. Installs are idempotent (`pacman --needed`, only missing Homebrew formulae, `apt-get install`). The lists are derived from what the configs actually invoke: tmux-palette items, television cable `requirements`, fish functions, and `~/.local/bin` scripts. Desktop-only packages (Wayland utilities, GUI apps) are not here; they belong to [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop).
 
-### Arch
+### Tools
 
-`packages.arch.pacman`, installed on every Linux machine with `pacman -S --needed --noconfirm`:
+Each `packages.tools` entry is a flow map, for example `{arch: fd, brew: fd, mise: fd}`. A key left out means the tool is not installed on that OS.
 
-| Group | Packages |
-| --- | --- |
-| Shell and editors | `fish`, `neovim`, `helix`, `micro`, `tmux` |
-| Terminals | `ghostty` (default), `kitty` |
-| TUI tools (tmux-palette, television cables) | `yazi`, `lazygit`, `lazydocker`, `docker`, `docker-compose`, `btop`, `fastfetch`, `onefetch`, `television`, `serie`, `tig`, `gitui`, `tldr`, `navi`, `mdfried` |
-| VCS and forge | `git`, `github-cli`, `git-delta`, `diffnav`, `tea` |
-| Search and files | `fzf`, `fd`, `ripgrep`, `zoxide`, `eza`, `bat`, `jq`, `duf` |
-| Media and preview (yazi and tv deps) | `ffmpeg`, `ffmpegthumbnailer`, `poppler`, `resvg`, `imagemagick`, `chafa`, `7zip`, `unzip` |
-| Remote | `mosh`, `sshfs`, `tailscale` |
-| Misc CLI | `mise`, `gum`, `glow`, `atuin`, `wget`, `starship`, `zsh-syntax-highlighting` |
-| Fonts | `ttf-victor-mono-nerd` |
+| Key | Used on | Installed by |
+| --- | --- | --- |
+| `arch` | Arch | pacman, only names no installed package provides (`pacman -T`) |
+| `aur` | Arch | `yay` or `paru` (`yay` bootstrapped if neither exists) |
+| `brew` | macOS | `brew install` (formula) |
+| `cask` | macOS | `brew install --cask` |
+| `apt` | Ubuntu | `apt-get install` |
+| `mise` | Ubuntu, when the entry has no `apt` | `mise use -g <spec>` in [15-tools](scripts.md#15-tools); a registry short name or a backend spec such as `aqua:owner/repo` |
 
-`packages.arch.aur`, installed with `yay -S --needed --noconfirm` (or `paru`) on every Linux machine: `topgrade`, `portop`. Names some installed package already provides are skipped, and yay is bootstrapped when no helper exists ([10-packages](scripts.md#10-packages)).
+`mise` is the Ubuntu fallback for tools apt lacks, ships years behind, or installs under another binary name (`batcat`, `fdfind`). Names were verified against pacman and the AUR, formulae.brew.sh and Ubuntu 24.04 (noble).
 
-`packages.arch.desktop`, added only for roles `desktop` and `laptop`:
+### Per-OS install keys
 
-| Source | Packages |
-| --- | --- |
-| pacman | `uwsm`, `xdg-user-dirs`; Wayland utilities `wl-clipboard`, `cliphist`, `wtype`, `ydotool`, `grim`, `slurp`, `hyprpicker`, `pamixer`, `brightnessctl`, `libnotify`; apps `nautilus`, `imv`, `mpv`, `evince`, `chromium`, `obsidian`; strata runtime deps `bubblewrap`, `desktop-file-utils`, `fontconfig`, `gstreamer`, `gst-libav`, `gst-plugins-base`, `gst-plugins-good`, `gtk4`, `gtksourceview5`, `gvfs`, `poppler-glib`, `xdg-utils` |
-| AUR (or a sync repo with the same name) | `tldraw-offline-bin`; desktop apps `beeper-bin`, `fastmail`, `1password`, `brave-origin-bin`, `claude-desktop`, `spotify` |
-| `[omarchy]` repo (`packages.arch.desktop.omarchy`, only when `pacman-conf -l` lists that repo) | `herdr`, `flea`, `xdg-terminal-exec`, `hyprland-preview-share-picker` |
+The groups below show what `packages.tools` covers. Deviations by OS:
 
-Hyprland, Waybar and the `omarchy-*` commands come with the Omarchy install and are not declared. strata (the folder handler) has no package; [15-tools](scripts.md#15-tools) runs its installer.
+| Group | Tools | Differences |
+| --- | --- | --- |
+| Shell and build | `fish`, `zsh`, `git`, `curl`, `wget`, `base-devel` / `build-essential` | `fish` on Ubuntu comes from `ppa:fish-shell/release-4` (noble ships 3.7). macOS ships zsh and curl. `pkg-config`, `libchafa-dev` and `libglib2.0-dev` are Ubuntu-only (the `mdfried` build). On macOS the Xcode command line tools come with Homebrew |
+| Editors | `neovim`, `helix`, `micro`, `tmux` | Ubuntu: `neovim` and `helix` through mise (`aqua:` specs), `tmux` through mise (static `tmux/tmux-builds`: noble's 3.4 rejects `extended-keys-format` in `tmux.conf`) |
+| Terminals | `ghostty`, `kitty` | `ghostty` has no Ubuntu 24.04 package. `kitty` is a cask on macOS |
+| TUI tools | `yazi`, `lazygit`, `lazydocker`, `docker`, `docker-compose`, `btop`, `fastfetch`, `onefetch`, `television`, `serie`, `tig`, `gitui`, `tldr`, `navi`, `mdfried` | Ubuntu: apt where it has the tool, else mise. `docker` is `docker.io` on Ubuntu; on macOS it is the CLI only (the daemon needs Docker Desktop, colima or OrbStack). `tldr` is `tealdeer` on Homebrew and apt |
+| VCS and forge | `git`, `github-cli`, `git-delta`, `diffnav`, `tea` | `github-cli` is `gh` on Homebrew and mise. `tea` uses a pinned `aqua:` spec on Ubuntu (apt's `tea` is an unrelated editor) |
+| Search and files | `fzf`, `fd`, `ripgrep`, `zoxide`, `eza`, `bat`, `jq`, `duf` | `fzf`, `fd`, `eza`, `bat` through mise on Ubuntu (apt's fzf predates `--fish`/`--tmux`; `fd` and `bat` install as `fdfind`/`batcat`) |
+| Media and preview | `ffmpeg`, `ffmpegthumbnailer`, `poppler`, `resvg`, `imagemagick`, `chafa`, `7zip`, `unzip` | `poppler` is `poppler-utils` on apt. `imagemagick` is `conda:imagemagick` on Ubuntu (apt has ImageMagick 6, no `magick`). `7zip` is `sevenzip` on Homebrew |
+| Remote | `mosh`, `sshfs`, `tailscale` | `sshfs` is not installed on macOS (it needs macFUSE). `tailscale` on Ubuntu comes from the pkgs.tailscale.com apt repo |
+| Misc CLI | `mise`, `gum`, `glow`, `atuin`, `starship`, `zsh-syntax-highlighting`, `topgrade`, `portop` | `mise` on Ubuntu is installed by [15-tools](scripts.md#15-tools) from `https://mise.run`. `topgrade` and `portop` are AUR packages on Arch |
+| Fonts | Victor Mono Nerd Font | `ttf-victor-mono-nerd` (Arch), `font-victor-mono-nerd-font` cask (macOS), a nerd-fonts release download into `~/.local/share/fonts/VictorMonoNerdFont` (Ubuntu, in [10-packages](scripts.md#10-packages)) |
+
+Names some installed package already provides are skipped on Arch, and yay is bootstrapped when no helper exists ([10-packages](scripts.md#10-packages)).
 
 ### Shared
 
@@ -55,10 +61,10 @@ Hyprland, Waybar and the `omarchy-*` commands come with the Omarchy install and 
 
 `packages.shared.cargo` lists `suvadu`, `mandible` (the tmux-palette "mandible" item runs `~/.local/bin/mandible-pick`), and `worktrunk` (`wt`, git worktree management for parallel agent work). [`run_onchange_after_15-tools.sh.tmpl`](scripts.md#15-tools) installs rustup when `cargo` is missing, then any crate `cargo install --list` lacks.
 
-`packages.shared.mise` lists the global mise tools: `ghq`, `bun`, `node`, `uv`, `opencode`, `crush`, and omp as `github:can1357/oh-my-pi` (omp is not in the mise registry, so it uses the GitHub-releases backend, which installs the release binary as `omp`). The same script runs `mise use -g` for each one not yet in the global config (`~/.config/mise/config.toml`, local per machine), then `mise install` on the list. A tool already there keeps its pinned version. topgrade's mise step (`mise upgrade`) updates them.
+`packages.shared.mise` lists the global mise tools on every OS: `ghq`, `bun`, `node`, `uv`, `opencode`, `crush`, and omp as `github:can1357/oh-my-pi` (omp is not in the mise registry, so it uses the GitHub-releases backend, which installs the release binary as `omp`). The same script runs `mise use -g` for each one not yet in the global config (`~/.config/mise/config.toml`, local per machine), then `mise install` on the list. On Ubuntu the `mise` specs of `packages.tools` entries without an `apt` key are added to the list. A tool already there keeps its pinned version. topgrade's mise step (`mise upgrade`) updates them.
 
 > [!NOTE]
-> AUR packages need `yay` or `paru`. The package script bootstraps `yay` when neither exists; only when that is impossible (running as root with no repo shipping yay) does it print a warning listing the skipped AUR packages and continue.
+> On Arch, AUR packages need `yay` or `paru`. The package script bootstraps `yay` when neither exists; only when that is impossible (running as root with no repo shipping yay) does it print a warning listing the skipped AUR packages and continue.
 
 ## aliases.yaml
 
@@ -152,7 +158,7 @@ See [bash and zsh](../shell/README.md) for the rest of those files.
 | --- | --- | --- |
 | `e.d` | `cd ~/.config/dotstate/storage/Rogz/.config && yazi` | not defined |
 | `e.f` | `cd ~/.config/fish && yazi` | `cd ~/.local/share/chezmoi/dot_config/fish && yazi` |
-| `e.h` | not defined | `cd ~/.local/share/chezmoi/dot_config/hypr && yazi` |
+| `e.h` | not defined | `cd ~/.local/share/omarchy-desktop/dot_config/hypr && yazi` (the [desktop layer's](https://prad.codes/env/omarchy-desktop) Hyprland config) |
 | `e.k` | `yazi ~/.config/kitty` | ✓ |
 | `e.y` | `yazi ~/.config/yazi` | ✓ |
 | `e.t` | `nvim ~/.config/tmux/tmux.conf` | ✓ |

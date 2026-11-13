@@ -14,19 +14,19 @@ bash and zsh are set up so a shell other than fish feels the same: the same alia
 | `dot_config/bash/functions/*.bash` | `~/.config/bash/functions/` |
 | `dot_config/zsh/functions/*.zsh` | `~/.config/zsh/functions/` |
 
-`aliases.sh.tmpl` is the only template. It renders the alias list from `.chezmoidata/aliases.yaml` ([chezmoi data](../chezmoi/data.md)). The other files apply as-is on every role.
+`aliases.sh.tmpl` is the only template. It renders the alias list from `.chezmoidata/aliases.yaml` ([chezmoi data](../chezmoi/data.md)). The other files apply as-is on every OS.
 
 ## Installation
 
-bash is part of the base system. zsh itself is not listed in `.chezmoidata/packages.yaml`, but `zsh-syntax-highlighting`, `starship`, `atuin`, `eza`, and `zoxide` are. `suvadu` (the `suv` history tool) is declared under `packages.shared.cargo` and installed by [15-tools](../chezmoi/scripts.md#15-tools).
+bash is part of the base system. zsh is in `.chezmoidata/packages.yaml` for Arch and Ubuntu (macOS ships it), alongside `zsh-syntax-highlighting`, `starship`, `atuin`, `eza`, and `zoxide`. `suvadu` (the `suv` history tool) is declared under `packages.shared.cargo` and installed by [15-tools](../chezmoi/scripts.md#15-tools).
 
 ## ~/.bashrc
 
 Interactive shells only (`[[ $- != *i* ]] && return`). In order:
 
-1. **PATH.** Prepends `~/.local/bin` if missing, sources `~/.cargo/env` if present, and appends `~/.maestro/bin` if it exists. Exports `GHQ_ROOT` and `CODE_ROOT` as `~/Code`.
+1. **PATH.** Prepends `~/.local/bin` if missing, sources `~/.cargo/env` if present, evaluates `brew shellenv` when Homebrew is installed (macOS), runs `mise activate bash` when mise is installed, and appends `~/.maestro/bin` if it exists. Exports `GHQ_ROOT` and `CODE_ROOT` as `~/Code`.
 2. **Go.** `GOPATH=~/.local/share/go`, `GOBIN=$GOPATH/bin`, and `GOBIN` prepended to `PATH`. mise provides `GOROOT`. The same two values are also in `~/.config/go/env` (`dot_config/go/env.tmpl`), Go's own config file, so every `go` invocation uses them even without these variables (cron, `sudo -u`, `env -i`, GUI apps).
-3. **Android SDK.** `ANDROID_HOME` and `ANDROID_SDK_ROOT` set to `~/.local/share/android`. `platform-tools`, `cmdline-tools/latest/bin`, and `emulator` are appended if they exist. Exports `GITHUB_TOKEN` from `gh auth token` unless it is already set, and every variable in `~/.config/free-router/env` (`FREE_ROUTER_PORT`, `FREE_ROUTER_API_KEY`; see [free-router](../ai/free-router.md)) if that file exists.
+3. **Android SDK.** `ANDROID_HOME` and `ANDROID_SDK_ROOT` set to `~/.local/share/android`. `platform-tools`, `cmdline-tools/latest/bin`, and `emulator` are appended if they exist. Exports `GITHUB_TOKEN` from `gh auth token` unless it is already set, and every variable in `~/.config/free-router/env` (`FREE_ROUTER_PORT`, `FREE_ROUTER_API_KEY`) if that file exists. The file comes from the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/docs/free-router.md), so it only exists on Omarchy machines.
 4. **Aliases.** Sources `~/.config/shell/aliases.sh`.
 5. **Functions.** Sources every `~/.config/bash/functions/*.bash`.
 6. **Flyline.** If `~/.local/lib/libflyline.so` exists, loads it with `enable -f … flyline` for richer line editing.
@@ -39,7 +39,7 @@ Interactive shells only (`[[ $- != *i* ]] && return`). In order:
 
 1. **History.** `HISTFILE=~/.zsh_history`, `HISTSIZE=10000`, `SAVEHIST=10000`, `setopt SHARE_HISTORY HIST_IGNORE_DUPS`.
 2. **Completion.** `autoload -Uz compinit && compinit`.
-3. The same PATH, Go, Android, `GITHUB_TOKEN`, and free-router blocks as `.bashrc`, including `GHQ_ROOT` and `CODE_ROOT`.
+3. The same PATH, Go, Android, `GITHUB_TOKEN`, and free-router blocks as `.bashrc` (including the Homebrew and mise lines, `GHQ_ROOT` and `CODE_ROOT`).
 4. Sources `~/.config/shell/aliases.sh`.
 5. Sources every `~/.config/zsh/functions/*.zsh`.
 6. Sources `~/.config/zsh/keybinds.zsh`.
@@ -48,7 +48,7 @@ Interactive shells only (`[[ $- != *i* ]] && return`). In order:
 9. **Prompt.** If starship is installed: `eval "$(starship init zsh)"`, `ZLE_RPROMPT_INDENT=0` (the right-prompt clock sits flush with the edge), and a transient prompt. A `line-finish` zle hook swaps `PROMPT`/`RPROMPT` to the `transient` and `transient_right` starship profiles (`❯`, colored by the last exit status, and the time) and redraws, so past prompts collapse as in fish; a `precmd` hook restores the full prompt. Starship's zsh init also sets `PROMPT2`, the `∙` continuation prompt for unfinished lines. See [Starship](starship.md#shell-integration).
    **Window title.** A `precmd` hook ports `fish_title`: it sets the terminal title to `%~`, prefixed with the first 10 characters of the hostname over SSH, and inside tmux also sets the window name (`ESC k`), like fish's `50-terminal-title.fish`. Unlike fish's `prompt_pwd`, the path is not abbreviated.
 10. `eval "$(tv init zsh)"` if `tv` is installed (<kbd>ctrl-t</kbd> smart autocomplete).
-11. **Syntax highlighting.** Sources the first `zsh-syntax-highlighting.zsh` found in `/usr/share/zsh/plugins/zsh-syntax-highlighting/`. The comment says this must stay last, because it wraps every zle widget defined before it.
+11. **Syntax highlighting.** Sources the first `zsh-syntax-highlighting.zsh` found in `/usr/share/zsh/plugins/zsh-syntax-highlighting/` (Arch), `/usr/share/zsh-syntax-highlighting/` (Ubuntu), or `$HOMEBREW_PREFIX/share/zsh-syntax-highlighting/` (Homebrew). The comment says this must stay last, because it wraps every zle widget defined before it.
 12. **atuin.** `eval "$(atuin init zsh)"` if atuin is installed. This line comes after the syntax-highlighting block, so despite the comment, syntax highlighting is not actually last. atuin loads after tv, so it keeps <kbd>ctrl-r</kbd>.
 
 ## zsh key bindings
@@ -133,7 +133,7 @@ if command -v eza >/dev/null 2>&1; then
 fi
 ```
 
-- **Clipboard detection.** `cpy`/`pst` map to Wayland's `wl-copy`/`wl-paste` when available.
+- **Clipboard detection.** `cpy`/`pst` map to Wayland's `wl-copy`/`wl-paste` when `wl-copy` exists; they are not defined on macOS.
 - **`q`.** Exits the shell. If the shell was spawned from yazi's own `q` binding (`$YAZI_ID` set), it runs `ya emit quit` first so the parent yazi closes too instead of bouncing back.
 - **Typo guards and eza.** `celar`/`claer` → `clear`, and `ls` → `eza --icons` when eza is installed. The file is sourced only by interactive shells, so scripts keep the real `ls`.
 
