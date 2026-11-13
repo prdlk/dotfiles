@@ -3,4 +3,4 @@
     url = "https://github.com/prdlk/television.git"
     refreshPeriod = "168h"
     [".config/television".pull]
-        args = ["--ff-only"]
+        args = ["--ff-only", "--no-rebase"]

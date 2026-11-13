@@ -3,4 +3,4 @@
     url = "https://github.com/prdlk/herdr.git"
     refreshPeriod = "168h"
     [".config/herdr".pull]
-        args = ["--ff-only"]
+        args = ["--ff-only", "--no-rebase"]

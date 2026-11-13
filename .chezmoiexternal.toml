@@ -7,14 +7,14 @@
     type = "git-repo"
     url = "https://github.com/prdlk/nvim.git"
     [".config/nvim".pull]
-        args = ["--ff-only"]
+        args = ["--ff-only", "--no-rebase"]
 
 # bat syntax definition — upstream git repo, cloned when missing.
 [".config/bat/syntaxes/sublime-purescript-syntax"]
     type = "git-repo"
     url = "https://github.com/tellnobody1/sublime-purescript-syntax.git"
     [".config/bat/syntaxes/sublime-purescript-syntax".pull]
-        args = ["--ff-only"]
+        args = ["--ff-only", "--no-rebase"]
 
 # tmux plugin manager — tmux.conf runs it from this path. tpm installs the
 # other plugins next to it (prefix + I); those stay unmanaged.
@@ -22,4 +22,4 @@
     type = "git-repo"
     url = "https://github.com/tmux-plugins/tpm.git"
     [".config/tmux/plugins/tpm".pull]
-        args = ["--ff-only"]
+        args = ["--ff-only", "--no-rebase"]
