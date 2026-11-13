@@ -124,7 +124,7 @@
     "description": "sessions, windows, zoxide: switch, create, rename, kill",
     "category": "Sessions",
     "shortcut": "Ctrl+Shift+O",
-    "aliases": ["sx", "ss"],
+    "aliases": ["sx"],
     "action": { "palette": "sessions" }
   },
   {
@@ -132,6 +132,7 @@
     "title": "Save Sessions",
     "description": "tmux-resurrect snapshot now",
     "category": "Sessions",
+    "aliases": ["ss"],
     "action": {
       "tmux": "run-shell '~/.config/tmux/plugins/tmux-resurrect/scripts/save.sh'"
     }
