@@ -62,7 +62,7 @@ Runs for every shell, including non-interactive ones, so scripts get the same `P
 | Homebrew's prefix (`brew shellenv fish`, macOS) | evaluated next |
 | `~/.bun/bin`, `~/.local/share/go/bin`, `~/.maestro/bin`, `~/.grok/bin`, `~/.opencode/bin` | prepended |
 | `~/.foundry/bin` | appended |
-| `~/.local/share/android/platform-tools`, `cmdline-tools/latest/bin`, `emulator` | appended |
+| `~/.local/share/android-sdk/platform-tools`, `cmdline-tools/latest/bin`, `emulator` | prepended (ahead of the legacy AUR `/opt/android-sdk/tools`) |
 | `~/local/share/pnpm` | appended (note the missing dot; this path does not match `PNPM_HOME`) |
 | `$PNPM_HOME/bin` | prepended; `PNPM_HOME=~/.local/share/pnpm` |
 
@@ -79,7 +79,8 @@ Runs for every shell, including non-interactive ones, so scripts get the same `P
 | `__EGL_VENDOR_LIBRARY_FILENAMES`, `VK_DRIVER_FILES` | Mesa's `50_mesa.json` and RADV's `radeon_icd.json`, only when `/dev/dri/by-path/pci-0000:c4:00.0-render` (the Strix Halo iGPU) exists. Keeps the session off the compute-only eGPU |
 | `EGET_BIN` | `~/.local/bin` |
 | `GHQ_ROOT`, `CODE_ROOT` | `~/Code` |
-| `ANDROID_HOME`, `ANDROID_SDK_ROOT` | `~/.local/share/android` |
+| `ANDROID_HOME`, `ANDROID_SDK_ROOT` | `~/.local/share/android-sdk` |
+| `JAVA_HOME` | `/usr/lib/jvm/java-17-openjdk` when installed (Gradle/AGP builds) |
 | `GITEA_LOGIN` | `prad.codes` |
 | `GITLAB_HOST` | `git.sonr.org` |
 | `GITHUB_TOKEN` | `gh auth token`, unless already set and only if `gh` is logged in |
