@@ -79,11 +79,13 @@ case ${1-} in
         [ $# -ge 4 ] || exit 0   # a Running item whose task has since ended
         root=$3
         shift 3
-        id=$(tmux new-session -d -P -F '#{session_id}' -s "$name" -c "$root" -e PJ_BG=1 "$@") || exit 1
-        # @pj_task marks the session for the Running list (and for tmux.conf's
-        # prefix + a, which hides any of these popups).
-        tmux set -t "$id" @pj_task "$root" \; set -t "$id" status off \; \
-            set -t "$id" detach-on-destroy on
+        # @pj_task marks the session for the Running list, for tmux.conf's
+        # prefix + a (which hides any of these popups) and for treemux's
+        # persistent sidebar (none in these popups). Set in the new-session
+        # command itself: the sidebar's after-new-session hook reads it.
+        id=$(tmux new-session -d -P -F '#{session_id}' -s "$name" -c "$root" -e PJ_BG=1 "$@" \; \
+            set @pj_task "$root") || exit 1
+        tmux set -t "$id" status off \; set -t "$id" detach-on-destroy on
         # Each session gets a key table for its hide/quit keys; other keys
         # reach the program. A task's output takes no input, so q hides and
         # ctrl-c (after a y/n confirm) stops the task. Interactive programs
