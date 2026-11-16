@@ -10,9 +10,9 @@
 #                            run a pj task (the item's action)
 #   pj-palette --cmd ROOT CMD…
 #                            run a quick-action command in ROOT
-#   pj-palette --win SESSION NAME ROOT CMD…
-#                            start CMD… in ROOT in a new window NAME of tmux
-#                            session SESSION (id), without switching to it
+#   pj-palette --win SESSION TASK ROOT CMD…
+#                            start CMD… in ROOT in a new window bg:TASK:N of
+#                            tmux session SESSION (id), without switching to it
 #   pj-palette --bg NAME [ROOT CMD…]
 #                            show background session NAME in a popup, first
 #                            starting CMD… in ROOT if it isn't running
@@ -26,9 +26,10 @@
 # pane.
 #
 # Long-running items (dev/start/serve/watch/preview tasks, compose up) run in
-# a new window of the current session named <tool-and-command> (bun-run-dev),
-# created in the background: focus stays where it is. One per task and
-# session; picking it again while it runs only says which window has it.
+# a new window of the current session named bg:<task>:<n> (bg:dev:1, the
+# lowest number free for that task in the session), created in the
+# background: focus stays where it is. One per task and root in a session;
+# picking it again while it runs only says which window has it.
 # ctrl-c in the window stops the task and closes the window; a task that
 # exits by itself leaves [exit N] until enter. Running ones (any session) are
 # listed first, under Running, to switch to them. tmux.conf's prefix + a
@@ -79,18 +80,22 @@ case ${1-} in
     finish $?
     ;;
 --win)
-    sid=$2 name=$3 root=$4
+    sid=$2 task=$3 root=$4
     shift 4
-    running=$(tmux list-windows -t "$sid" -F $'#{window_index}\t#{@pj_bg_task}' 2>/dev/null |
-        awk -F'\t' -v n="$name" '$2 == n { print $1; exit }')
+    # this task in this root already running in the session: its window name
+    running=$(tmux list-windows -t "$sid" -F $'#{window_name}\t#{@pj_bg_task}\t#{@pj_bg_root}' 2>/dev/null |
+        awk -F'\t' -v t="$task" -v r="$root" '$2 == t && $3 == r { print $1; exit }')
     if [ -n "$running" ]; then
-        tmux display-message "pj: $name is already running in window $running"
+        tmux display-message "pj: $task is already running in $running"
         exit 0
     fi
+    names=$(tmux list-windows -t "$sid" -F '#{window_name}' 2>/dev/null)
+    n=1
+    while grep -qxF "bg:$task:$n" <<<"$names"; do n=$((n + 1)); done
     # @pj_bg_task / @pj_bg_root mark the window for the Running list and the
-    # check above. -n turns automatic-rename off, so it keeps the task's name.
-    win=$(tmux new-window -d -P -F '#{window_id}' -t "$sid:" -n "$name" -c "$root" -e PJ_BG=1 "$@") || exit 1
-    tmux set -w -t "$win" @pj_bg_task "$name" \; set -w -t "$win" @pj_bg_root "$root" 2>/dev/null
+    # check above. -n turns automatic-rename off, so it keeps its name.
+    win=$(tmux new-window -d -P -F '#{window_id}' -t "$sid:" -n "bg:$task:$n" -c "$root" -e PJ_BG=1 "$@") || exit 1
+    tmux set -w -t "$win" @pj_bg_task "$task" \; set -w -t "$win" @pj_bg_root "$root" 2>/dev/null
     exit 0
     ;;
 --bg)
@@ -140,17 +145,16 @@ icon_for() {
 # Tasks that run until stopped: dev/start/serve/watch/preview, also as a
 # namespace segment (dev:web, api:dev).
 long_running() { [[ $1 =~ (^|:)(dev|start|serve|watch|preview)(:|$) ]]; }
-slug() { local s=${*,,}; s=${s//[^a-z0-9]/-}; tr -s - <<<"$s"; }
 
 # Item action (a bash line the palette evals) running `pj-palette ARGV…`:
-# in a full-width bottom split (25%) in DIR, or, given NAME, in a background
-# window NAME of this session. Argv goes to tmux as is (no shell, so fish
-# re-parses nothing).
-task_action() { # dir name argv…
-    local dir=$1 name=$2
+# in a full-width bottom split (25%) in DIR, or, given TASK, in a background
+# window bg:TASK:N of this session. Argv goes to tmux as is (no shell, so
+# fish re-parses nothing).
+task_action() { # dir task argv…
+    local dir=$1 task=$2
     shift 2
-    if [ -n "$name" ]; then
-        printf '%q ' "$self" --win "$session_id" "$name" "$dir" "$self" "$@"
+    if [ -n "$task" ]; then
+        printf '%q ' "$self" --win "$session_id" "$task" "$dir" "$self" "$@"
     else
         printf '%q ' tmux split-window -v -f -l 25% -c "$dir" "$self" "$@"
     fi
@@ -163,11 +167,11 @@ item() { # category icon title description aliases(csv) action [icon color]
           aliases: ($a | split(",") | map(select(. != ""))), action: {shell: $x}}
          + if $k == "" then {} else {iconColor: $k} end')")
 }
-quick() { # icon title aliases background(0/1) dir argv…
-    local icon=$1 title=$2 aliases=$3 dir=$5 name="" desc="in ${5/#$HOME/\~}"
-    [ "$4" = 1 ] && { name=$(slug "$title"); desc+=" · background"; }
+quick() { # icon title aliases background-task("" = one-off) dir argv…
+    local icon=$1 title=$2 aliases=$3 task=$4 dir=$5 desc="in ${5/#$HOME/\~}"
+    [ -n "$task" ] && desc+=" · background"
     shift 5
-    item Quick "$icon" "$title" "$desc" "$aliases" "$(task_action "$dir" "$name" --cmd "$dir" "$@")"
+    item Quick "$icon" "$title" "$desc" "$aliases" "$(task_action "$dir" "$task" --cmd "$dir" "$@")"
 }
 
 # ── omp palette (palettes/omp.json): the <session>:omp agent sessions ──────
@@ -200,10 +204,10 @@ fi
 
 # ── Running: background task windows (any session), then <session>:omp
 #    sessions, to bring back ─────────────────────────────────────────────────
-while IFS=$'\t' read -r sid sname wid idx task dir; do
-    [ -n "$task" ] && item Running '' "$task" "$sname · window $idx · in ${dir/#$HOME/\~}" "" \
+while IFS=$'\t' read -r sid sname wid idx wname task dir; do
+    [ -n "$task" ] && item Running '' "$wname" "$sname · window $idx · in ${dir/#$HOME/\~}" "" \
         "$(printf '%q ' tmux switch-client -t "$sid:$wid")"
-done < <(tmux list-windows -a -F $'#{session_id}\t#{session_name}\t#{window_id}\t#{window_index}\t#{@pj_bg_task}\t#{@pj_bg_root}' 2>/dev/null)
+done < <(tmux list-windows -a -F $'#{session_id}\t#{session_name}\t#{window_id}\t#{window_index}\t#{window_name}\t#{@pj_bg_task}\t#{@pj_bg_root}' 2>/dev/null)
 while IFS=$'\t' read -r name dir; do
     [ -n "$dir" ] && item Running '' "$name" "in ${dir/#$HOME/\~}" "" "$(printf '%q ' "$self" --bg "$name")"
 done < <(tmux list-sessions -F $'#{session_name}\t#{@pj_task}' 2>/dev/null)
@@ -220,24 +224,24 @@ if [ -f "$root/package.json" ]; then
         fi
     fi
     if have "$pm"; then
-        quick "$(icon_for "$pm")" "$pm install" "install,i" 0 "$root" "$pm" install
+        quick "$(icon_for "$pm")" "$pm install" "install,i" "" "$root" "$pm" install
         jq -e '.scripts.dev' "$root/package.json" >/dev/null 2>&1 &&
-            quick "$(icon_for "$pm")" "$pm run dev" "dev" 1 "$root" "$pm" run dev
+            quick "$(icon_for "$pm")" "$pm run dev" "dev" dev "$root" "$pm" run dev
     fi
 fi
 if [ -f "$root/pyproject.toml" ] && have uv; then
-    quick "$(icon_for uv)" "uv sync" "sync,install" 0 "$root" uv sync
-    quick "$(icon_for uv)" "uv run python" "py,repl" 0 "$root" uv run python
+    quick "$(icon_for uv)" "uv sync" "sync,install" "" "$root" uv sync
+    quick "$(icon_for uv)" "uv run python" "py,repl" "" "$root" uv run python
 fi
 if have make && { [ -f "$root/Makefile" ] || [ -f "$root/makefile" ] || [ -f "$root/GNUmakefile" ]; }; then
-    quick "$(icon_for make)" "make" "m,build" 0 "$root" make
+    quick "$(icon_for make)" "make" "m,build" "" "$root" make
 fi
-[ -f "$root/go.mod" ] && have go && quick "$(icon_for go)" "go run ." "run" 0 "$root" go run .
-[ -f "$root/Cargo.toml" ] && have cargo && quick "$(icon_for cargo)" "cargo run" "run" 0 "$root" cargo run
+[ -f "$root/go.mod" ] && have go && quick "$(icon_for go)" "go run ." "run" "" "$root" go run .
+[ -f "$root/Cargo.toml" ] && have cargo && quick "$(icon_for cargo)" "cargo run" "run" "" "$root" cargo run
 if have docker; then
     for f in compose.yaml compose.yml docker-compose.yaml docker-compose.yml; do
         [ -f "$root/$f" ] || continue
-        quick '󰡨' "docker compose up" "up,compose" 1 "$root" docker compose up
+        quick '󰡨' "docker compose up" "up,compose" compose "$root" docker compose up
         break
     done
 fi
@@ -247,11 +251,11 @@ fi
 while IFS=$'\t' read -r display kind target troot runner _file; do
     [ -n "$kind" ] || continue
     tag=${display%% *}
-    desc="$runner $target" name=""
+    desc="$runner $target" task=""
     [ "$troot" != "$root" ] && desc+="  (${troot#"$root"/})"
-    long_running "$target" && { name=$(slug "$runner $target"); desc+=" · background"; }
+    long_running "$target" && { task=$target; desc+=" · background"; }
     item "Tasks: $tag" "$(icon_for "$tag")" "$target" "$desc" "" \
-        "$(task_action "$troot" "$name" --run "$kind" "$target" "$troot" "$runner")"
+        "$(task_action "$troot" "$task" --run "$kind" "$target" "$troot" "$runner")"
 done < <(PJ_QUIET=1 pj --list 2>/dev/null)
 
 if [ ${#items[@]} -eq 0 ]; then
