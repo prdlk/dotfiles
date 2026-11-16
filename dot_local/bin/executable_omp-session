@@ -23,10 +23,13 @@ Cable entry points:
   omp-session --new           the cable's ctrl-n action: a new `omp` session
 
 Env:
-  OMP_SESSION_STATE=FILE  --resume/--new write `ran` to it, so the launcher can
-                          tell a started session from a cancelled picker and
-                          only move the cursor back up after a cancel (tv
-                          --inline).
+  OMP_SESSION_STATE=FILE  set by the launcher for its `tv omp-sessions` picker:
+                          --resume/--new write omp's arguments to it (JSON)
+                          instead of starting omp, and the launcher execs omp
+                          itself. omp then replaces the launcher, so the
+                          pane's foreground process (the tmux window name) is
+                          omp, not python3. An empty FILE means the picker was
+                          cancelled (tv --inline): move the cursor back up.
   PI_CODING_AGENT_DIR     omp's agent dir (default ~/.omp/agent).
 """
 
@@ -221,23 +224,23 @@ def cmd_preview(path):
                 print(f"\n{colors[role]}▌ {role}\033[0m\n{text}")
 
 
-def mark_ran():
+def run_omp(*args):
     state = os.environ.get("OMP_SESSION_STATE")
     if state:
-        Path(state).write_text("ran\n")
+        Path(state).write_text(json.dumps(args))
+        sys.exit(0)
+    os.execvp("omp", ["omp", *args])
 
 
 def cmd_resume(path):
-    mark_ran()
-    os.execvp("omp", ["omp", "--resume", str(path)])
+    run_omp("--resume", str(path))
 
 
 # ── Launcher ───────────────────────────────────────────────────────
 
 
 def new_session():
-    mark_ran()
-    os.execvp("omp", ["omp"])
+    run_omp()
 
 
 def pick(sessions):
@@ -247,13 +250,14 @@ def pick(sessions):
     os.close(fd)
     try:
         subprocess.run(["tv", "omp-sessions", "--inline"], env={**os.environ, "OMP_SESSION_STATE": state})
-        ran = Path(state).read_text().strip() == "ran"
+        picked = Path(state).read_text()
     finally:
         os.unlink(state)
-    if not ran:
-        # Cancelled: tv left the cursor on the line below the prompt.
-        with open("/dev/tty", "w") as tty:
-            tty.write("\033[A")
+    if picked:
+        os.execvp("omp", ["omp", *json.loads(picked)])
+    # Cancelled: tv left the cursor on the line below the prompt.
+    with open("/dev/tty", "w") as tty:
+        tty.write("\033[A")
 
 
 def launch():

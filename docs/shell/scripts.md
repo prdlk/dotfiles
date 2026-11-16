@@ -327,7 +327,7 @@ Starts or resumes omp for the current git repo by fixed rules, so <kbd>ctrl-a</k
 | Detached | Opens the `omp-sessions` cable (a new session when there are none) |
 | Outside a git repo | Plain `omp` |
 
-Resuming runs `omp --resume <session file>`; omp switches to the session's own cwd. `omp-session --new` runs plain `omp`; it is the cable's <kbd>ctrl-n</kbd> action and marks `OMP_SESSION_STATE` like a resume does, so the prompt is not moved after a new session.
+Resuming runs `omp --resume <session file>`; omp switches to the session's own cwd. `omp-session --new` runs plain `omp`; it is the cable's <kbd>ctrl-n</kbd> action. Every path ends in `exec omp`, so omp replaces the script and the tmux window is named `omp`, not `python3`.
 
 **Sessions.** Every `*/*.jsonl` under `$PI_CODING_AGENT_DIR/sessions` (default `~/.omp/agent/sessions`) whose `session` header `cwd` is the worktree root or below it, excluding worktrees nested inside it. Session age is the file's mtime (the last write).
 
@@ -339,9 +339,10 @@ Resuming runs `omp --resume <session file>`; omp switches to the session's own c
 | --- | --- |
 | `omp-session --list` | Prints `<age> <branch> <title>[ · <subdir>]<TAB><session file>` per session, newest first. The title is omp's session title, else the first user message |
 | `omp-session --preview FILE` | Title, last-write time, cwd, then the text of every user and assistant message (thinking, tool calls, and tool results skipped) |
-| `omp-session --resume FILE` | Writes `ran` to `$OMP_SESSION_STATE` when set, then `exec omp --resume FILE` (enter) |
+| `omp-session --resume FILE` | `exec omp --resume FILE` (enter); under the launcher, hands the arguments back instead (see below) |
+| `omp-session --new` | `exec omp` (ctrl-n); under the launcher, likewise |
 
-**Prompt redraw.** The launcher runs `tv omp-sessions --inline` with `OMP_SESSION_STATE` set to a temp file. When the picker is cancelled (no `ran`), it prints `\033[A` to `/dev/tty` so the shell redraws the prompt in place; the key bindings just repaint.
+**Picker.** The launcher runs `tv omp-sessions --inline` with `OMP_SESSION_STATE` set to a temp file. `--resume` and `--new` write omp's arguments to it as JSON and exit, and the launcher then execs omp itself; if tv ran omp, the python launcher would stay the pane's foreground process group leader and tmux would name the window after it. An empty file means the picker was cancelled: the launcher prints `\033[A` to `/dev/tty` so the shell redraws the prompt in place; the key bindings just repaint.
 
 **Launched by:** <kbd>ctrl-a</kbd> in fish and zsh. <kbd>ctrl-n</kbd> at the prompt runs `omp` directly, not this script.
 
