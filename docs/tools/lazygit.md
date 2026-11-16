@@ -128,7 +128,7 @@ Colors are upstream `extras/lazygit/cyberdream.yml` from [cyberdream.nvim](https
 | <kbd>a</kbd> | files | `git add` the file if it has unstaged changes, else `git reset` it ("Toggle file staged") | |
 | <kbd>L</kbd> | files | `livediff` | terminal |
 | <kbd>Ctrl</kbd>+<kbd>d</kbd> | files | `gh dash` | terminal |
-| <kbd>Ctrl</kbd>+<kbd>o</kbd> | files | `gh browse` | |
+| <kbd>Ctrl</kbd>+<kbd>o</kbd> | files | `gop` (opens the repo's web page on any forge, not only github.com) | |
 | <kbd>o</kbd> | localBranches | `gh pr create --fill -w` ("start ai pull request") | |
 | <kbd>C</kbd> | localBranches | `gh repo sync && gh clean-branches --force` | log |
 | <kbd>O</kbd> | commits | `hub browse -- "commit/{{.SelectedLocalCommit.Hash}}"` | |
@@ -137,7 +137,7 @@ Colors are upstream `extras/lazygit/cyberdream.yml` from [cyberdream.nvim](https
 
 Worktrees go to `~/Work/<repo>-<branch>`, from worktrunk's `worktree-path` (`dot_config/worktrunk/private_config.toml`). Clones stay under ghq's `~/Code`. lazygit's own worktree flow always names the directory after the branch alone, so the two worktree keys above replace the built-in ones and hand off to `wt`. `worktree.defaultPath: ~/Work` makes the built-in menus that remain, such as detached worktrees from commits and tags, offer `~/Work` as the parent directory. `ghostty-tmux` puts `~/.cargo/bin` on the tmux server's PATH so `wt` resolves in the `prefix g` popup.
 
-`gh commit`, `gh clean-branches`, and `gh dash` are managed gh extensions (see [GitHub CLI](github-cli.md)). `gitv`, `gwm`, `wrkflw`, `github`, `livediff`, and `hub` are not installed by this repo.
+`gh commit`, `gh clean-branches`, and `gh dash` are managed gh extensions (see [GitHub CLI](github-cli.md)). `gop` is a repo script ([Scripts](../shell/scripts.md#gop)). `gitv`, `gwm`, `wrkflw`, `github`, `livediff`, and `hub` are not installed by this repo.
 
 > [!WARNING]
 > Several custom keys share a key with a built-in binding in the same context: <kbd>C</kbd> and <kbd>a</kbd> in files (`commitChangesWithEditor`, `toggleStagedAll`), <kbd>Ctrl</kbd>+<kbd>w</kbd>, <kbd>Ctrl</kbd>+<kbd>p</kbd>, <kbd>Ctrl</kbd>+<kbd>d</kbd>, <kbd>Ctrl</kbd>+<kbd>o</kbd> against universal bindings, and <kbd>O</kbd> in commits. <kbd>Ctrl</kbd>+<kbd>i</kbd> is the same keycode as <kbd>Tab</kbd> in most terminals.
