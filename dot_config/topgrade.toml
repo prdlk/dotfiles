@@ -65,7 +65,7 @@ upgrade = false
 # Predefined repos still get pulled by default. Add your own globs if you want
 # configs fetched in the same pass; left commented so topgrade doesn't trip
 # over a dirty working tree mid-run.
-# repos = ["~/.config/omarchy", "~/Code/prad.codes/env/omarchy"]
+# repos = ["~/.config/omarchy", "~/.local/share/chezmoi"]
 # arguments = "--rebase --autostash"
 
 

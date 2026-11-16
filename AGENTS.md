@@ -1,8 +1,8 @@
 # AGENTS.md
 
-Cross-platform chezmoi dotfiles: a self-contained developer environment (shells, editors, terminals, tmux, TUI tools) for Arch, macOS and Ubuntu. Remote: `https://prad.codes/env/omarchy` (`git@prad.codes:env/omarchy.git`), branch `main`.
+Cross-platform chezmoi dotfiles: a self-contained developer environment (shells, editors, terminals, tmux, TUI tools) for Arch, macOS and Ubuntu. Remote: `https://github.com/prdlk/dotfiles` (`git@github.com:prdlk/dotfiles.git`, public), branch `main`.
 
-Location: `~/Code/prad.codes/env/omarchy`. chezmoi uses it as its source either via `chezmoi init --source ~/Code/prad.codes/env/omarchy` or by cloning it into `~/.local/share/chezmoi` — the same checkout model either way: one working tree that chezmoi reads and that you commit from.
+Location: `~/.local/share/chezmoi`, chezmoi's default source directory: one working tree that chezmoi reads and that you commit from.
 
 `mode = "symlink"`: plain files in `$HOME` are symlinks into this repo, so editing `~/.config/foo/bar` edits `dot_config/foo/bar` directly. Templates (`*.tmpl`), `private_`, `executable_` targets are rendered copies — edit the source, then `chezmoi apply`.
 

@@ -1,12 +1,12 @@
-# dots (omarchy)
+# dotfiles
 
 prdlk's cross-platform developer environment for Arch, macOS and Ubuntu, managed with chezmoi. On [Omarchy](https://omarchy.org) machines (Arch Linux + Hyprland) the desktop layer from [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop) is applied on top. One command installs chezmoi and applies the whole setup.
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://prad.codes/env/omarchy.git
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/prdlk/dotfiles.git
 ```
 
-That command installs chezmoi, clones [env/omarchy](https://prad.codes/env/omarchy), asks two questions (name, email), installs packages with the OS package manager, and applies every config. See [Installation](installation.md) for prerequisites, the age key step, and the options.
+That command installs chezmoi, clones [prdlk/dotfiles](https://github.com/prdlk/dotfiles), asks two questions (name, email), installs packages with the OS package manager, and applies every config. See [Installation](installation.md) for prerequisites, the age key step, and the options.
 
 ## Table of contents
 

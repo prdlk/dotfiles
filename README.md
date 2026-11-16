@@ -1,13 +1,13 @@
-# omarchy
+# dotfiles
 
-chezmoi source for a cross-platform developer environment (shells, editors, terminals, tmux, TUI tools, agent tooling) on Arch, macOS and Ubuntu, hosted at <https://prad.codes/env/omarchy>.
+chezmoi source for a cross-platform developer environment (shells, editors, terminals, tmux, TUI tools, agent tooling) on Arch, macOS and Ubuntu, hosted at <https://github.com/prdlk/dotfiles>.
 
 On an [Omarchy](https://omarchy.org) machine (Arch + Hyprland) the desktop layer from [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop) is applied automatically after the dotfiles.
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://prad.codes/env/omarchy.git
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/prdlk/dotfiles.git
 # or over SSH:
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply git@prad.codes:env/omarchy.git
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply git@github.com:prdlk/dotfiles.git
 ```
 
 First apply prompts once for name and email. There are no machine roles: what differs per machine is decided by the OS.
@@ -22,7 +22,7 @@ First apply prompts once for name and email. There are no machine roles: what di
 ## Prerequisites
 
 - **Arch / Omarchy**: `sudo` for pacman. Omarchy provides `yay`; on plain Arch the install script bootstraps it.
-- **GitHub credentials (all OSes)**: the prdlk/kitty, ghostty, television, yazi and omp externals are private (on Omarchy, also prdlk/hypr and prdlk/omarchy in the desktop layer; prdlk/nvim and prdlk/herdr are public). Without credentials the first apply fails with `could not read Username for https://github.com`. Before the one-liner, install `gh` and run `gh auth login` (it configures git's credential helper), or set up another credential helper or token.
+- **GitHub credentials (all OSes)**: the prdlk/kitty, television, yazi and omp externals are private (on Omarchy, also prdlk/hypr and prdlk/omarchy in the desktop layer; prdlk/nvim and prdlk/herdr are public). Without credentials the first apply fails with `could not read Username for https://github.com`. Before the one-liner, install `gh` and run `gh auth login` (it configures git's credential helper), or set up another credential helper or token.
 - **macOS**: `curl`. The package script installs Homebrew, which brings the Xcode command line tools.
 - **Ubuntu**: `sudo`, `curl` and `git`.
 - **Secrets**: `age`-encrypted files need the key at

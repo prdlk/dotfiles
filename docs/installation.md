@@ -26,16 +26,16 @@ Install chezmoi and apply these dotfiles with one command on Arch, macOS or Ubun
 
 3. **GitHub credentials (all OSes)**
 
-   Several GitHub repos this setup pulls are private: the prdlk/kitty, ghostty, television, yazi and omp externals (cloned on the first apply). On Omarchy the desktop layer adds prdlk/hypr (submodule) and prdlk/omarchy. prdlk/nvim and prdlk/herdr are public. An unauthenticated clone fails with `could not read Username for https://github.com`. Before the one-liner, install `gh` and run `gh auth login` (it sets up git's HTTPS credential helper), or configure another credential helper or a token.
+   Several GitHub repos this setup pulls are private: the prdlk/kitty, television, yazi and omp externals (cloned on the first apply). On Omarchy the desktop layer adds prdlk/hypr (submodule) and prdlk/omarchy. prdlk/nvim and prdlk/herdr are public. An unauthenticated clone fails with `could not read Username for https://github.com`. Before the one-liner, install `gh` and run `gh auth login` (it sets up git's HTTPS credential helper), or configure another credential helper or a token.
 
 4. **Repository access**
 
-   [env/omarchy](https://prad.codes/env/omarchy) is a public repository on the prad.codes Gitea, so its HTTPS clone needs no credentials. Use the SSH remote (`git@prad.codes:env/omarchy.git`) if you plan to push.
+   [prdlk/dotfiles](https://github.com/prdlk/dotfiles) is public, so its HTTPS clone needs no credentials. Use the SSH remote (`git@github.com:prdlk/dotfiles.git`) if you plan to push.
 
 ## One-liner
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://prad.codes/env/omarchy.git
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/prdlk/dotfiles.git
 ```
 
 This is chezmoi's official install script. It installs chezmoi to `./bin` (run it from `~` or pass `-b ~/.local/bin`), clones the repo into `~/.local/share/chezmoi`, and runs `chezmoi apply`.
@@ -47,13 +47,13 @@ Arguments after `--` go to chezmoi:
 **SSH**
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init --apply git@prad.codes:env/omarchy.git
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init --apply git@github.com:prdlk/dotfiles.git
 ```
 
 **Dry run**
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init https://prad.codes/env/omarchy.git
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init https://github.com/prdlk/dotfiles.git
 chezmoi diff
 chezmoi apply
 ```

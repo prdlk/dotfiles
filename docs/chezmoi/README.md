@@ -2,7 +2,7 @@
 
 Source layout, naming conventions, symlink mode, and the day-to-day chezmoi workflow for this repo.
 
-The repo is a [chezmoi](https://chezmoi.io) source directory. It lives at `~/Code/prad.codes/env/omarchy` and chezmoi uses it as its source, either through `chezmoi init --source ~/Code/prad.codes/env/omarchy` or by cloning it into `~/.local/share/chezmoi`; both are the same checkout model chezmoi expects. Its remote is [env/omarchy](https://prad.codes/env/omarchy) (branch `main`). `chezmoi apply` renders it into `$HOME`. The [Installation](../installation.md) page covers first-time setup.
+The repo is a [chezmoi](https://chezmoi.io) source directory at `~/.local/share/chezmoi`, chezmoi's default source directory. Its remote is [prdlk/dotfiles](https://github.com/prdlk/dotfiles) (branch `main`). `chezmoi apply` renders it into `$HOME`. The [Installation](../installation.md) page covers first-time setup.
 
 ## Pages in this section
 
@@ -136,4 +136,4 @@ What that means in practice:
 | `chezmoi cd` | Opens a shell in the source directory for git work. The fish alias `,,` opens yazi there instead. |
 | `chezmoi init --prompt` | Re-asks name and email and regenerates `~/.config/chezmoi/chezmoi.toml`. |
 
-Commit and push from the source directory with plain git; the remote pushes over SSH (`git@prad.codes:env/omarchy.git`). On Omarchy, `chezmoi-desktop` (diff, apply, cd) does the same for the [desktop layer](https://prad.codes/env/omarchy-desktop).
+Commit and push from the source directory with plain git; the remote is [prdlk/dotfiles](https://github.com/prdlk/dotfiles) (`git@github.com:prdlk/dotfiles.git` over SSH). On Omarchy, `chezmoi-desktop` (diff, apply, cd) does the same for the [desktop layer](https://prad.codes/env/omarchy-desktop).
