@@ -1,0 +1,123 @@
+# Font Configuration
+font-size = 12
+font-family = VictorMono Nerd Font
+background-blur = true
+
+# Window Configuration
+window-decoration = false
+window-padding-x = 0
+window-padding-y = 0
+background-opacity = 1.0
+
+# Cursor Configuration
+cursor-style = underline
+cursor-style-blink = true
+
+# Scrollback
+scrollback-limit = 3023
+
+# Terminal features
+mouse-hide-while-typing = true
+copy-on-select = false
+confirm-close-surface = false
+# Links: ctrl+click opens URLs and OSC 8 hyperlinks. Under tmux (`mouse on`)
+# tmux gets the click: hold shift too (ctrl+shift+click) so Ghostty handles it;
+# tmux's own C-MouseDown1Pane opens OSC 8 links on a plain ctrl+click.
+link-url = true
+link-previews = true
+
+# Disable annoying copied to clipboard
+app-notifications = no-clipboard-copy,no-config-reload
+
+# Ghostty is only a tmux client: tmux owns tabs (windows), splits (panes),
+# sessions and persistence. `clear` drops every Ghostty default (tabs,
+# splits, alt+N goto_tab, ctrl+alt+arrow goto_split) so those chords reach
+# tmux; the ctrl+shift chords below drive tmux through its prefix2
+# (\x02 = ctrl+b). Keep `clear` above every other keybind line.
+keybind = clear
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+keybind = ctrl+plus=increase_font_size:1
+keybind = ctrl+minus=decrease_font_size:1
+keybind = ctrl+zero=reset_font_size
+keybind = ctrl+shift+period=reload_config
+# shift+enter as CSI-u (ESC[13;2u), the newline-in-prompt key coding agents
+# (omp, claude) read. Never \n: that is ctrl+j, tmux's pane-down key.
+keybind = shift+enter=text:\x1b[13;2u
+
+# command palette: ctrl+space is tmux's root-table C-Space (tmux-palette);
+# sent explicitly as NUL so no keyboard-protocol mode can turn it into a CSI.
+keybind = ctrl+space=text:\x00
+# session exposé (tmux-expose, live thumbnails of every session): tmux prefix E
+keybind = ctrl+backspace=text:\x02E
+# project tasks palette (pj): tmux prefix t
+keybind = ctrl+shift+p=text:\x02t
+keybind = ctrl+shift+space=text:\x02t
+# workmux agents sidebar toggle: tmux prefix S (the workmux palette is on
+# tmux prefix w, and ctrl+s inside the sidebar)
+keybind = ctrl+shift+a=text:\x02S
+
+# launchers (kitty's ctrl+shift chords), tmux prefix y/g
+keybind = ctrl+shift+f=text:\x02y
+# file tree sidebar (treemux), toggled and focused: tmux prefix BSpace
+keybind = ctrl+shift+e=text:\x02\x7f
+keybind = ctrl+shift+g=text:\x02g
+
+# tabs → tmux windows
+keybind = ctrl+shift+t=text:\x02c
+keybind = ctrl+shift+w=text:\x02k
+keybind = ctrl+shift+r=text:\x02r
+keybind = ctrl+tab=text:\x02n
+keybind = ctrl+shift+tab=text:\x02p
+keybind = ctrl+page_down=text:\x02n
+keybind = ctrl+page_up=text:\x02p
+keybind = ctrl+shift+arrow_right=text:\x02n
+keybind = ctrl+shift+arrow_left=text:\x02p
+keybind = ctrl+shift+k=text:\x02n
+keybind = ctrl+shift+h=text:\x02p
+
+# splits → tmux panes
+keybind = ctrl+shift+l=text:\x02v
+keybind = ctrl+shift+j=text:\x02h
+keybind = ctrl+shift+x=text:\x02x
+
+# session picker: tmux-palette's sessions palette (tmux-sessions) on prefix o
+keybind = ctrl+shift+o=text:\x02o
+keybind = super+enter=text:\x02o
+keybind = ctrl+shift+enter=text:\x02z
+keybind = ctrl+shift+z=text:\x02z
+
+# scrollback, help (search scrollback: tmux prefix /)
+keybind = ctrl+shift+page_up=text:\x02[
+keybind = ctrl+shift+slash=text:\x02?
+keybind = ctrl+shift+alt+,=text:\x02q
+
+# sessions: quitting Ghostty detaches; the session lives on in tmux
+keybind = ctrl+shift+n=text:\x02C
+# workmux agents sidebar toggle: tmux prefix S
+keybind = ctrl+shift+s=text:\x02S
+keybind = ctrl+shift+q=text:\x02d
+
+keybind = super+n=new_window
+
+# Tab configuration
+gtk-titlebar = false
+
+quit-after-last-window-closed = false
+quit-after-last-window-closed-delay = 5m
+# Every window gets its own tmux session (~/.local/bin/ghostty-tmux): it
+# reclaims the oldest detached session or starts a new one. The first window
+# after boot starts the tmux server, and tmux-continuum restores the last
+# saved sessions, so closing Ghostty (or rebooting) never loses the shells.
+command = shell:$HOME/.local/bin/ghostty-tmux
+
+# Shell integration
+shell-integration = detect
+shell-integration-features = cursor,sudo,title,no-cursor
+
+# Rando stuff
+gtk-single-instance = true
+
+# Colors: cyberdream (themes/cyberdream), the palette shared with tmux, nvim,
+# yazi, and television.
+theme = cyberdream

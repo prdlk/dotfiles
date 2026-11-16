@@ -27,7 +27,6 @@ Config lives in two places. Check which one before editing.
 |Target|Repo|Declared in|
 |---|---|---|
 |`~/.config/kitty`|prdlk/kitty|`.chezmoiexternals/kitty.toml`|
-|`~/.config/ghostty`|prdlk/ghostty|`.chezmoiexternals/ghostty.toml`|
 |`~/.config/television`|prdlk/television|`.chezmoiexternals/television.toml`|
 |`~/.config/yazi`|prdlk/yazi|`.chezmoiexternals/yazi.toml`|
 |`~/.config/herdr`|prdlk/herdr|`.chezmoiexternals/herdr.toml` (`plugins/github/` gitignored, runtime plugin checkouts)|
@@ -36,7 +35,7 @@ Config lives in two places. Check which one before editing.
 |`~/.config/tmux/plugins/tpm`|tmux-plugins/tpm|`.chezmoiexternal.toml`|
 |`~/.config/bat/syntaxes/sublime-purescript-syntax`|tellnobody1/…|`.chezmoiexternal.toml`|
 
-These stay on their GitHub URLs; they are separate repos, not part of this one. tmux (`dot_config/tmux`) and tmux-palette (`dot_config/tmux-palette`) are local files here, not externals.
+These stay on their GitHub URLs; they are separate repos, not part of this one. Ghostty (`dot_config/ghostty`), tmux (`dot_config/tmux`) and tmux-palette (`dot_config/tmux-palette`) are local files here, not externals.
 
 Editing: `cd ~/.config/<app>` (the live checkout), edit, commit, push there. Nothing to commit in this repo. Do not `chezmoi add` these paths.
 

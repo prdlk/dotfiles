@@ -2,7 +2,7 @@
 # Make way for git-repo externals. chezmoi can only clone into a missing or
 # empty target, and only pull in a target that is already a checkout; a
 # directory with other content stops the apply (a fresh Omarchy install ships
-# its own ~/.config/kitty, ghostty, omarchy, …). For each such target, ask
+# its own ~/.config/kitty, omarchy, …). For each such target, ask
 # whether to replace it: yes moves it aside to <target>.bak-<time> and clones
 # the repo there, so chezmoi finds a checkout; no aborts the apply. Runs
 # before every apply; it only stats directories unless one is in the way.

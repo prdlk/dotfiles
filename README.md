@@ -74,9 +74,9 @@ chezmoi-desktop cd
 
 ## Externals
 
-- Externals (`.chezmoiexternals/`): kitty, ghostty, television, yazi, herdr, omp,
+- Externals (`.chezmoiexternals/`): kitty, television, yazi, herdr, omp,
   plus nvim, tpm and a bat syntax in `.chezmoiexternal.toml`. Every one pulls with `--ff-only --no-rebase`.
-- tmux (`dot_config/tmux`) and tmux-palette (`dot_config/tmux-palette`) are plain files in this repo.
+- Ghostty (`dot_config/ghostty`), tmux (`dot_config/tmux`) and tmux-palette (`dot_config/tmux-palette`) are plain files in this repo.
 
 `gh` needs `gh auth login` once per machine; the extension install script
 skips gracefully until then and re-runs on the next apply.

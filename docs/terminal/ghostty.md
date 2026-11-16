@@ -8,11 +8,11 @@ On Omarchy it is the default terminal: the first entry of `~/.config/xdg-termina
 
 | | |
 | --- | --- |
-| Source | [prdlk/ghostty](https://github.com/prdlk/ghostty) via `.chezmoiexternals/ghostty.toml`: `config`, `themes/` |
+| Source | `dot_config/ghostty/`: `config`, `themes/` |
 | Target | `~/.config/ghostty/` |
 | Install | `ghostty` in `.chezmoidata/packages.yaml`: pacman on Arch, the `ghostty` cask on macOS. No Ubuntu 24.04 package, so Ubuntu has no ghostty (use kitty) |
 
-`~/.config/ghostty` is a `git-repo` external checkout, not chezmoi-managed contents; edit it in place and commit and push from there.
+`~/.config/ghostty` holds symlinks into this repo (symlink mode); edit in place and commit here. It lives here rather than in its own repo because nearly every keybinding sends a tmux prefix chord bound in `dot_config/tmux/tmux.conf`, so the two change together.
 
 `config` holds every setting, ending in `theme = cyberdream`.
 
@@ -20,7 +20,7 @@ On Omarchy it is the default terminal: the first entry of `~/.config/xdg-termina
 
 | Option | Value |
 | --- | --- |
-| `font-family` / `font-size` | `VictorMono Nerd Font` / `11` |
+| `font-family` / `font-size` | `VictorMono Nerd Font` / `12` |
 | `adjust-cell-height` | `20%` (line height) |
 | `background-opacity` / `background-blur` | `0.9` / `true` |
 | `window-decoration` | `false`; `gtk-titlebar = false` |

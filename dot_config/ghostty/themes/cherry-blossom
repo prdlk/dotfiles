@@ -1,0 +1,26 @@
+# cherry-blossom theme for ghostty: the CherryBlossom Noctalia palette
+# (palettes/CherryBlossom.json in prdlk/noctalia), kept static so it survives
+# the noctalia template rewriting themes/noctalia.
+palette = 0=#201d1c
+palette = 1=#bf615d
+palette = 2=#8a9a6b
+palette = 3=#c17e4a
+palette = 4=#7a858b
+palette = 5=#ad6756
+palette = 6=#a78266
+palette = 7=#dcc1b7
+palette = 8=#5b5450
+palette = 9=#cf716f
+palette = 10=#a6b084
+palette = 11=#ae825f
+palette = 12=#8f9aa0
+palette = 13=#c6745f
+palette = 14=#baa59d
+palette = 15=#d9beb4
+
+background = #222120
+foreground = #dcc1b7
+cursor-color = #cf716f
+cursor-text = #201d1c
+selection-background = #552b29
+selection-foreground = #dcc1b7

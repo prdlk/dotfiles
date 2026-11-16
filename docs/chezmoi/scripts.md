@@ -70,7 +70,7 @@ Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a dir
 
 ## 05-externals
 
-`.chezmoiscripts/run_before_05-externals.sh.tmpl` clears the way for the `git-repo` externals in `.chezmoiexternals/*.toml` and `.chezmoiexternal.toml` (its list is rendered from those files, so new externals are covered without edits). chezmoi clones an external only into a missing or empty target and pulls only in an existing checkout; any other directory at the target stops the apply with a git error. A fresh Omarchy install ships its own `~/.config/kitty`, `ghostty`, and others, so the first apply would stop there.
+`.chezmoiscripts/run_before_05-externals.sh.tmpl` clears the way for the `git-repo` externals in `.chezmoiexternals/*.toml` and `.chezmoiexternal.toml` (its list is rendered from those files, so new externals are covered without edits). chezmoi clones an external only into a missing or empty target and pulls only in an existing checkout; any other directory at the target stops the apply with a git error. A fresh Omarchy install ships its own `~/.config/kitty` and others, so the first apply would stop there.
 
 - Runs before every apply (`run_before_`). With every target missing, empty, or already a checkout it only stats directories and exits 0.
 - For each target that exists otherwise (a non-empty directory without `.git`, a file, or a symlink), it asks on the terminal: `<target> exists and is not a git checkout. Replace it with <url> (old copy kept as <target>.bak-<time>)? [y/N]`.

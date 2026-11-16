@@ -66,7 +66,6 @@ Per-app config repos, one file each in `.chezmoiexternals/<app>.toml`. Each is a
 | `television.toml` | `~/.config/television` | [prdlk/television](https://github.com/prdlk/television) |
 | `yazi.toml` | `~/.config/yazi` | [prdlk/yazi](https://github.com/prdlk/yazi) |
 | `kitty.toml` | `~/.config/kitty` | [prdlk/kitty](https://github.com/prdlk/kitty) |
-| `ghostty.toml` | `~/.config/ghostty` | [prdlk/ghostty](https://github.com/prdlk/ghostty) |
 | `herdr.toml` | `~/.config/herdr` | [prdlk/herdr](https://github.com/prdlk/herdr) — `plugins/github/` (runtime plugin checkouts) is gitignored there |
 | `omp.toml` | `~/.omp` | [prdlk/omp](https://github.com/prdlk/omp) — omp agent config and the global agent instructions |
 

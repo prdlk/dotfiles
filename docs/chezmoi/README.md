@@ -25,7 +25,6 @@ The repo is a [chezmoi](https://chezmoi.io) source directory. It lives at `~/Cod
   skills.yaml
 .chezmoiexternal.toml
 .chezmoiexternals/
-  ghostty.toml
   herdr.toml
   kitty.toml
   omp.toml
@@ -82,10 +81,10 @@ README.md
 | `.chezmoitemplates/os-family` | — | Renders `arch`, `debian` or `darwin`; scripts use it to pick the package manager. See [os-family](config.md#os-family). |
 | `.chezmoidata/` | — | YAML merged into template data (`.packages`, `.aliases`, `.skills`). See [Packages and aliases](data.md) and [Skills](../ai/skills.md). |
 | `.chezmoiexternal.toml` | — | Git repos cloned into `$HOME` (nvim config, a bat syntax, tpm). |
-| `.chezmoiexternals/` | — | One external per app or tool: ghostty, herdr, kitty, omp, television, yazi. Plain config repos cloned into `~/.config/<app>`. See [Externals and ignore rules](externals-and-ignore.md#chezmoiexternals). |
+| `.chezmoiexternals/` | — | One external per app or tool: herdr, kitty, omp, television, yazi. Plain config repos cloned into `~/.config/<app>`. See [Externals and ignore rules](externals-and-ignore.md#chezmoiexternals). |
 | `.chezmoiignore.tmpl` | — | Target paths chezmoi skips: repo docs, runtime state, mise config. The same on every OS. |
 | `.chezmoiscripts/`, root `run_*` | — | Install and housekeeping scripts. See [Apply scripts](scripts.md). |
-| `dot_config/` | `~/.config/` | Per-tool config, including tmux and tmux-palette as local files. Documented under [Shell](../shell/README.md), [Terminal](../terminal/README.md), [Tools](../tools/README.md). |
+| `dot_config/` | `~/.config/` | Per-tool config, including Ghostty, tmux and tmux-palette as local files. Documented under [Shell](../shell/README.md), [Terminal](../terminal/README.md), [Tools](../tools/README.md). |
 | `dot_local/bin/` | `~/.local/bin/` | 26 standalone scripts shared by every shell, including `chezmoi-desktop`. |
 | `dot_leetcode/` | `~/.leetcode/` | leetcode CLI workspace state. |
 | `docs/`, `AGENTS.md`, `README.md` | — | These docs, the repo agent rules, and the repo README. Listed in `.chezmoiignore.tmpl`, never applied. |

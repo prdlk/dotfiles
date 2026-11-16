@@ -1,6 +1,0 @@
-[".config/ghostty"]
-    type = "git-repo"
-    url = "https://github.com/prdlk/ghostty.git"
-    refreshPeriod = "168h"
-    [".config/ghostty".pull]
-        args = ["--ff-only", "--no-rebase"]

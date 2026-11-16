@@ -97,7 +97,7 @@ Known gaps: no ghostty on Ubuntu 24.04; `sshfs` is not installed on macOS (it ne
 
 3. **Files and externals**
 
-   Configs are linked into `$HOME` (symlink mode). The neovim config and the kitty, ghostty, television, yazi, herdr and omp configs are cloned as externals. Where something already sits at one of those paths (Omarchy ships its own `~/.config/kitty`, for example), `run_before_05-externals` asks whether to replace it (the old copy is kept as `<dir>.bak-<time>`); answering no aborts the apply. See [Externals and ignore rules](chezmoi/externals-and-ignore.md).
+   Configs are linked into `$HOME` (symlink mode). The neovim config and the kitty, television, yazi, herdr and omp configs are cloned as externals. Where something already sits at one of those paths (Omarchy ships its own `~/.config/kitty`, for example), `run_before_05-externals` asks whether to replace it (the old copy is kept as `<dir>.bak-<time>`); answering no aborts the apply. See [Externals and ignore rules](chezmoi/externals-and-ignore.md).
 
 4. **Post-apply scripts**
 
