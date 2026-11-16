@@ -10,7 +10,11 @@ The .chezmoi.toml.tmpl config template, its master password and software picker,
 
 ### Master password
 
-Asked once per machine, before anything else: when `~/.config/chezmoi/key.txt` does not exist and the source has `key.txt.age`. The template runs `chezmoi age decrypt --passphrase --output ~/.config/chezmoi/key.txt key.txt.age` on the terminal (`/dev/tty`), allows three tries, and makes the key mode 600. A wrong password three times fails the init; run it again. With no terminal (a script, a container without `-it`) it prints a warning and continues without the key, so any `encrypted_` file fails to apply until `chezmoi init` runs in a terminal.
+Asked once per machine, before anything else: when `~/.config/chezmoi/key.txt` does not exist and the source has `key.txt.age`. The template reads the password from the terminal (`/dev/tty`, not echoed) and pipes it to `chezmoi --no-tty age decrypt --passphrase --output ~/.config/chezmoi/key.txt key.txt.age`, then makes the key mode 600. A wrong password asks again, up to three times.
+
+Enter alone skips the secrets; so do three wrong tries and running without a terminal (a script, a container without `-it`). Without the key, `.chezmoiignore.tmpl` lists every `encrypted_` source file's target, so `chezmoi apply` leaves them out instead of failing to decrypt them. A later `chezmoi init` asks for the password again.
+
+Encrypted today: `~/.ssh/id_ed25519` and `id_ed25519.pub`, `~/.config/fish/conf.d/secrets.fish`, and `~/.config/free-router/env` (also ignored off Omarchy). Edit one with `chezmoi edit <target>`; add one with `chezmoi add --encrypt <target>`.
 
 `key.txt.age` is the age identity encrypted with the password (age's scrypt passphrase mode) and committed; `.chezmoiignore.tmpl` keeps it out of `$HOME`. The repo is public, so the password is the only protection of every secret in it: use a long one. To change it, re-encrypt the key on a machine that has it and commit the result:
 
@@ -69,7 +73,7 @@ What differs by family is covered in [Apply scripts](scripts.md) and [Data files
 | `age.recipient` | `age1v6j26xeydxgn5vtv2unjszd5aq6a0l6s50plc6x539u95usmhyeqxcup96` | Public key files are encrypted to. Safe to publish. |
 | `age.useBuiltin` | `true` | Uses chezmoi's built-in age implementation; the `age` binary is not required. |
 
-Add a secret with `chezmoi add --encrypt <file>`: the source gets an `encrypted_` file, and every machine that knows the password decrypts it on apply.
+Add a secret with `chezmoi add --encrypt <file>`: the source gets an `encrypted_` file, every machine that has the key decrypts it on apply, and machines that skipped the password leave it out ([Master password](#master-password)).
 
 ## Template data
 

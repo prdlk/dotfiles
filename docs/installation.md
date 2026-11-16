@@ -16,7 +16,7 @@ Install chezmoi and apply these dotfiles with one command on Arch, macOS or Ubun
 
 2. **Master password**
 
-   Secrets are age-encrypted in the repo. Their key, `key.txt.age`, is committed encrypted with the master password, and `chezmoi init` asks for that password first (three tries), writing the key to `~/.config/chezmoi/key.txt`. Nothing needs copying between machines. See [Master password](chezmoi/config.md#master-password).
+   Secrets (SSH keys, `secrets.fish`, free-router's env) are age-encrypted in the repo. Their key, `key.txt.age`, is committed encrypted with the master password, and `chezmoi init` asks for that password first (three tries), writing the key to `~/.config/chezmoi/key.txt`. Press enter instead to skip the secrets: they are then left out of the apply. Nothing needs copying between machines. See [Master password](chezmoi/config.md#master-password).
 
 3. **GitHub credentials (all OSes)**
 
@@ -83,7 +83,7 @@ Known gaps: no ghostty on Ubuntu 24.04; `sshfs` is not installed on macOS (it ne
 
 1. **Prompts**
 
-   `.chezmoi.toml.tmpl` asks for the **master password** (once per machine, while `~/.config/chezmoi/key.txt` is missing), then shows a multi-select of the **software to install**, everything ticked. Unticked choices are stored in `~/.config/chezmoi/chezmoi.toml` as `skip`; `chezmoi init` asks again later. See [Configuration](chezmoi/config.md#prompts).
+   `.chezmoi.toml.tmpl` asks for the **master password** (once per machine, while `~/.config/chezmoi/key.txt` is missing; enter skips the secrets), then shows a multi-select of the **software to install**, everything ticked. Unticked choices are stored in `~/.config/chezmoi/chezmoi.toml` as `skip`; `chezmoi init` asks again later. See [Configuration](chezmoi/config.md#prompts).
 
 2. **Packages**
 

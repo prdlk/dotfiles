@@ -4,7 +4,7 @@
 #   conf.d/20-aliases.fish       aliases
 #   conf.d/40-tools.fish         starship / zoxide / mise / hishtory init
 #   conf.d/50-terminal-title.fish tmux window title
-#   conf.d/secrets.fish          API keys (gitignored)
+#   conf.d/secrets.fish          API keys (age-encrypted in the dotfiles)
 #   functions/                   one autoloaded function per file
 #   functions/fish_user_key_bindings.fish  key bindings
 #

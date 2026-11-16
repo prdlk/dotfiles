@@ -2,8 +2,9 @@
 
 1. The master password, once per machine: it decrypts key.txt.age (the age
    identity, passphrase-encrypted and committed) to ~/.config/chezmoi/key.txt,
-   which decrypts every encrypted_ file. Skipped once that key exists. Three
-   tries; with no terminal it is skipped with a warning.
+   which decrypts every encrypted_ file. Skipped once that key exists. Enter
+   alone, three wrong tries, or no terminal skip it: without the key,
+   .chezmoiignore.tmpl leaves every encrypted_ file out of the apply.
 2. The software to install: every package choice from .chezmoidata/
    packages.yaml (.chezmoitemplates/packages), with the previous answer
    preselected and anything new preselected too. The unchosen ones are
@@ -17,14 +18,28 @@ Name and email for git are .chezmoidata/user.yaml, not prompted. */ -}}
 {{-   $_ := output "sh" "-c" `
 mkdir -p "$(dirname "$1")"
 if ! (: </dev/tty) 2>/dev/null; then
-    echo "chezmoi: no terminal for the master password; $1 not created, encrypted files will fail" >&2
+    echo "chezmoi: no terminal for the master password; secrets skipped" >&2
     exit 0
 fi
-echo "Master password (decrypts the dotfiles' age key):" >/dev/tty
+trap 'stty echo </dev/tty' EXIT INT TERM
 for try in 1 2 3; do
-    "$0" age decrypt --passphrase --output "$1" "$2" </dev/tty >/dev/tty && chmod 600 "$1" && exit 0
+    printf 'Master password (enter to skip secrets): ' >/dev/tty
+    stty -echo </dev/tty
+    IFS= read -r password </dev/tty || password=''
+    stty echo </dev/tty
+    echo >/dev/tty
+    if [ -z "$password" ]; then
+        echo "Secrets skipped; run chezmoi init again to add them." >/dev/tty
+        exit 0
+    fi
+    # --no-tty: chezmoi reads the passphrase from stdin instead of the terminal.
+    if printf '%s\n' "$password" | "$0" --no-tty age decrypt --passphrase --output "$1" "$2" >/dev/null 2>&1; then
+        chmod 600 "$1"
+        exit 0
+    fi
+    echo "Wrong password." >/dev/tty
 done
-exit 1
+echo "Secrets skipped after three tries; run chezmoi init again to add them." >/dev/tty
 ` .chezmoi.executable $identity $encrypted -}}
 {{- end -}}
 {{- $names := (includeTemplate "packages" dict | fromJson).names -}}

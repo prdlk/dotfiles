@@ -8,6 +8,25 @@ docs
 # ~/.config/chezmoi/key.txt at init. Never applied as ~/key.txt.age.
 key.txt.age
 
+# Without the age key (master password skipped at `chezmoi init`) every
+# encrypted_ file is left out, so apply never tries to decrypt it. Target
+# path: the source path minus chezmoi attribute prefixes and `.age`.
+{{- if not (stat (joinPath .chezmoi.homeDir ".config/chezmoi/key.txt")) }}
+{{-   range glob (joinPath .chezmoi.sourceDir "**/encrypted_*") }}
+{{-     $target := list }}
+{{-     range splitList "/" (trimPrefix (printf "%s/" $.chezmoi.sourceDir) .) }}
+{{-       $c := regexReplaceAll "^((after|before|create|empty|encrypted|exact|executable|external|literal|modify|once|onchange|private|readonly|remove|run|symlink)_)+" . "" }}
+{{-       $target = append $target (regexReplaceAll "^dot_" $c ".") }}
+{{-     end }}
+{{ join "/" $target | trimSuffix ".age" }}
+{{-   end }}
+{{- end }}
+
+# free-router (the local freellmapi proxy) runs only on the Omarchy desktop.
+{{- if not (lookPath "omarchy") }}
+.config/free-router
+{{- end }}
+
 # Niri compositor hook kept in the fish config; never applied here
 .config/fish/auto-Niri.fish
 
@@ -17,8 +36,7 @@ key.txt.age
 !.config/tmux/plugins/tpm
 .config/fish/fish_variables
 
-# Plaintext tokens — local-only, never in git. Rotate anything ever committed.
-.config/fish/conf.d/secrets.fish
+# nvim external: lockfile, git metadata, agent tool state
 .config/nvim/lazy-lock.json
 .config/nvim/.git
 .config/nvim/.git/**

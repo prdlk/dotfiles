@@ -159,12 +159,9 @@ pnpm workspace helpers. `__pnpm_pick_pkg` lists workspace packages with `pnpm m 
 
 ### secrets.fish
 
-Exports credentials as global variables. The values are machine-specific and are not documented here. Variable names:
+Exports credentials as global variables. It is age-encrypted in the repo (`dot_config/fish/conf.d/encrypted_private_secrets.fish.age`) and written, mode 600, only on machines that got the [master password](../chezmoi/config.md#master-password) at `chezmoi init`; elsewhere it is absent and fish starts without it. Edit it with `chezmoi edit ~/.config/fish/conf.d/secrets.fish`. It ships with every variable commented out:
 
 `PGDATABASE` (local Postgres connection string), `GITLAB_TOKEN`, `OPPER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `WEBAWESOME_NPM_TOKEN`, `TAVILY_API_KEY`, `FINANCIAL_DATASETS_API_KEY`, `PIMLICO_API_KEY`, `WAKATIME_API_KEY`, `LINEAR_CLI_PROFILE`, `LINEAR_API_KEY`, `LINEAR_TEAM_ID`.
-
-> [!WARNING]
-> Put your own values in `~/.config/fish/conf.d/secrets.fish` on each machine. Do not reuse credentials from another clone.
 
 ## config.fish
 

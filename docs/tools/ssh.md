@@ -8,7 +8,7 @@
 | Target | `~/.ssh/config` (symlink; `private_` keeps `~/.ssh` at `0700`) |
 | Packages | `mosh`, `tailscale` (every OS, so goliath has `mosh-server` too; Ubuntu's tailscale comes from the pkgs.tailscale.com repo) |
 
-Keys, `known_hosts` and the agent socket are not managed; only `config` is. The agent comes from fish's [`30-ssh-agent.fish`](../shell/fish.md#30-ssh-agentfish). On Omarchy, keepalives come from `/etc/ssh/ssh_config.d/20-omarchy-keepalive.conf` (`ServerAliveInterval 15`, `ServerAliveCountMax 3`, `ConnectTimeout 10`).
+`config` is a plain file; the key pair `id_ed25519` / `id_ed25519.pub` is age-encrypted in the repo (`private_dot_ssh/encrypted_*`) and written only on machines that got the [master password](../chezmoi/config.md#master-password) at `chezmoi init`. `known_hosts` and the agent socket are not managed. The agent comes from fish's [`30-ssh-agent.fish`](../shell/fish.md#30-ssh-agentfish). On Omarchy, keepalives come from `/etc/ssh/ssh_config.d/20-omarchy-keepalive.conf` (`ServerAliveInterval 15`, `ServerAliveCountMax 3`, `ConnectTimeout 10`).
 
 ## Host goliath
 

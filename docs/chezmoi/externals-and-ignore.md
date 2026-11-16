@@ -75,7 +75,14 @@ The Omarchy-only externals (`~/.config/omarchy`, `agent-root`, freellmapi) are d
 
 ## .chezmoiignore.tmpl
 
-Patterns match target paths (relative to `$HOME`). Matching entries are neither written nor removed. The file is still named `.tmpl` but has no conditional blocks: the same rules apply on every OS. Source entries that start with `.` (`.claude/`, `.gitignore`) are ignored by chezmoi without needing a rule.
+Patterns match target paths (relative to `$HOME`). Matching entries are neither written nor removed. Source entries that start with `.` (`.claude/`, `.gitignore`) are ignored by chezmoi without needing a rule. Two blocks are conditional:
+
+| Condition | Ignored | Why |
+| --- | --- | --- |
+| `~/.config/chezmoi/key.txt` missing (master password skipped) | The target of every `encrypted_` source file: the source path from a recursive glob, minus chezmoi attribute prefixes, `dot_` → `.`, minus `.age` | apply would fail to decrypt them; see [Master password](config.md#master-password) |
+| `omarchy` not on `PATH` | `.config/free-router` | The freellmapi proxy runs only on the Omarchy desktop |
+
+`key.txt.age` (the password-encrypted age key at the source root) is always ignored.
 
 ### Repo docs
 
@@ -103,7 +110,6 @@ Files at the source root that would otherwise land in `$HOME` as `~/README.md` o
 | `.config/lazygit/.omc/**` | Tool state written inside the lazygit config dir |
 | `.config/tmux/plugins/**`, except `!.config/tmux/plugins/tpm` | Plugins cloned by [45-tmux-plugins](scripts.md#45-tmux-plugins) (or tpm's `prefix I`); tpm itself is the external above |
 | `.config/fish/fish_variables` | fish universal variables, rewritten by fish at runtime |
-| `.config/fish/conf.d/secrets.fish` | Plaintext credentials. Local-only, never in git (the fish repo's `.gitignore` also lists it) |
 | `.config/nvim/lazy-lock.json` | lazy.nvim lockfile inside the nvim external |
 | `.config/nvim/.git`, `.config/nvim/.git/**` | The external's git metadata |
 | `.config/nvim/.omc/**`, `.config/nvim/.crush/**`, `.config/nvim/.understand-anything/**` | Agent tool state inside the nvim checkout |
@@ -121,4 +127,4 @@ mise tool versions stay local to each machine and are not managed.
 
 ### No desktop gate
 
-Earlier versions gated the Linux desktop layer (Hyprland, Waybar, uwsm, fontconfig, systemd units, `omarchy-*` scripts, free-router) by machine role here. That layer now lives in [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop) and is applied by its own chezmoi, started from [`run_after_50-omarchy-desktop.sh`](scripts.md#50-omarchy-desktop) only on Omarchy machines. Nothing in this file depends on the OS or the machine.
+Earlier versions gated the Linux desktop layer (Hyprland, Waybar, uwsm, fontconfig, systemd units, `omarchy-*` scripts) by machine role here. That layer now lives in [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop) and is applied by its own chezmoi, started from [`run_after_50-omarchy-desktop.sh`](scripts.md#50-omarchy-desktop) only on Omarchy machines. The only machine conditions left here are the two at the top: the age key and `omarchy` on `PATH` (for free-router's encrypted env).

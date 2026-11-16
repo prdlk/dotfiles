@@ -1,4 +1,4 @@
-# Environment — non-secret. Secrets live in conf.d/secrets.fish (gitignored).
+# Environment — non-secret. Secrets live in conf.d/secrets.fish (age-encrypted in the dotfiles).
 set -g fish_greeting
 
 # Bottom-pinned prompt toggle (config.fish + functions/clear.fish).
@@ -55,8 +55,8 @@ if not set -q GITHUB_TOKEN; and command -q gh
 end
 
 # free-router (localhost freellmapi): FREE_ROUTER_PORT, FREE_ROUTER_API_KEY.
-# KEY=VALUE file shared with free-router.service and bash/zsh; only present on
-# desktop/laptop roles of the chezmoi repo.
+# KEY=VALUE file shared with free-router.service and bash/zsh; age-encrypted
+# in the dotfiles, so present only on Omarchy machines given the master password.
 if test -r ~/.config/free-router/env
     for _line in (string match -rv '^\s*(#|$)' < ~/.config/free-router/env)
         set -gx (string split -m1 = -- $_line)
