@@ -1,5 +1,5 @@
 # Font Configuration
-font-size = 12
+font-size = 11
 font-family = VictorMono Nerd Font
 background-blur = true
 
@@ -53,8 +53,8 @@ keybind = ctrl+backspace=text:\x02E
 # project tasks palette (pj): tmux prefix t
 keybind = ctrl+shift+p=text:\x02t
 keybind = ctrl+shift+space=text:\x02t
-# workmux agents sidebar toggle: tmux prefix S (the workmux palette is on
-# tmux prefix w, and ctrl+s inside the sidebar)
+# workmux dashboard popup: tmux prefix S (the workmux palette is on tmux
+# prefix w)
 keybind = ctrl+shift+a=text:\x02S
 
 # launchers (kitty's ctrl+shift chords), tmux prefix y/g
@@ -94,7 +94,7 @@ keybind = ctrl+shift+alt+,=text:\x02q
 
 # sessions: quitting Ghostty detaches; the session lives on in tmux
 keybind = ctrl+shift+n=text:\x02C
-# workmux agents sidebar toggle: tmux prefix S
+# workmux dashboard popup: tmux prefix S
 keybind = ctrl+shift+s=text:\x02S
 keybind = ctrl+shift+q=text:\x02d
 
