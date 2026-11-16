@@ -518,4 +518,4 @@ customCommands:
     output: terminal
   - key: "<c-o>"
     context: "files"
-    command: "gh browse"
+    command: "gop"
