@@ -30,6 +30,7 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`atuin-pick`](#atuin-pick) | python3 | atuin history picker for a kitty or tmux split |
 | [`brave-new-tab`](#brave-new-tab) | sh | Open a URL in a new Brave Origin tab |
 | [`c2p`](#c2p) | sh | code2prompt with an fzf-picked template |
+| [`dotsync`](#dotsync) | sh | Commit, rebase and push every config repo, then `chezmoi apply` |
 | [`extract_agents`](#extract_agents) | sh | Copy all `AGENTS.md` files into a directory tree |
 | [`fab`](#fab) | sh | fzf picker for Fabric patterns |
 | [`gdc`](#gdc) | sh | Discard all git changes after confirmation |
@@ -104,6 +105,31 @@ c2p
 Lists `*.hbs` files under `~/.config/code2prompt` with `fd`, lets you pick one with fzf, and `exec`s `code2prompt --template <file>`.
 
 **Needs:** `fd`, `fzf`, `code2prompt`.
+
+## dotsync
+
+```sh
+dotsync          # sync every repo, then chezmoi apply
+dotsync --list   # print the repos it would sync
+```
+
+Brings every config repo on the machine in line with its remote in one pass.
+
+**Repos.** The dotfiles source (`chezmoi source-path`), the [desktop layer](https://prad.codes/env/omarchy-desktop) source when `chezmoi-desktop` and `~/.local/share/omarchy-desktop` exist, and the `git-repo` externals of both whose origin sits next to one of those sources: same GitHub owner as [prdlk/dotfiles](https://github.com/prdlk/dotfiles) or same Gitea org as env/omarchy-desktop. On an Omarchy machine that is kitty, herdr, nvim, television, yazi, `~/.omp` and `~/.config/omarchy`; third-party externals (tpm, the bat syntax, agent-root, freellmapi) are left to chezmoi's own pull. Submodules (the desktop layer's `dot_config/hypr`) are synced deepest first, before their parent, so the parent commits the new pointer.
+
+**Per repo**, in order:
+
+1. Detached HEAD: skipped.
+2. Uncommitted changes: `gh commit --auto` ([gh-commit](https://github.com/prdlk/gh-commit)) groups them by scope and commits them with generated messages. Anything still uncommitted afterwards skips the repo.
+3. No upstream: skipped.
+4. `git pull --rebase`. On a conflict the rebase is aborted and the repo is left with its local commits.
+5. `git push` when ahead.
+
+Then `chezmoi apply`, which on Omarchy also applies the desktop layer. Every skipped or failed repo is reported on stderr and makes the exit status 1; the other repos still sync.
+
+It is not named `sync`: `~/.local/bin` precedes `/usr/bin` on `PATH`, and coreutils `sync` flushes disks for scripts such as `omarchy-provision-hardware`.
+
+**Needs:** `git`, `chezmoi`, `gh` with the `prdlk/gh-commit` extension (and its `opencode`).
 
 ## extract_agents
 

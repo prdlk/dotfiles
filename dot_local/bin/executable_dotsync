@@ -1,0 +1,129 @@
+#!/bin/sh
+# dotsync: sync every config repo of this machine with its remote, then apply.
+#
+# Repos: the dotfiles source (chezmoi), the Omarchy desktop layer source
+# (chezmoi-desktop, when installed) and the git-repo externals of both whose
+# origin lives next to one of those two sources (same GitHub owner / Gitea
+# org), so third-party externals (tpm, agent-root, ...) are only pulled by
+# chezmoi, never pushed. Submodules of a repo are synced before the repo.
+#
+# Per repo: uncommitted changes are committed with `gh commit --auto`
+# (generated messages), then `git pull --rebase` and `git push` when ahead.
+# A repo that cannot be synced cleanly (detached HEAD, no upstream, rebase
+# conflict, failed push) is left as it was and reported; the exit status is
+# then 1. Finally `chezmoi apply` (which applies the desktop layer on Omarchy).
+#
+# Named dotsync, not sync: ~/.local/bin precedes /usr/bin on PATH and
+# coreutils `sync` flushes disks for scripts such as omarchy-provision-hardware.
+#
+# Usage: dotsync          sync all, then chezmoi apply
+#        dotsync --list   print the repos it would sync
+
+failed=0
+say() { printf '%s\n' "$*"; }
+fail() { printf 'dotsync: %s\n' "$*" >&2; failed=1; }
+
+# host/owner/repo of a remote URL (https, ssh or scp-like).
+norm() { printf '%s\n' "$1" | sed -E 's#^[a-z+]+://##; s#^[^@/]+@##; s#:#/#; s#\.git$##'; }
+origin() { git -C "$1" remote get-url origin 2>/dev/null; }
+
+sources=$(chezmoi source-path)
+if command -v chezmoi-desktop >/dev/null 2>&1 && [ -d "$HOME/.local/share/omarchy-desktop/.git" ]; then
+    sources="$sources
+$(chezmoi-desktop source-path)"
+fi
+
+# Remote prefixes counted as ours: the parent of each source's origin.
+own=$(printf '%s\n' "$sources" | while read -r s; do
+    u=$(origin "$s") && [ -n "$u" ] && dirname "$(norm "$u")"
+done)
+
+is_own() {
+    u=$(origin "$1") || return 1
+    p=$(dirname "$(norm "$u")")
+    printf '%s\n' "$own" | grep -qxF "$p"
+}
+
+externals() {
+    chezmoi managed --include=externals --path-style=absolute
+    if command -v chezmoi-desktop >/dev/null 2>&1 && [ -d "$HOME/.local/share/omarchy-desktop/.git" ]; then
+        chezmoi-desktop managed --include=externals --path-style=absolute
+    fi
+}
+
+# Every repo, submodules (deepest first) before their parent.
+repos() {
+    {
+        printf '%s\n' "$sources"
+        externals | while read -r d; do
+            [ -e "$d/.git" ] && is_own "$d" && printf '%s\n' "$d"
+        done
+    } | awk '!seen[$0]++' | while read -r r; do
+        git -C "$r" submodule foreach --quiet --recursive 'printf "%s\n" "$toplevel/$sm_path"' 2>/dev/null |
+            awk '{ l[NR] = $0 } END { for (i = NR; i > 0; i--) print l[i] }' |
+            while read -r s; do is_own "$s" && printf '%s\n' "$s"; done
+        printf '%s\n' "$r"
+    done
+}
+
+sync_repo() {
+    dir=$1
+    name=$(printf '%s\n' "$dir" | sed "s#^$HOME/#~/#")
+    if ! branch=$(git -C "$dir" symbolic-ref --quiet --short HEAD); then
+        fail "$name: detached HEAD, skipped"
+        return
+    fi
+    if [ -n "$(git -C "$dir" status --porcelain)" ]; then
+        say "$name: committing local changes (gh commit --auto)"
+        if ! (cd "$dir" && gh commit --auto); then
+            fail "$name: gh commit failed, skipped"
+            return
+        fi
+        if [ -n "$(git -C "$dir" status --porcelain)" ]; then
+            fail "$name: uncommitted changes left after gh commit, skipped"
+            return
+        fi
+    fi
+    if ! git -C "$dir" rev-parse --quiet --verify '@{upstream}' >/dev/null; then
+        fail "$name: $branch has no upstream, skipped"
+        return
+    fi
+    if ! git -C "$dir" pull --rebase --quiet; then
+        git -C "$dir" rebase --abort 2>/dev/null
+        fail "$name: rebase onto $(git -C "$dir" rev-parse --abbrev-ref '@{upstream}') failed, left as it was"
+        return
+    fi
+    ahead=$(git -C "$dir" rev-list --count '@{upstream}..HEAD')
+    if [ "$ahead" -gt 0 ]; then
+        if git -C "$dir" push --quiet; then
+            say "$name: pushed $ahead commit(s)"
+        else
+            fail "$name: push failed"
+        fi
+    else
+        say "$name: up to date"
+    fi
+}
+
+case $* in
+--list)
+    repos
+    exit 0
+    ;;
+'') ;;
+*)
+    echo "usage: dotsync [--list]" >&2
+    exit 2
+    ;;
+esac
+
+# Not a `while read` pipe: gh commit must keep the terminal as stdin.
+list=$(repos)
+IFS='
+'
+for r in $list; do sync_repo "$r"; done
+unset IFS
+
+say "chezmoi apply"
+chezmoi apply || fail "chezmoi apply failed"
+exit "$failed"
