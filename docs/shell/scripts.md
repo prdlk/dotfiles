@@ -424,6 +424,7 @@ A task runner that searches every task source in the project and lets you pick o
 pj-palette
 pj-palette --run KIND TARGET ROOT RUNNER
 pj-palette --cmd ROOT CMD…
+pj-palette --win SESSION NAME ROOT CMD…
 pj-palette --bg NAME [ROOT CMD…]
 pj-palette --omp
 ```
@@ -434,7 +435,7 @@ With no arguments it reads the active pane's directory (`tmux display -p '#{pane
 
 | Group | Items | Shown when |
 | --- | --- | --- |
-| Running | Every background task session still alive (any project), by session name | A long-running item was started and not stopped |
+| Running | Every background task window still alive (any session), as `<task>` with its session and window index; selecting one switches to it. Then every `<session>:omp` session, which reopens its popup | A long-running item was started and not stopped, or omp is running |
 | Quick | `<pm> install` (alias `install`, `i`), `<pm> run dev` (`dev`) | `package.json` at the project root. The package manager comes from `packageManager`, then the lockfile, as in `pj` |
 | Quick | `uv sync` (`sync`), `uv run python` (`py`, `repl`) | `pyproject.toml` and `uv` installed |
 | Quick | `make` (default target; `m`, `build`) | A Makefile and `make` |
@@ -446,9 +447,9 @@ The project root is the git toplevel, else the pane's directory.
 
 **Run.** One-off items open a full-width split along the bottom of the window (`split-window -v -f -l 25%`), 25% of its height, in the task's directory. The command is passed to `split-window` as separate arguments, so no shell reparses it. `--run` calls `pj --run`, which keeps pj's `openlogs` wrapping of `dev`/`start`/`serve`/`watch` tasks, and `--cmd` runs a quick action. While the command runs, <kbd>ctrl-c</kbd> stops only the command (the script traps `SIGINT`), so the output stays. Once the command exits, the script prints `[exit N] enter or ctrl-c to close`, and <kbd>enter</kbd> or <kbd>ctrl-c</kbd> closes the pane; other keys are ignored.
 
-**Background.** Long-running items, marked `· background`, are `<pm> run dev`, `docker compose up`, and pj tasks named `dev`/`start`/`serve`/`watch`/`preview` or with one of those as a `:` segment (`dev:web`, `api:dev`). They run through `--bg` in a detached session named `<session>:<tool-and-command>` (`leetcode:bun-run-dev`, `leetcode:docker-compose-up`), shown in a rounded 90%×80% popup attached to it. <kbd>q</kbd> detaches the popup and leaves the task running: the session's `key-table` is `pj-task`, which binds only `q` and <kbd>ctrl-c</kbd>, so other keys reach the task instead of root-table bindings (prefix bindings still work). <kbd>ctrl-c</kbd> runs `confirm-before` (`Stop <session>? (y/n)`); <kbd>y</kbd> sends ctrl-c to the task, which stops it and ends the session, closing the popup, and any other key cancels. If the task exits on its own, the `[exit N]` prompt keeps its output until <kbd>enter</kbd>. Picking the item again, or its **Running** entry, reopens the popup instead of starting a second copy. The session has `status off`, `detach-on-destroy on`, and `@pj_task` set to the task's root, which is how the Running group finds it. Session names contain `:`, so the script targets them by id (`$N`).
+**Background.** Long-running items, marked `· background`, are `<pm> run dev`, `docker compose up`, and pj tasks named `dev`/`start`/`serve`/`watch`/`preview` or with one of those as a `:` segment (`dev:web`, `api:dev`). They run through `--win` in a new window of the session the palette was opened from (`new-window -d`, so focus stays where it was), named `<tool-and-command>` (`bun-run-dev`, `docker-compose-up`; `-n` turns automatic-rename off for it). Window options `@pj_bg_task` (the name) and `@pj_bg_root` (the task's root) mark it. Picking the item again while it runs starts no second copy; a tmux message names the window that has it. <kbd>ctrl-c</kbd> in the window stops the task and closes the window. If the task exits on its own, the `[exit N]` prompt keeps its output until <kbd>enter</kbd>.
 
-**omp.** tmux `prefix a` runs `pj-palette --bg <session>:omp <pane cwd> omp`, so omp gets the same kind of background session and Running entry. Its popup docks in the bottom-right corner of the client, 35% wide and 60% tall. omp runs directly (no `[exit N]` prompt) and needs <kbd>q</kbd>, so its session uses the `pj-app` key table instead: <kbd>ctrl-c</kbd> hides the popup, <kbd>ctrl-q</kbd> kills the session (quits omp). `prefix a` inside any session with `@pj_task` also hides, which makes `prefix a` a toggle. The popup border shows only the session name. (Ghostty <kbd>ctrl+shift+a</kbd> toggles the workmux agent sidebar instead.)
+**omp.** tmux `prefix a` runs `pj-palette --bg <session>:omp <pane cwd> omp`: omp runs in a detached session `<session>:omp` (`status off`, `detach-on-destroy on`, `@pj_task` set to the directory), shown in a popup docked in the bottom-right corner of the client, 35% wide and 60% tall. omp needs <kbd>q</kbd>, so the session's `key-table` is `pj-app`: <kbd>ctrl-c</kbd> hides the popup, <kbd>ctrl-q</kbd> kills the session (quits omp), other keys reach omp (prefix bindings still work). `prefix a` inside any session with `@pj_task` also hides, which makes `prefix a` a toggle. The popup border shows only the session name. Session names contain `:`, so the script targets them by id (`$N`). (Ghostty <kbd>ctrl+shift+a</kbd> opens the workmux dashboard instead.)
 
 **omp palette.** `--omp` feeds `palettes/omp.json`, opened by the main palette's **omp** item. It lists every running `<session>:omp` across tmux sessions, with a green icon and `open`/`hidden` state: **This session** first (or a grey `not running · start in <cwd>` item that starts it), then **Running** for the other tmux sessions' agents, then a **Quit** item per session (`kill-session`).
 
@@ -502,7 +503,7 @@ With no arguments it prints palette items as JSON, grouped by category:
 | Agents | Every agent `workmux status --all --json` tracks in this tmux server: waiting (yellow), done (green), working (blue), then idle, most recent first. Title `<repo>/<handle>`, description status, time since the change, and the pane title | `switch-client` to the agent's pane |
 | Worktrees: `<repo>` | The active pane's repo's worktrees (`workmux list --json`, main checkout left out): branch, open/closed, dirty, path. Open ones are green | `workmux open` (starts the session if closed) |
 | New | **New worktree from a prompt**, when the pane is in a repo | `--prompt` in a popup: `gum write` for the task, then `workmux add -A -p TASK` (omp names the branch, see [workmux](../tools/workmux.md#branch-names)) |
-| Workmux | **Dashboard** (90% popup), **Sidebar** (toggle; also tmux `prefix S`, Ghostty <kbd>ctrl+shift+a</kbd> / <kbd>ctrl+shift+s</kbd>), **Last done** (`workmux last-done`) | |
+| Workmux | **Dashboard** (90% popup; also tmux `prefix S`, Ghostty <kbd>ctrl+shift+a</kbd> / <kbd>ctrl+shift+s</kbd>), **Sidebar** (toggle), **Last done** (`workmux last-done`) | |
 | Close | One per open worktree | `workmux close`: ends the session, keeps worktree and branch |
 | Merge | One per worktree | `workmux merge` in a popup |
 | Remove | One per worktree | `workmux remove` in a popup (asks before deleting unmerged commits) |

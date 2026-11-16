@@ -41,7 +41,7 @@ On Omarchy it is the default terminal: the first entry of `~/.config/xdg-termina
 
 Every Ghostty window gets its own tmux session; no two windows mirror the same one. `~/.local/bin/ghostty-tmux` (source `dot_local/bin/executable_ghostty-tmux`) runs for each new window:
 
-1. If a detached session exists (left by a closed window, or restored by continuum after a reboot), it attaches to the oldest one, by session id. Background task sessions from `pj-palette` (`@pj_task` set, named `<session>:<task>`) are never reclaimed.
+1. If a detached session exists (left by a closed window, or restored by continuum after a reboot), it attaches to the oldest one, by session id. `pj-palette`'s background omp sessions (`@pj_task` set, named `<session>:omp`) are never reclaimed.
 2. Otherwise it starts a new session.
 
 Before starting tmux, the script puts mise's shims on `PATH`. A server started from a desktop-launched Ghostty therefore finds the tools tmux plugins shell out to: bun for the palette, fzf, and zoxide.
@@ -83,7 +83,7 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+shift+/` | `prefix ?` | Keybinding help popup |
 | `ctrl+shift+alt+,` | `prefix q` | Reload tmux config |
 | `ctrl+shift+n` | `prefix C` | New session |
-| `ctrl+shift+a`, `ctrl+shift+s` | `prefix S` | Toggle the [workmux](../tools/workmux.md) agent sidebar (all sessions); the session/window tree stays on `prefix s`. The [Workmux palette](../shell/scripts.md#workmux-palette) has no chord: `prefix w`, or `ctrl+s` inside the sidebar |
+| `ctrl+shift+a`, `ctrl+shift+s` | `prefix S` | [workmux](../tools/workmux.md) dashboard in a 90% popup; the session/window tree stays on `prefix s`. The [Workmux palette](../shell/scripts.md#workmux-palette) has no chord: `prefix w` |
 | `ctrl+shift+q` | `prefix d` | Detach (closes the Ghostty window; the session lives on) |
 
 ## Themes
