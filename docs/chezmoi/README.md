@@ -107,7 +107,7 @@ chezmoi encodes target names and attributes in source file names. These are the 
 | `.tmpl` | Rendered with Go templates and chezmoi data | `dot_gitconfig.tmpl`, `dot_config/shell/aliases.sh.tmpl`, all scripts, the config and ignore files |
 | `run_once_` / `run_onchange_` + `before_` / `after_` | Script, with run frequency and phase | See [Apply scripts](scripts.md) |
 
-Prefixes stack in chezmoi's fixed order, e.g. `private_dot_foo`, `executable_dot_bar`. No source file currently uses `encrypted_`, even though age encryption is configured.
+Prefixes stack in chezmoi's fixed order, e.g. `private_dot_foo`, `executable_dot_bar`. No source file currently uses `encrypted_`; `chezmoi add --encrypt` adds one, decrypted on every machine with the [master password](config.md#master-password).
 
 ## Symlink mode
 
@@ -134,6 +134,6 @@ What that means in practice:
 | `chezmoi re-add <path>` | Copies edits made to non-symlinked targets (private, executable) back into the source. |
 | `chezmoi edit <path>` | Opens the source file for a target, the right way to change templates. |
 | `chezmoi cd` | Opens a shell in the source directory for git work. The fish alias `,,` opens yazi there instead. |
-| `chezmoi init --prompt` | Re-asks name and email and regenerates `~/.config/chezmoi/chezmoi.toml`. |
+| `chezmoi init` | Re-asks the software to install (previous answer preselected) and regenerates `~/.config/chezmoi/chezmoi.toml`; `--promptDefaults` keeps the answer. |
 
 Commit and push from the source directory with plain git; the remote is [prdlk/dotfiles](https://github.com/prdlk/dotfiles) (`git@github.com:prdlk/dotfiles.git` over SSH). On Omarchy, `chezmoi-desktop` (diff, apply, cd) does the same for the [desktop layer](https://prad.codes/env/omarchy-desktop).

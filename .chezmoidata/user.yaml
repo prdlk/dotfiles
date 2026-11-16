@@ -1,0 +1,4 @@
+# Git identity for dot_gitconfig.tmpl. One user runs these dotfiles, so it is
+# fixed here instead of asked at `chezmoi init`.
+name: Prad Nukala
+email: prad@nuka.la

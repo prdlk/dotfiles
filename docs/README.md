@@ -6,7 +6,7 @@ prdlk's cross-platform developer environment for Arch, macOS and Ubuntu, managed
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/prdlk/dotfiles.git
 ```
 
-That command installs chezmoi, clones [prdlk/dotfiles](https://github.com/prdlk/dotfiles), asks two questions (name, email), installs packages with the OS package manager, and applies every config. See [Installation](installation.md) for prerequisites, the age key step, and the options.
+That command installs chezmoi, clones [prdlk/dotfiles](https://github.com/prdlk/dotfiles), asks for the master password (decrypts the age key) and which software to install, installs it with the OS package manager, and applies every config. See [Installation](installation.md) for prerequisites and the options.
 
 ## Table of contents
 
@@ -53,7 +53,7 @@ The Omarchy desktop layer (Hyprland, Waybar, fonts and default apps, the `omarch
 
 ## What differs per OS
 
-There are no machine roles. The first apply asks for name and email only; the OS decides the rest.
+There are no machine roles. The first apply asks for the master password and the software to install; the OS decides the rest.
 
 | OS | Packages | Desktop layer |
 | --- | --- | --- |

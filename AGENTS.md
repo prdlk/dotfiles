@@ -57,7 +57,7 @@ Moving one back in is the reverse: copy the tracked files into `dot_config/<app>
 
 `.chezmoidata/packages.yaml` is the install manifest; the goal is `chezmoi init --apply` on a fresh Arch, macOS or Ubuntu machine yields a working setup. When a config, script, tmux-palette item, television cable `requirements`, or alias starts calling a new binary, declare it in the same change.
 
-`packages.tools` has one entry per tool, saying how each OS gets it (`10-packages`):
+`packages.tools` has one entry per tool, saying how each OS gets it (`10-packages`). Every entry needs a `name`: the choice in the `chezmoi init` software picker (`.chezmoitemplates/packages`; entries sharing a name are one choice, e.g. a tool and its build libraries). `core: true` marks what the install scripts themselves need (git, curl, build tools, jq, mise): always installed, never offered. Shared items are offered under the crate name, the mise spec's last path segment, or the gh extension's repo name.
 
 |Key|Used on|Installed by|
 |---|---|---|

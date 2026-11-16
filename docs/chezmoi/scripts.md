@@ -2,7 +2,7 @@
 
 Every run_ script chezmoi executes during apply, when each one fires, and what it does on each OS.
 
-Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a directory whose scripts run as if they sat at the source root without creating a matching target directory. Two sit at the repo root. All are templates except `50-omarchy-desktop`; `20-gh-extensions` is a fish script, the rest use `#!/bin/sh` with `set -eu` (except `25-skills`, which uses `set -u`).
+Ten scripts run during `chezmoi apply`. Eight live in `.chezmoiscripts/`, a directory whose scripts run as if they sat at the source root without creating a matching target directory. Two sit at the repo root. All are templates except `50-omarchy-desktop`; `20-gh-extensions` is a fish script, the rest use `#!/bin/sh` with `set -eu` (except `25-skills` and `45-tmux-plugins`, which use `set -u`). What 10, 15, 20 and 45 install follows the software picked at `chezmoi init` ([Software selection](config.md#software-selection)); a script left with nothing to do renders empty and chezmoi skips it.
 
 ## Execution order
 
@@ -14,7 +14,7 @@ Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a dir
 
 2. **10-packages (before, onchange)**
 
-   Install system packages from `packages.yaml` with pacman and AUR, Homebrew, or apt.
+   Install the chosen system packages from `packages.yaml` with pacman and AUR, Homebrew, or apt.
 
 3. **Files, symlinks, externals**
 
@@ -36,34 +36,39 @@ Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a dir
 
    bat cache, font cache (Linux).
 
-8. **50-omarchy-desktop (after, every apply)**
+8. **45-tmux-plugins (after, every apply)**
+
+   Clone tmux plugins from `tmux.conf` that are missing.
+
+9. **50-omarchy-desktop (after, every apply)**
 
    Clone and apply the Omarchy desktop layer when `omarchy` is on `PATH`.
 
-9. **build-bat-cache (after, onchange)**
+10. **build-bat-cache (after, onchange)**
 
    Rebuild bat cache when its theme or config changes.
 
-10. **install-yazi-plugins (after, onchange)**
+11. **install-yazi-plugins (after, onchange)**
 
    Reinstall yazi plugins when the manifest changes.
 
 | Script | Phase | Frequency | Re-run trigger |
 | --- | --- | --- | --- |
 | `.chezmoiscripts/run_before_05-externals.sh.tmpl` | before | every apply | Always runs; cheap unless a target is in the way |
-| `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` | before | onchange | sha256 of `.chezmoidata/packages.yaml`; also the OS family, which changes the rendered install commands |
-| `.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` | after | onchange | sha256 of `packages.shared.cargo` and of the whole `.packages` data as JSON; also the OS family |
-| `.chezmoiscripts/run_onchange_after_20-gh-extensions.sh.tmpl` | after | onchange | sha256 of `packages.shared.gh_extensions` as JSON |
+| `.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` | before | onchange | The rendered package lists: a manifest edit, a different software choice, or another OS family |
+| `.chezmoiscripts/run_onchange_after_15-tools.sh.tmpl` | after | onchange | The rendered crate and mise lists (manifest edit or software choice); also the OS family |
+| `.chezmoiscripts/run_onchange_after_20-gh-extensions.sh.tmpl` | after | onchange | The rendered extension list |
 | `.chezmoiscripts/run_onchange_after_25-skills.sh.tmpl` | after | onchange | sha256 of `.skills` as JSON |
 | `.chezmoiscripts/run_onchange_after_40-post.sh.tmpl` | after | onchange | Edits to the script itself or an OS change |
+| `.chezmoiscripts/run_after_45-tmux-plugins.sh.tmpl` | after | every apply | Always runs (when tmux is chosen); only stats directories unless a plugin is missing |
 | `.chezmoiscripts/run_after_50-omarchy-desktop.sh` | after | every apply | Always runs; exits at once unless `omarchy` is on `PATH` |
 | `run_onchange_after_build-bat-cache.sh.tmpl` | after | onchange | sha256 of `dot_config/bat/themes/cyberdream.tmTheme` and `dot_config/bat/config` |
 | `run_onchange_after_install-yazi-plugins.sh.tmpl` | after | onchange | sha256 of `~/.config/yazi/package.toml` (empty when the file is absent) |
 
-`run_onchange_` scripts re-run whenever their rendered content differs from the last successful run. The hash triggers work by writing a checksum of another file into a comment, so editing that file changes the script's content:
+`run_onchange_` scripts re-run whenever their rendered content differs from the last successful run. The package scripts render their package lists, so the choice and the manifest are the trigger. Others write a checksum of another file into a comment, so editing that file changes the script's content:
 
 ```sh
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# skills hash: {{ .skills | toJson | sha256sum }}
 ```
 
 `run_once_` scripts run once per unique rendered content and again only if that content changes or the previous run failed.
@@ -80,7 +85,7 @@ Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a dir
 
 ## 10-packages
 
-`.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` installs the `packages.tools` entries of [`packages.yaml`](data.md#packagesyaml) with the OS package manager, chosen by the [os-family template](config.md#os-family). It runs before files are applied so the tools exist when configs land. For any other OS it prints a warning and installs nothing. The script uses `sudo` unless it runs as root.
+`.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl` installs the chosen `packages.tools` entries of [`packages.yaml`](data.md#packagesyaml) (every entry not in `data.skip`, plus the `core` ones) with the OS package manager, chosen by the [os-family template](config.md#os-family). It runs before files are applied so the tools exist when configs land. For any other OS it prints a warning and installs nothing. The script uses `sudo` unless it runs as root.
 
 ### Arch (`arch`)
 
@@ -98,10 +103,10 @@ Nine scripts run during `chezmoi apply`. Seven live in `.chezmoiscripts/`, a dir
 ### Ubuntu (`debian`)
 
 1. `apt-get update`, then installs `ca-certificates`, `curl`, `gnupg`, `software-properties-common` and `xz-utils`.
-2. Adds `ppa:fish-shell/release-4` when no fish-shell source is configured (the noble archive has fish 3.7; the fish config targets 4.x).
-3. Adds the pkgs.tailscale.com apt repo for the release codename (its keyring and `tailscale.list`) when `/etc/apt/sources.list.d/tailscale.list` is missing. Runs `apt-get update` again if a repo was added.
-4. `apt-get install -y` of every `apt` entry.
-5. If `~/.local/share/fonts/VictorMonoNerdFont` does not exist, downloads the nerd-fonts `VictorMono.tar.xz` release into it. [40-post](#40-post) refreshes the font cache.
+2. Adds `ppa:fish-shell/release-4` when fish is chosen and no fish-shell source is configured (the noble archive has fish 3.7; the fish config targets 4.x).
+3. Adds the pkgs.tailscale.com apt repo for the release codename (its keyring and `tailscale.list`) when tailscale is chosen and `/etc/apt/sources.list.d/tailscale.list` is missing. Runs `apt-get update` again if a repo was added.
+4. `apt-get install -y` of every chosen `apt` entry.
+5. When `victor-mono-nerd-font` is chosen and `~/.local/share/fonts/VictorMonoNerdFont` does not exist, downloads the nerd-fonts `VictorMono.tar.xz` release into it. [40-post](#40-post) refreshes the font cache.
 
 Ubuntu's `mise` entries are installed by [15-tools](#15-tools), after mise itself.
 
@@ -113,16 +118,16 @@ Ubuntu's `mise` entries are installed by [15-tools](#15-tools), after mise itsel
 | --- | --- | --- |
 | Homebrew environment | macOS | Evaluates `brew shellenv` so `cargo`, `mise` and `jq` from Homebrew are found |
 | mise | Ubuntu, `mise` not on `PATH` | `curl -fsSL https://mise.run \| sh` (mise is in neither apt nor the manifest's apt list; Arch and macOS get it from pacman/Homebrew) |
-| rustup | `cargo` not on `PATH` | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y --no-modify-path`. `-y` because there is no prompt under chezmoi; `--no-modify-path` because the shell rc files are symlinks into this repo and already source `~/.cargo/env` |
-| cargo crates | every OS | `cargo install --locked <crate>` for each `packages.shared.cargo` entry missing from `cargo install --list` |
-| mise tools | `mise` installed (warning otherwise) | `mise use -g <tools…>` for each entry absent from `mise ls --global --json`, then `mise install <tools…>`. The list is `packages.shared.mise` on every OS plus, on Ubuntu, the `mise` spec of each `packages.tools` entry that has no `apt`. A tool already in the global config keeps its pinned version. omp and opencode come from here |
+| rustup | any crate chosen, `cargo` not on `PATH` | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y --no-modify-path`. `-y` because there is no prompt under chezmoi; `--no-modify-path` because the shell rc files are symlinks into this repo and already source `~/.cargo/env` |
+| cargo crates | every OS | `cargo install --locked <crate>` for each chosen `packages.shared.cargo` entry missing from `cargo install --list` |
+| mise tools | `mise` installed (warning otherwise) | `mise use -g <tools…>` for each entry absent from `mise ls --global --json`, then `mise install <tools…>`. The list is the chosen `packages.shared.mise` items on every OS plus, on Ubuntu, the `mise` spec of each chosen `packages.tools` entry that has no `apt`. A tool already in the global config keeps its pinned version. omp and opencode come from here |
 | old omp binary | `~/.local/bin/omp` is a regular file and `mise which omp` resolves | Deletes it: a copy from omp's own installer (`omp.sh/install`) sits ahead of mise's shims on `PATH` |
 
-The re-run triggers are hashes of `packages.shared.cargo` and of the whole `.packages` data, and the OS family. strata (the folder handler) is no longer installed here; it moved to the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts).
+The re-run trigger is the rendered crate and mise lists, which change with the manifest, the software choice, and the OS family. strata (the folder handler) is no longer installed here; it moved to the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts).
 
 ## 20-gh-extensions
 
-`.chezmoiscripts/run_onchange_after_20-gh-extensions.sh.tmpl` installs each `packages.shared.gh_extensions` entry. It is a fish script (`#!/usr/bin/env fish`), so fish sources `~/.config/fish` first: `PATH` (mise, `~/.local/bin`, `~/.cargo/bin`) and `GITHUB_TOKEN` (from `gh auth token` in `conf.d/10-env.fish`) are those of a fish session. It runs after every file is applied and after [15-tools](#15-tools), so the fish config and `~/.cargo/env.fish` exist.
+`.chezmoiscripts/run_onchange_after_20-gh-extensions.sh.tmpl` installs each chosen `packages.shared.gh_extensions` entry; it renders empty when fish, gh, or every extension is left out at init. It is a fish script (`#!/usr/bin/env fish`), so fish sources `~/.config/fish` first: `PATH` (mise, `~/.local/bin`, `~/.cargo/bin`) and `GITHUB_TOKEN` (from `gh auth token` in `conf.d/10-env.fish`) are those of a fish session. It runs after every file is applied and after [15-tools](#15-tools), so the fish config and `~/.cargo/env.fish` exist.
 
 - Exits 0 with `warning: gh not installed — skipping extensions` if `gh` is missing.
 - Exits 0 with `warning: gh not authenticated — run 'gh auth login', then 'chezmoi apply' again` if `gh auth status` fails.
@@ -151,7 +156,17 @@ The re-run triggers are hashes of `packages.shared.cargo` and of the whole `.pac
 | bat cache | `bat` installed | `bat cache --build` |
 | Font cache | Linux, `fc-cache` installed | `fc-cache -f` |
 
-Each step ignores failures (`|| true`). tpm is cloned by [`.chezmoiexternal.toml`](externals-and-ignore.md#chezmoiexternaltoml), not here. The title-bar button layout setting that used to be here moved to the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts).
+Each step ignores failures (`|| true`). tpm and the tmux plugins are [45-tmux-plugins](#45-tmux-plugins), not here. The title-bar button layout setting that used to be here moved to the [desktop layer](https://prad.codes/env/omarchy-desktop/src/branch/main/README.md#scripts).
+
+## 45-tmux-plugins
+
+`.chezmoiscripts/run_after_45-tmux-plugins.sh.tmpl` gives a new machine its tmux plugins without `prefix I`. It renders empty when tmux is left out at init.
+
+- Reads every `set -g @plugin '<owner>/<repo>[#branch]'` line of `${XDG_CONFIG_HOME:-~/.config}/tmux/tmux.conf`; exits 0 if the file is missing.
+- For each plugin whose directory under `~/.config/tmux/plugins/` (where tpm keeps them) is missing: `git clone --depth 1 --recursive --shallow-submodules`, from `https://github.com/<owner>/<repo>` (or the full URL when one is given), on the `#branch` if set.
+- tpm is one of the `@plugin` lines. The [`.chezmoiexternal.toml`](externals-and-ignore.md#chezmoiexternaltoml) clone normally puts it in place first; this covers it if not.
+- Plugins install their own dependencies when tmux loads them (`tmux-palette-plugin` runs `bun install`). Updates stay with tpm (`prefix U`).
+- Runs after every apply; with every plugin present it only stats directories. Exits 1 listing any plugin whose clone failed, after trying the rest.
 
 ## 50-omarchy-desktop
 

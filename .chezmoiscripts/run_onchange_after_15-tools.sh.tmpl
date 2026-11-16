@@ -1,16 +1,17 @@
 #!/bin/sh
 # Tools that come from their own installers rather than the OS package
-# manager: rustup (cargo) and the packages.shared.cargo crates, mise itself on
-# Ubuntu, and the global mise tools: packages.shared.mise on every OS plus, on
-# Ubuntu, the packages.tools entries that have a `mise` spec and no `apt`.
+# manager: rustup (cargo) and the chosen packages.shared.cargo crates, mise
+# itself on Ubuntu, and the chosen global mise tools: packages.shared.mise on
+# every OS plus, on Ubuntu, the chosen packages.tools entries that have a
+# `mise` spec and no `apt` (.chezmoitemplates/packages).
 # Runs before 20-gh-extensions, whose fish session sources ~/.cargo/env.fish
-# (conf.d/rustup.fish) and activates mise.
-# cargo hash: {{ .packages.shared.cargo | toJson | sha256sum }}
-# tools hash: {{ .packages | toJson | sha256sum }}
+# (conf.d/rustup.fish) and activates mise. The rendered lists change with the
+# manifest or the choice, which re-runs this.
 {{- $family := includeTemplate "os-family" . }}
-{{- $mise := .packages.shared.mise }}
+{{- $pk := includeTemplate "packages" . | fromJson }}
+{{- $mise := $pk.mise }}
 {{- if eq $family "debian" }}
-{{-   range .packages.tools }}
+{{-   range $pk.tools }}
 {{-     if and (hasKey . "mise") (not (hasKey . "apt")) }}{{ $mise = append $mise .mise }}{{ end }}
 {{-   end }}
 {{- end }}
@@ -30,6 +31,8 @@ done
 command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh
 {{- end }}
 
+{{- if $pk.cargo }}
+
 # rustup: -y answers its prompt (no tty under chezmoi); --no-modify-path keeps
 # it out of the shell rc files, which are symlinks into this repo and already
 # source ~/.cargo/env (bash, zsh, fish conf.d/rustup.fish).
@@ -38,9 +41,11 @@ if ! command -v cargo >/dev/null 2>&1; then
 fi
 
 installed=$(cargo install --list | awk '/^[^ ]/{print $1}')
-{{ range .packages.shared.cargo -}}
+{{ range $pk.cargo -}}
 echo "$installed" | grep -qx {{ . | quote }} || cargo install --locked {{ . | quote }}
 {{ end }}
+{{- end }}
+{{- if $mise }}
 
 # Global mise tools. Only tools absent from the global config are added, so a
 # local pin (node = "22") is never rewritten to latest; `mise install` then
@@ -62,3 +67,4 @@ if command -v mise >/dev/null 2>&1; then
 else
     echo "warning: mise not installed — skipping mise tools" >&2
 fi
+{{- end }}

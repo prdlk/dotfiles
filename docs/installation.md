@@ -14,15 +14,9 @@ Install chezmoi and apply these dotfiles with one command on Arch, macOS or Ubun
 
    On Omarchy the desktop layer (Hyprland config, Waybar, uwsm, the `omarchy-*` scripts) is a second chezmoi source, [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop), applied automatically after these dotfiles. It layers on top of the Omarchy install and does not replace it. See [Omarchy desktop layer](#omarchy-desktop-layer).
 
-2. **age key**
+2. **Master password**
 
-   chezmoi is configured for age encryption with the identity at `~/.config/chezmoi/key.txt`. The key is never committed. Copy it from an existing machine before applying:
-
-   ```sh
-   mkdir -p ~/.config/chezmoi
-   scp <existing-machine>:.config/chezmoi/key.txt ~/.config/chezmoi/key.txt
-   chmod 600 ~/.config/chezmoi/key.txt
-   ```
+   Secrets are age-encrypted in the repo. Their key, `key.txt.age`, is committed encrypted with the master password, and `chezmoi init` asks for that password first (three tries), writing the key to `~/.config/chezmoi/key.txt`. Nothing needs copying between machines. See [Master password](chezmoi/config.md#master-password).
 
 3. **GitHub credentials (all OSes)**
 
@@ -89,11 +83,11 @@ Known gaps: no ghostty on Ubuntu 24.04; `sshfs` is not installed on macOS (it ne
 
 1. **Prompts**
 
-   `.chezmoi.toml.tmpl` asks once for **name** and **email**. Answers are stored in `~/.config/chezmoi/chezmoi.toml` and not asked again. See [Configuration](chezmoi/config.md).
+   `.chezmoi.toml.tmpl` asks for the **master password** (once per machine, while `~/.config/chezmoi/key.txt` is missing), then shows a multi-select of the **software to install**, everything ticked. Unticked choices are stored in `~/.config/chezmoi/chezmoi.toml` as `skip`; `chezmoi init` asks again later. See [Configuration](chezmoi/config.md#prompts).
 
 2. **Packages**
 
-   `run_onchange_before_10-packages` installs the `packages.tools` entries of `.chezmoidata/packages.yaml` with the OS package manager (pacman and yay, Homebrew, or apt) before any file is written. See [Scripts](chezmoi/scripts.md).
+   `run_onchange_before_10-packages` installs the chosen `packages.tools` entries of `.chezmoidata/packages.yaml` with the OS package manager (pacman and yay, Homebrew, or apt) before any file is written. See [Scripts](chezmoi/scripts.md).
 
 3. **Files and externals**
 
@@ -101,7 +95,7 @@ Known gaps: no ghostty on Ubuntu 24.04; `sshfs` is not installed on macOS (it ne
 
 4. **Post-apply scripts**
 
-   rustup and cargo crates, mise itself on Ubuntu, the global mise tools (`ghq`, `bun`, `node`, `uv`, `opencode`, `crush`, omp), then gh extensions (from a fish session), skills, the bat cache, the font cache on Linux, yazi plugins, and on Omarchy the desktop layer. tpm arrives earlier as an external.
+   rustup and cargo crates, mise itself on Ubuntu, the global mise tools (`ghq`, `bun`, `node`, `uv`, `opencode`, `crush`, omp), then gh extensions (from a fish session), skills, the bat cache, the font cache on Linux, the tmux plugins, yazi plugins, and on Omarchy the desktop layer. Each covers only the chosen software. tpm arrives earlier as an external.
 
 > [!NOTE]
 > The gh extension script skips with a warning until `gh auth login` has run. A skipped run still exits 0, so a plain `chezmoi apply` does not retry it. See [Scripts](chezmoi/scripts.md#20-gh-extensions) for how to re-run it.

@@ -87,6 +87,8 @@ A window whose agent workmux tracks shows its status icon after the label (`#{@w
 
 ## Plugins
 
+Plugins live in `~/.config/tmux/plugins/`. A new machine gets them on `chezmoi apply`: tpm is an [external](../chezmoi/externals-and-ignore.md#chezmoiexternaltoml), and [45-tmux-plugins](../chezmoi/scripts.md#45-tmux-plugins) clones every other `@plugin` that is missing. `prefix I` and `prefix U` (tpm) still install and update by hand.
+
 | Plugin | Settings |
 | --- | --- |
 | `tmux-plugins/tpm` | Plugin manager |

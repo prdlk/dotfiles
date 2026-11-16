@@ -50,7 +50,7 @@ gh config and aliases, the four gh extensions installed on apply, and the gh-das
 
 1. **Re-run trigger**
 
-   The rendered script embeds a SHA-256 of the `gh_extensions` list, so chezmoi re-runs it whenever the list changes.
+   The rendered script lists the chosen extensions, so chezmoi re-runs it whenever the list or the [software choice](../chezmoi/config.md#software-selection) changes. Leaving out fish, gh, or every extension at `chezmoi init` skips it.
 
 2. **Guards**
 

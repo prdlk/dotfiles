@@ -1,14 +1,48 @@
-{{- $name := promptStringOnce . "name" "Full name" "Prad Nukala" -}}
-{{- $email := promptStringOnce . "email" "Email" "prad@sonr.io" -}}
+{{- /* chezmoi init asks two things, in this order:
+
+1. The master password, once per machine: it decrypts key.txt.age (the age
+   identity, passphrase-encrypted and committed) to ~/.config/chezmoi/key.txt,
+   which decrypts every encrypted_ file. Skipped once that key exists. Three
+   tries; with no terminal it is skipped with a warning.
+2. The software to install: every package choice from .chezmoidata/
+   packages.yaml (.chezmoitemplates/packages), with the previous answer
+   preselected and anything new preselected too. The unchosen ones are
+   stored as data.skip, so packages added later still install. `chezmoi init`
+   asks again; `chezmoi init --promptDefaults` keeps the previous answer.
+
+Name and email for git are .chezmoidata/user.yaml, not prompted. */ -}}
+{{- $identity := joinPath .chezmoi.homeDir ".config/chezmoi/key.txt" -}}
+{{- $encrypted := joinPath .chezmoi.sourceDir "key.txt.age" -}}
+{{- if and (not (stat $identity)) (stat $encrypted) -}}
+{{-   $_ := output "sh" "-c" `
+mkdir -p "$(dirname "$1")"
+if ! (: </dev/tty) 2>/dev/null; then
+    echo "chezmoi: no terminal for the master password; $1 not created, encrypted files will fail" >&2
+    exit 0
+fi
+echo "Master password (decrypts the dotfiles' age key):" >/dev/tty
+for try in 1 2 3; do
+    "$0" age decrypt --passphrase --output "$1" "$2" </dev/tty >/dev/tty && chmod 600 "$1" && exit 0
+done
+exit 1
+` .chezmoi.executable $identity $encrypted -}}
+{{- end -}}
+{{- $names := (includeTemplate "packages" dict | fromJson).names -}}
+{{- $previous := get . "skip" | default list -}}
+{{- $preselected := list -}}
+{{- range $names }}{{ if not (has . $previous) }}{{ $preselected = append $preselected . }}{{ end }}{{ end -}}
+{{- $install := promptMultichoice "Software to install (x toggles, ctrl+a selects all, enter confirms)" $names $preselected -}}
+{{- $skip := list -}}
+{{- range $names }}{{ if not (has . $install) }}{{ $skip = append $skip . }}{{ end }}{{ end -}}
 
 mode = "symlink"
 encryption = "age"
 
 [age]
     identity = "~/.config/chezmoi/key.txt"
-    recipient = "age19tdqgavaekhvgqsd75n8a09vvshen2ykzy8kw6tenczz73449anqc3l7a6"
+    recipient = "age1v6j26xeydxgn5vtv2unjszd5aq6a0l6s50plc6x539u95usmhyeqxcup96"
     useBuiltin = true
 
 [data]
-    name = {{ $name | quote }}
-    email = {{ $email | quote }}
+    # Software not to install, from the init picker (.chezmoitemplates/packages).
+    skip = {{ $skip | toToml }}

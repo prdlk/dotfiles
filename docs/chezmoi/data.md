@@ -9,14 +9,20 @@ Files in `.chezmoidata/` are merged into chezmoi's template data on every run. N
 | `.chezmoidata/packages.yaml` | `.packages` | [`run_onchange_before_10-packages.sh.tmpl`](scripts.md#10-packages), [`run_onchange_after_15-tools.sh.tmpl`](scripts.md#15-tools), [`run_onchange_after_20-gh-extensions.sh.tmpl`](scripts.md#20-gh-extensions) |
 | `.chezmoidata/aliases.yaml` | `.aliases` | `dot_config/shell/aliases.sh.tmpl` (bash and zsh) |
 | `.chezmoidata/skills.yaml` | `.skills` | [`run_onchange_after_25-skills.sh.tmpl`](scripts.md#25-skills) |
+| `.chezmoidata/user.yaml` | `.name`, `.email` | `dot_gitconfig.tmpl` (git identity; one user, so not prompted) |
 
 ## packages.yaml
 
-`packages.tools` is one list with an entry per tool saying how each OS gets it, plus a `shared` block that is the same on every OS. Any edit to the file changes the hash embedded in the package script, so the next `chezmoi apply` re-runs the install. Installs are idempotent (`pacman --needed`, only missing Homebrew formulae, `apt-get install`). The lists are derived from what the configs actually invoke: tmux-palette items, television cable `requirements`, fish functions, and `~/.local/bin` scripts. Desktop-only packages (Wayland utilities, GUI apps) are not here; they belong to [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop).
+`packages.tools` is one list with an entry per tool saying how each OS gets it, plus a `shared` block that is the same on every OS. What a machine installs is the manifest minus the software unticked at `chezmoi init` ([Software selection](config.md#software-selection)); `.chezmoitemplates/packages` does the filtering, and the install scripts render the resulting lists, so a manifest edit or a new choice re-runs them on the next `chezmoi apply`. Installs are idempotent (`pacman --needed`, only missing Homebrew formulae, `apt-get install`). The lists are derived from what the configs actually invoke: tmux-palette items, television cable `requirements`, fish functions, and `~/.local/bin` scripts. Desktop-only packages (Wayland utilities, GUI apps) are not here; they belong to [env/omarchy-desktop](https://prad.codes/env/omarchy-desktop).
 
 ### Tools
 
-Each `packages.tools` entry is a flow map, for example `{arch: fd, brew: fd, mise: fd}`. A key left out means the tool is not installed on that OS.
+Each `packages.tools` entry is a flow map, for example `{name: fd, arch: fd, brew: fd, mise: fd}`. A key left out means the tool is not installed on that OS.
+
+| Key | Meaning |
+| --- | --- |
+| `name` | The choice in the init picker. Entries sharing a name are one choice: `mdfried` covers the tool and its Ubuntu build libraries |
+| `core` | `true` for what the install scripts need themselves (git, curl, `base-devel` / `build-essential`, jq, mise): always installed, not offered |
 
 | Key | Used on | Installed by |
 | --- | --- | --- |

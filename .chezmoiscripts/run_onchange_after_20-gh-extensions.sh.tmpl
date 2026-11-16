@@ -1,9 +1,12 @@
+{{- /* Renders empty (chezmoi skips it) when fish, gh or every extension is
+not chosen at `chezmoi init` (.chezmoitemplates/packages). */ -}}
+{{- $pk := includeTemplate "packages" . | fromJson -}}
+{{- if and (has "fish" $pk.selected) (has "gh" $pk.selected) $pk.gh_extensions -}}
 #!/usr/bin/env fish
-# Install gh extensions declared in .chezmoidata/packages.yaml.
+# Install the chosen gh extensions of .chezmoidata/packages.yaml.
 # A fish script, so fish's config (~/.config/fish, applied before after-scripts
 # run) is sourced first: PATH (mise, ~/.local/bin, ~/.cargo/bin) and
 # GITHUB_TOKEN (conf.d/10-env.fish) match a fish session.
-# gh_extensions hash: {{ .packages.shared.gh_extensions | toJson | sha256sum }}
 
 if not command -q gh
     echo "warning: gh not installed — skipping extensions" >&2
@@ -16,10 +19,11 @@ end
 
 set -l installed (gh extension list 2>/dev/null | string split -f2 \t)
 set -l failed
-for ext in{{ range .packages.shared.gh_extensions }} {{ . | quote }}{{ end }}
+for ext in{{ range $pk.gh_extensions }} {{ . | quote }}{{ end }}
     contains -- $ext $installed; or gh extension install $ext; or set -a failed $ext
 end
 if set -q failed[1]
     echo "error: gh extension install failed for: $failed" >&2
     exit 1
 end
+{{ end -}}

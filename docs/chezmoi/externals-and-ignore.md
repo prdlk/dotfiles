@@ -101,7 +101,7 @@ Files at the source root that would otherwise land in `$HOME` as `~/README.md` o
 | Pattern | Why |
 | --- | --- |
 | `.config/lazygit/.omc/**` | Tool state written inside the lazygit config dir |
-| `.config/tmux/plugins/**`, except `!.config/tmux/plugins/tpm` | Plugins tpm installs with `prefix I`; tpm itself is the external above |
+| `.config/tmux/plugins/**`, except `!.config/tmux/plugins/tpm` | Plugins cloned by [45-tmux-plugins](scripts.md#45-tmux-plugins) (or tpm's `prefix I`); tpm itself is the external above |
 | `.config/fish/fish_variables` | fish universal variables, rewritten by fish at runtime |
 | `.config/fish/conf.d/secrets.fish` | Plaintext credentials. Local-only, never in git (the fish repo's `.gitignore` also lists it) |
 | `.config/nvim/lazy-lock.json` | lazy.nvim lockfile inside the nvim external |

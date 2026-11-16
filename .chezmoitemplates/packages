@@ -1,0 +1,37 @@
+{{- /* The packages of .chezmoidata/packages.yaml this machine installs: every
+entry except those named in .skip, which `chezmoi init` writes from its
+software picker (.chezmoi.toml.tmpl). A config without `skip` installs
+everything. Returns JSON:
+  names          every choice the picker offers, in manifest order
+  selected       the chosen ones (core entries included)
+  tools          packages.tools entries to install (core: true always)
+  cargo, mise, gh_extensions   the chosen packages.shared items
+A tools entry's choice is its `name`; a crate's is the crate, a mise spec's
+and a gh extension's the last path segment (github:can1357/oh-my-pi →
+oh-my-pi, prdlk/gh-commit → gh-commit).
+Usage: {{ $pk := includeTemplate "packages" . | fromJson }} */ -}}
+{{- $p := (include ".chezmoidata/packages.yaml" | fromYaml).packages -}}
+{{- $skip := get . "skip" | default list -}}
+{{- $names := list -}}
+{{- $selected := list -}}
+{{- $tools := list -}}
+{{- range $p.tools -}}
+{{-   $n := get . "name" -}}
+{{-   $core := get . "core" | default false -}}
+{{-   if and (not $core) (not (has $n $names)) }}{{ $names = append $names $n }}{{ end -}}
+{{-   if or $core (not (has $n $skip)) -}}
+{{-     $tools = append $tools . -}}
+{{-     if not (has $n $selected) }}{{ $selected = append $selected $n }}{{ end -}}
+{{-   end -}}
+{{- end -}}
+{{- $shared := dict "cargo" list "mise" list "gh_extensions" list -}}
+{{- range $kind := list "cargo" "mise" "gh_extensions" -}}
+{{-   $chosen := list -}}
+{{-   range (get $p.shared $kind) -}}
+{{-     $n := regexReplaceAll ".*[:/]" . "" -}}
+{{-     $names = append $names $n -}}
+{{-     if not (has $n $skip) }}{{ $chosen = append $chosen . }}{{ $selected = append $selected $n }}{{ end -}}
+{{-   end -}}
+{{-   $_ := set $shared $kind $chosen -}}
+{{- end -}}
+{{- dict "names" $names "selected" $selected "tools" $tools "cargo" $shared.cargo "mise" $shared.mise "gh_extensions" $shared.gh_extensions | toJson -}}

@@ -2,6 +2,9 @@ packages:
   # One entry per tool: how each OS installs it
   # (.chezmoiscripts/run_onchange_before_10-packages.sh.tmpl, and
   # run_onchange_after_15-tools.sh.tmpl for `mise`).
+  #   name: the choice in the `chezmoi init` software picker; entries sharing
+  #         a name are one choice (a tool and its build dependencies)
+  #   core: true: always installed, not offered (the install scripts need it)
   #   arch: pacman name     aur: AUR name (Arch)
   #   brew: formula         cask: cask (macOS)
   #   apt:  Ubuntu package
@@ -11,77 +14,80 @@ packages:
   # against pacman/AUR, formulae.brew.sh and Ubuntu 24.04 (noble).
   tools:
     # base: shells, build tools, fetchers
-    - {arch: fish, brew: fish, apt: fish} # Ubuntu: ppa:fish-shell/release-4 (noble's archive has 3.7)
-    - {arch: zsh, apt: zsh} # macOS ships zsh
-    - {arch: git, brew: git, apt: git}
-    - {arch: curl, apt: curl} # macOS ships curl
-    - {arch: wget, brew: wget, apt: wget}
-    - {arch: base-devel, apt: build-essential} # cargo crates compile C; macOS: Xcode CLT, from the Homebrew install
-    - {apt: pkg-config} # Ubuntu: mdfried build (cargo)
-    - {apt: libchafa-dev} # Ubuntu: mdfried build (cargo)
-    - {apt: libglib2.0-dev} # Ubuntu: mdfried build (cargo); chafa.pc requires glib-2.0
+    - {name: fish, arch: fish, brew: fish, apt: fish} # Ubuntu: ppa:fish-shell/release-4 (noble's archive has 3.7)
+    - {name: zsh, arch: zsh, apt: zsh} # macOS ships zsh
+    - {name: git, core: true, arch: git, brew: git, apt: git}
+    - {name: curl, core: true, arch: curl, apt: curl} # macOS ships curl
+    - {name: wget, arch: wget, brew: wget, apt: wget}
+    - {name: build-tools, core: true, arch: base-devel, apt: build-essential} # cargo crates compile C; macOS: Xcode CLT, from the Homebrew install
+    - {name: mdfried, apt: pkg-config} # Ubuntu: mdfried build (cargo)
+    - {name: mdfried, apt: libchafa-dev} # Ubuntu: mdfried build (cargo)
+    - {name: mdfried, apt: libglib2.0-dev} # Ubuntu: mdfried build (cargo); chafa.pc requires glib-2.0
     # editors
-    - {arch: neovim, brew: neovim, mise: "aqua:neovim/neovim"}
-    - {arch: helix, brew: helix, mise: "aqua:helix-editor/helix"}
-    - {arch: micro, brew: micro, apt: micro}
-    - {arch: tmux, brew: tmux, mise: tmux} # noble's 3.4 rejects tmux.conf's extended-keys-format (3.5+); mise: static tmux/tmux-builds
+    - {name: neovim, arch: neovim, brew: neovim, mise: "aqua:neovim/neovim"}
+    - {name: helix, arch: helix, brew: helix, mise: "aqua:helix-editor/helix"}
+    - {name: micro, arch: micro, brew: micro, apt: micro}
+    - {name: tmux, arch: tmux, brew: tmux, mise: tmux} # noble's 3.4 rejects tmux.conf's extended-keys-format (3.5+); mise: static tmux/tmux-builds
     # terminals (ghostty is the default; no Ubuntu 24.04 package)
-    - {arch: ghostty, cask: ghostty}
-    - {arch: kitty, cask: kitty, apt: kitty}
+    - {name: ghostty, arch: ghostty, cask: ghostty}
+    - {name: kitty, arch: kitty, cask: kitty, apt: kitty}
     # tui tools (tmux-palette, television cables, fish functions)
-    - {arch: yazi, brew: yazi, mise: yazi}
-    - {arch: lazygit, brew: lazygit, mise: lazygit}
-    - {arch: lazydocker, brew: lazydocker, mise: lazydocker}
-    - {arch: docker, brew: docker, apt: docker.io} # macOS: CLI only; the daemon needs Docker Desktop, colima or OrbStack
-    - {arch: docker-compose, brew: docker-compose, apt: docker-compose-v2}
-    - {arch: btop, brew: btop, apt: btop}
-    - {arch: fastfetch, brew: fastfetch, mise: fastfetch}
-    - {arch: onefetch, brew: onefetch, mise: onefetch}
-    - {arch: television, brew: television, mise: television}
-    - {arch: serie, brew: serie, mise: "aqua:lusingander/serie"}
-    - {arch: tig, brew: tig, apt: tig}
-    - {arch: gitui, brew: gitui, mise: gitui}
-    - {arch: tldr, brew: tealdeer, apt: tealdeer} # `tldr` binary everywhere
-    - {arch: navi, brew: navi, mise: navi}
-    - {arch: mdfried, brew: mdfried, mise: "cargo:mdfried"}
+    - {name: yazi, arch: yazi, brew: yazi, mise: yazi}
+    - {name: lazygit, arch: lazygit, brew: lazygit, mise: lazygit}
+    - {name: lazydocker, arch: lazydocker, brew: lazydocker, mise: lazydocker}
+    - {name: docker, arch: docker, brew: docker, apt: docker.io} # macOS: CLI only; the daemon needs Docker Desktop, colima or OrbStack
+    - {name: docker-compose, arch: docker-compose, brew: docker-compose, apt: docker-compose-v2}
+    - {name: btop, arch: btop, brew: btop, apt: btop}
+    - {name: fastfetch, arch: fastfetch, brew: fastfetch, mise: fastfetch}
+    - {name: onefetch, arch: onefetch, brew: onefetch, mise: onefetch}
+    - {name: television, arch: television, brew: television, mise: television}
+    - {name: serie, arch: serie, brew: serie, mise: "aqua:lusingander/serie"}
+    - {name: tig, arch: tig, brew: tig, apt: tig}
+    - {name: gitui, arch: gitui, brew: gitui, mise: gitui}
+    - {name: tldr, arch: tldr, brew: tealdeer, apt: tealdeer} # `tldr` binary everywhere
+    - {name: navi, arch: navi, brew: navi, mise: navi}
+    - {name: mdfried, arch: mdfried, brew: mdfried, mise: "cargo:mdfried"}
     # vcs + forge
-    - {arch: github-cli, brew: gh, mise: gh}
-    - {arch: git-delta, brew: git-delta, apt: git-delta}
-    - {arch: diffnav, brew: diffnav, mise: "aqua:dlvhdr/diffnav"}
-    - {arch: tea, brew: tea, mise: "aqua:gitea.com/gitea/tea@0.16.0"} # apt `tea` is an unrelated editor; aqua needs a pinned version
+    - {name: gh, arch: github-cli, brew: gh, mise: gh}
+    - {name: delta, arch: git-delta, brew: git-delta, apt: git-delta}
+    - {name: diffnav, arch: diffnav, brew: diffnav, mise: "aqua:dlvhdr/diffnav"}
+    - {name: tea, arch: tea, brew: tea, mise: "aqua:gitea.com/gitea/tea@0.16.0"} # apt `tea` is an unrelated editor; aqua needs a pinned version
     # search / files
-    - {arch: fzf, brew: fzf, mise: fzf} # apt 0.44 predates `fzf --fish` / `--tmux`
-    - {arch: fd, brew: fd, mise: fd} # apt installs it as `fdfind`
-    - {arch: ripgrep, brew: ripgrep, apt: ripgrep}
-    - {arch: zoxide, brew: zoxide, apt: zoxide}
-    - {arch: eza, brew: eza, mise: eza}
-    - {arch: bat, brew: bat, mise: bat} # apt installs it as `batcat`
-    - {arch: jq, brew: jq, apt: jq}
-    - {arch: duf, brew: duf, apt: duf}
+    - {name: fzf, arch: fzf, brew: fzf, mise: fzf} # apt 0.44 predates `fzf --fish` / `--tmux`
+    - {name: fd, arch: fd, brew: fd, mise: fd} # apt installs it as `fdfind`
+    - {name: ripgrep, arch: ripgrep, brew: ripgrep, apt: ripgrep}
+    - {name: zoxide, arch: zoxide, brew: zoxide, apt: zoxide}
+    - {name: eza, arch: eza, brew: eza, mise: eza}
+    - {name: bat, arch: bat, brew: bat, mise: bat} # apt installs it as `batcat`
+    - {name: jq, core: true, arch: jq, brew: jq, apt: jq} # 15-tools reads `mise ls --json` with it
+    - {name: duf, arch: duf, brew: duf, apt: duf}
     # media / preview (yazi + tv deps)
-    - {arch: ffmpeg, brew: ffmpeg, apt: ffmpeg}
-    - {arch: ffmpegthumbnailer, brew: ffmpegthumbnailer, apt: ffmpegthumbnailer}
-    - {arch: poppler, brew: poppler, apt: poppler-utils}
-    - {arch: resvg, brew: resvg, mise: resvg}
-    - {arch: imagemagick, brew: imagemagick, mise: "conda:imagemagick"} # apt is ImageMagick 6, no `magick`
-    - {arch: chafa, brew: chafa, apt: chafa}
-    - {arch: 7zip, brew: sevenzip, apt: 7zip}
-    - {arch: unzip, apt: unzip} # macOS ships unzip
+    - {name: ffmpeg, arch: ffmpeg, brew: ffmpeg, apt: ffmpeg}
+    - {name: ffmpegthumbnailer, arch: ffmpegthumbnailer, brew: ffmpegthumbnailer, apt: ffmpegthumbnailer}
+    - {name: poppler, arch: poppler, brew: poppler, apt: poppler-utils}
+    - {name: resvg, arch: resvg, brew: resvg, mise: resvg}
+    - {name: imagemagick, arch: imagemagick, brew: imagemagick, mise: "conda:imagemagick"} # apt is ImageMagick 6, no `magick`
+    - {name: chafa, arch: chafa, brew: chafa, apt: chafa}
+    - {name: 7zip, arch: 7zip, brew: sevenzip, apt: 7zip}
+    - {name: unzip, arch: unzip, apt: unzip} # macOS ships unzip
     # remote
-    - {arch: mosh, brew: mosh, apt: mosh}
-    - {arch: sshfs, apt: sshfs} # macOS: needs macFUSE (kernel extension), not installed
-    - {arch: tailscale, brew: tailscale, apt: tailscale} # Ubuntu: pkgs.tailscale.com repo
+    - {name: mosh, arch: mosh, brew: mosh, apt: mosh}
+    - {name: sshfs, arch: sshfs, apt: sshfs} # macOS: needs macFUSE (kernel extension), not installed
+    - {name: tailscale, arch: tailscale, brew: tailscale, apt: tailscale} # Ubuntu: pkgs.tailscale.com repo
     # misc cli
-    - {arch: mise, brew: mise} # Ubuntu: https://mise.run, in 15-tools
-    - {arch: gum, brew: gum, mise: gum}
-    - {arch: glow, brew: glow, mise: glow}
-    - {arch: atuin, brew: atuin, mise: atuin}
-    - {arch: starship, brew: starship, mise: starship}
-    - {arch: zsh-syntax-highlighting, brew: zsh-syntax-highlighting, apt: zsh-syntax-highlighting}
-    - {aur: topgrade, brew: topgrade, mise: topgrade}
-    - {aur: portop, brew: portop, mise: "github:padovanl/portop"}
+    - {name: mise, core: true, arch: mise, brew: mise} # Ubuntu: https://mise.run, in 15-tools
+    - {name: gum, arch: gum, brew: gum, mise: gum}
+    - {name: glow, arch: glow, brew: glow, mise: glow}
+    - {name: atuin, arch: atuin, brew: atuin, mise: atuin}
+    - {name: starship, arch: starship, brew: starship, mise: starship}
+    - {name: zsh-syntax-highlighting, arch: zsh-syntax-highlighting, brew: zsh-syntax-highlighting, apt: zsh-syntax-highlighting}
+    - {name: topgrade, aur: topgrade, brew: topgrade, mise: topgrade}
+    - {name: portop, aur: portop, brew: portop, mise: "github:padovanl/portop"}
     # fonts (Ubuntu: nerd-fonts release download in 10-packages)
-    - {arch: ttf-victor-mono-nerd, cask: font-victor-mono-nerd-font}
+    - {name: victor-mono-nerd-font, arch: ttf-victor-mono-nerd, cask: font-victor-mono-nerd-font}
+  # The lists below are offered in the same picker, each item under its crate
+  # name, its mise spec's last path segment (oh-my-pi), or its gh extension
+  # repo name (gh-commit).
   shared:
     gh_extensions:
       - davidraviv/gh-clean-branches

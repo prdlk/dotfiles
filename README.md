@@ -10,7 +10,7 @@ sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://github.com/prdlk/do
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply git@github.com:prdlk/dotfiles.git
 ```
 
-First apply prompts once for name and email. There are no machine roles: what differs per machine is decided by the OS.
+`chezmoi init` asks for the master password (it decrypts the age key, once per machine), then shows a multi-select of the software to install, everything ticked by default. There are no machine roles: what differs per machine is the OS and that choice.
 
 | | Arch / Omarchy | macOS | Ubuntu |
 | --- | --- | --- | --- |
@@ -25,15 +25,6 @@ First apply prompts once for name and email. There are no machine roles: what di
 - **GitHub credentials (all OSes)**: the prdlk/kitty, television, yazi and omp externals are private (on Omarchy, also prdlk/hypr and prdlk/omarchy in the desktop layer; prdlk/nvim and prdlk/herdr are public). Without credentials the first apply fails with `could not read Username for https://github.com`. Before the one-liner, install `gh` and run `gh auth login` (it configures git's credential helper), or set up another credential helper or token.
 - **macOS**: `curl`. The package script installs Homebrew, which brings the Xcode command line tools.
 - **Ubuntu**: `sudo`, `curl` and `git`.
-- **Secrets**: `age`-encrypted files need the key at
-  `~/.config/chezmoi/key.txt`. Copy it there **before** `chezmoi apply`
-  (distributed manually, never committed):
-
-  ```sh
-  mkdir -p ~/.config/chezmoi
-  scp <existing-machine>:.config/chezmoi/key.txt ~/.config/chezmoi/key.txt
-  chmod 600 ~/.config/chezmoi/key.txt
-  ```
 
 ## What's managed
 

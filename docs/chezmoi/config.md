@@ -1,38 +1,47 @@
 # Config and OS family
 
-The .chezmoi.toml.tmpl config template, its two prompts, the os-family template, symlink mode, age encryption, and where the resulting data is used.
+The .chezmoi.toml.tmpl config template, its master password and software picker, the os-family template, symlink mode, age encryption, and where the resulting data is used.
 
-`.chezmoi.toml.tmpl` is rendered once by `chezmoi init` into `~/.config/chezmoi/chezmoi.toml`. It asks two questions, turns on symlink mode and age encryption, and stores the answers as template data for every other `.tmpl` file. There are no machine roles; per-OS behavior comes from the [os-family template](#os-family).
+`.chezmoi.toml.tmpl` is rendered by `chezmoi init` into `~/.config/chezmoi/chezmoi.toml`. It decrypts the age key with the master password, asks which software to install, turns on symlink mode and age encryption, and stores the choice as template data. There are no machine roles; per-OS behavior comes from the [os-family template](#os-family). The git name and email are fixed in `.chezmoidata/user.yaml`, not asked.
+
+## Prompts
+
+`chezmoi init` asks two things, in this order.
+
+### Master password
+
+Asked once per machine, before anything else: when `~/.config/chezmoi/key.txt` does not exist and the source has `key.txt.age`. The template runs `chezmoi age decrypt --passphrase --output ~/.config/chezmoi/key.txt key.txt.age` on the terminal (`/dev/tty`), allows three tries, and makes the key mode 600. A wrong password three times fails the init; run it again. With no terminal (a script, a container without `-it`) it prints a warning and continues without the key, so any `encrypted_` file fails to apply until `chezmoi init` runs in a terminal.
+
+`key.txt.age` is the age identity encrypted with the password (age's scrypt passphrase mode) and committed; `.chezmoiignore.tmpl` keeps it out of `$HOME`. The repo is public, so the password is the only protection of every secret in it: use a long one. To change it, re-encrypt the key on a machine that has it and commit the result:
+
+```sh
+chezmoi age encrypt --passphrase --output "$(chezmoi source-path)/key.txt.age" ~/.config/chezmoi/key.txt
+```
+
+### Software selection
+
+A multi-select of everything `.chezmoidata/packages.yaml` can install: each `packages.tools` `name` (entries sharing a name are one choice, such as mdfried and its Ubuntu build libraries), each cargo crate, each global mise tool (by its spec's last path segment, `oh-my-pi`), and each gh extension (by repo name, `gh-commit`). Entries marked `core: true` (git, curl, the build tools, jq, mise) are always installed and not offered. `x` toggles, `←`/`→` page, `ctrl+a` selects all, enter confirms.
+
+The choices left unticked are stored as `data.skip`; `.chezmoitemplates/packages` turns the manifest minus `skip` into the lists the [install scripts](scripts.md) use. Storing what to skip, not what to install, means a package added to the manifest later is installed everywhere without re-running init.
+
+`chezmoi init` asks again, with the previous answer preselected and anything new ticked. `chezmoi init --promptDefaults` keeps the previous answer without asking. The next `chezmoi apply` installs what was added; nothing is uninstalled when a choice is removed.
 
 ## Source
 
-**.chezmoi.toml.tmpl**
+**.chezmoi.toml.tmpl** (after the prompts above)
 
 ```toml
-{{- $name := promptStringOnce . "name" "Full name" "Prad Nukala" -}}
-{{- $email := promptStringOnce . "email" "Email" "prad@sonr.io" -}}
-
 mode = "symlink"
 encryption = "age"
 
 [age]
     identity = "~/.config/chezmoi/key.txt"
-    recipient = "age19tdqgavaekhvgqsd75n8a09vvshen2ykzy8kw6tenczz73449anqc3l7a6"
+    recipient = "age1v6j26xeydxgn5vtv2unjszd5aq6a0l6s50plc6x539u95usmhyeqxcup96"
     useBuiltin = true
 
 [data]
-    name = {{ $name | quote }}
-    email = {{ $email | quote }}
+    skip = {{ $skip | toToml }}
 ```
-
-## Prompts
-
-| Key | Prompt | Type | Default |
-| --- | --- | --- | --- |
-| `name` | `Full name` | `promptStringOnce` | `Prad Nukala` |
-| `email` | `Email` | `promptStringOnce` | `prad@sonr.io` |
-
-The `*Once` functions only prompt when the key is missing from the existing config, so re-running `chezmoi init` keeps earlier answers. `chezmoi init --prompt` forces both prompts again.
 
 ## os-family
 
@@ -56,26 +65,21 @@ What differs by family is covered in [Apply scripts](scripts.md) and [Data files
 | Setting | Value | Effect |
 | --- | --- | --- |
 | `encryption` | `"age"` | `chezmoi add --encrypt` and `encrypted_` source files use age. |
-| `age.identity` | `~/.config/chezmoi/key.txt` | Private key used to decrypt. Distributed by hand between machines, never committed. |
-| `age.recipient` | `age19tdqgavaekhvgqsd75n8a09vvshen2ykzy8kw6tenczz73449anqc3l7a6` | Public key files are encrypted to. Safe to publish. |
+| `age.identity` | `~/.config/chezmoi/key.txt` | Private key used to decrypt, written by the [master password](#master-password) prompt from `key.txt.age`. Never committed in plain text. |
+| `age.recipient` | `age1v6j26xeydxgn5vtv2unjszd5aq6a0l6s50plc6x539u95usmhyeqxcup96` | Public key files are encrypted to. Safe to publish. |
 | `age.useBuiltin` | `true` | Uses chezmoi's built-in age implementation; the `age` binary is not required. |
 
-No source file currently carries the `encrypted_` attribute, so the key is only exercised when a secret is added with `chezmoi add --encrypt`. The [Installation](../installation.md) page still asks for the key to be copied into place before the first apply:
-
-```sh
-mkdir -p ~/.config/chezmoi
-scp <existing-machine>:.config/chezmoi/key.txt ~/.config/chezmoi/key.txt
-chmod 600 ~/.config/chezmoi/key.txt
-```
+Add a secret with `chezmoi add --encrypt <file>`: the source gets an `encrypted_` file, and every machine that knows the password decrypts it on apply.
 
 ## Template data
 
-The `[data]` table exposes `.name` and `.email` to every template. chezmoi also merges `.chezmoidata/*.yaml` into the same namespace (`.packages`, `.aliases`, `.skills`; see [Data files](data.md)) and provides built-ins such as `.chezmoi.os` and `.chezmoi.osRelease`.
+`.chezmoidata/*.yaml` is merged into the template data (`.name` and `.email` from `user.yaml`, `.packages`, `.aliases`, `.skills`; see [Data files](data.md)), next to the config's `[data]` (`.skip`) and built-ins such as `.chezmoi.os` and `.chezmoi.osRelease`.
 
 | Variable | Consumed by | Use |
 | --- | --- | --- |
 | `.name` | `dot_gitconfig.tmpl` | `[user] name` in `~/.gitconfig` |
 | `.email` | `dot_gitconfig.tmpl` | `[user] email` in `~/.gitconfig` |
+| `.skip` | `.chezmoitemplates/packages` | Software left out at init; filters every install script |
 | `os-family` | `run_onchange_before_10-packages.sh.tmpl` | Chooses pacman + AUR, Homebrew or apt |
 | `os-family` | `run_onchange_after_15-tools.sh.tmpl` | Installs mise on Ubuntu and adds the `mise` specs of `packages.tools`; sources Homebrew's environment on macOS |
 | `.chezmoi.os` | `run_onchange_after_40-post.sh.tmpl` | `fc-cache` on `linux` only |

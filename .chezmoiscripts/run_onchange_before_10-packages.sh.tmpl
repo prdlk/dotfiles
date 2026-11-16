@@ -1,18 +1,20 @@
 #!/bin/sh
-# Install packages.tools from .chezmoidata/packages.yaml with the OS package
-# manager: pacman + AUR on Arch, Homebrew on macOS, apt on Ubuntu. Ubuntu's
-# `mise` entries are installed by 15-tools, after mise itself.
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# Install the chosen packages.tools entries of .chezmoidata/packages.yaml
+# (.chezmoitemplates/packages: all but data.skip from `chezmoi init`) with the
+# OS package manager: pacman + AUR on Arch, Homebrew on macOS, apt on Ubuntu.
+# Ubuntu's `mise` entries are installed by 15-tools, after mise itself. The
+# rendered lists change with the manifest or the choice, which re-runs this.
 set -eu
 
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
 {{ $family := includeTemplate "os-family" . -}}
+{{ $pk := includeTemplate "packages" . | fromJson -}}
 
 {{ if eq $family "arch" -}}
 {{- $pacman := list -}}
 {{- $aur := list -}}
-{{- range .packages.tools -}}
+{{- range $pk.tools -}}
 {{-   if hasKey . "arch" }}{{ $pacman = append $pacman .arch }}{{ end -}}
 {{-   if hasKey . "aur" }}{{ $aur = append $aur .aur }}{{ end -}}
 {{- end -}}
@@ -24,11 +26,11 @@ install_missing() {
     [ -z "$missing" ] || $SUDO pacman -S --needed --noconfirm $missing
 }
 
-install_missing {{ $pacman | join " " }}
+{{ if $pacman }}install_missing {{ $pacman | join " " }}{{ end }}
 
 # AUR names no installed package provides yet; ones already installed from a
 # sync repo ([omarchy], extra) are neither rebuilt nor replaced.
-aur_missing=$(pacman -T {{ $aur | join " " }} || true)
+aur_missing={{ if $aur }}$(pacman -T {{ $aur | join " " }} || true){{ else }}''{{ end }}
 if [ -n "$aur_missing" ]; then
     # No AUR helper yet: take yay from a sync repo that ships it, else build
     # yay-bin from the AUR (makepkg refuses root).
@@ -57,7 +59,7 @@ fi
 {{ else if eq $family "darwin" -}}
 {{- $brew := list -}}
 {{- $cask := list -}}
-{{- range .packages.tools -}}
+{{- range $pk.tools -}}
 {{-   if hasKey . "brew" }}{{ $brew = append $brew .brew }}{{ end -}}
 {{-   if hasKey . "cask" }}{{ $cask = append $cask .cask }}{{ end -}}
 {{- end -}}
@@ -93,7 +95,7 @@ done
 
 {{ else if eq $family "debian" -}}
 {{- $apt := list -}}
-{{- range .packages.tools -}}
+{{- range $pk.tools -}}
 {{-   if hasKey . "apt" }}{{ $apt = append $apt .apt }}{{ end -}}
 {{- end -}}
 export DEBIAN_FRONTEND=noninteractive
@@ -104,11 +106,14 @@ repos_added=0
 $SUDO apt-get update -qq
 $SUDO apt-get install -y -qq ca-certificates curl gnupg software-properties-common xz-utils >/dev/null
 
+{{- if has "fish" $pk.selected }}
 # fish 4 (the archive has 3.7; the fish config targets 4.x).
 if ! grep -rqs fish-shell /etc/apt/sources.list.d/; then
     $SUDO add-apt-repository -y -n ppa:fish-shell/release-4
     repos_added=1
 fi
+{{- end }}
+{{- if has "tailscale" $pk.selected }}
 
 # tailscale: not in the archive.
 if [ ! -f /etc/apt/sources.list.d/tailscale.list ]; then
@@ -118,10 +123,13 @@ if [ ! -f /etc/apt/sources.list.d/tailscale.list ]; then
         $SUDO tee /etc/apt/sources.list.d/tailscale.list >/dev/null
     repos_added=1
 fi
+{{- end }}
 [ "$repos_added" -eq 0 ] || $SUDO apt-get update -qq
 
 # shellcheck disable=SC2086  # one word per package
 $SUDO apt-get install -y -qq {{ $apt | join " " }}
+
+{{- if has "victor-mono-nerd-font" $pk.selected }}
 
 # Victor Mono Nerd Font: no Ubuntu package; the nerd-fonts release.
 fonts="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/VictorMonoNerdFont"
@@ -130,6 +138,7 @@ if [ ! -d "$fonts" ]; then
     curl -fsSL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/VictorMono.tar.xz |
         tar -xJ -C "$fonts"
 fi
+{{- end }}
 
 {{ else -}}
 echo "warning: no package manifest for {{ .chezmoi.os }} {{ if .chezmoi.osRelease }}{{ .chezmoi.osRelease.id }}{{ end }} — skipping packages" >&2

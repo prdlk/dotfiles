@@ -1,0 +1,40 @@
+{{- /* Renders empty (chezmoi skips it) when tmux is not chosen at
+`chezmoi init` (.chezmoitemplates/packages). */ -}}
+{{- if has "tmux" (includeTemplate "packages" . | fromJson).selected -}}
+#!/bin/sh
+# tmux plugins: clone every `set -g @plugin 'owner/repo[#branch]'` of
+# tmux.conf that is missing from ~/.config/tmux/plugins, where tpm keeps them,
+# so a new machine has its plugins without prefix + I. tpm itself is listed
+# too: .chezmoiexternal.toml normally clones it first, this covers it if not.
+# Runs after every apply; it only stats directories when nothing is missing.
+# Updates stay with tpm (prefix + U). Plugins install their own dependencies
+# when tmux loads them (tmux-palette-plugin runs `bun install`).
+set -u
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/tmux"
+[ -f "$config/tmux.conf" ] || exit 0
+
+specs=$(sed -nE "s/^[[:space:]]*set(-option)?[[:space:]]+-g[[:space:]]+@plugin[[:space:]]+['\"]([^'\"]+)['\"].*/\2/p" "$config/tmux.conf")
+failed=''
+for spec in $specs; do
+    repo=${spec%%#*}
+    branch=''
+    case $spec in *'#'*) branch=${spec#*#} ;; esac
+    name=${repo##*/}
+    dir="$config/plugins/${name%.git}"
+    [ -d "$dir" ] && continue
+    case $repo in
+    *://* | git@*) url=$repo ;;
+    *) url="https://github.com/$repo" ;;
+    esac
+    echo "tmux plugin: cloning $repo"
+    # shellcheck disable=SC2086 # --branch and its value: two words or none
+    git clone --quiet --depth 1 --recursive --shallow-submodules ${branch:+--branch $branch} "$url" "$dir" ||
+        failed="$failed $repo"
+done
+
+if [ -n "$failed" ]; then
+    echo "error: tmux plugin clone failed for:$failed" >&2
+    exit 1
+fi
+{{ end -}}
