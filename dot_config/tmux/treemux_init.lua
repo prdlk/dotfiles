@@ -1,5 +1,5 @@
 -- Neovim init for the treemux sidebar (kiyoon/treemux, see tmux.conf): a
--- Neo-tree file explorer in a tmux pane right of the shell. It runs as
+-- Neo-tree file explorer in a tmux pane left of the shell. It runs as
 -- `NVIM_APPNAME=nvim-treemux nvim -u <this file>`, so its plugins, lockfile,
 -- shada and state live under ~/.local/share/nvim-treemux and never touch the
 -- editor's lazy-lock.json.
@@ -10,11 +10,10 @@
 --
 -- How the tree talks to the rest of the session:
 --   * opening a file goes to the editor (see `editor` below): the nvim in
---     another pane of this tmux window if there is one, else the session's
---     editor window for this project, a window of its own running nvim
---     (created on first use, with its own sidebar), so a window holding a
---     coding agent never gives up space to an editor. `<cr>` opens it there
---     and switches to it; `t` opens it in the shell's pane itself
+--     another pane of this tmux window, else a new nvim split off the
+--     shell's pane in this window (@treemux-editor-position / -size).
+--     `<cr>` opens it there and focuses it; `t` opens it in the shell's
+--     pane itself
 --   * the editor's own keymap works here: every normal-mode key of
 --     ~/.config/nvim/lua/plugins/astrocore.lua (and the chords of its plugin
 --     specs) is forwarded to the editor nvim of this window, which then gets
@@ -92,7 +91,7 @@ local function smart(fn)
 end
 
 --- Close this sidebar: kill its own pane. That is all treemux's toggle.sh
---- does for a right sidebar (its width memory is /dev/null, see tmux.conf),
+--- does for a sidebar (its width memory is /dev/null, see tmux.conf),
 --- minus a toggle.sh run; the watcher exits once the pane is gone, and the
 --- neighbouring column takes the space. A persistent sidebar (one in every
 --- window) would come straight back, so there it closes all of them, as
@@ -106,12 +105,11 @@ local function close_sidebar()
   end
 end
 
---- The editor: the nvim in another pane of this tmux window, else the nvim
---- of the session's editor window for this project (window option
---- @treemux_editor_root = the project root). Found by a process in the pane
---- listening on nvim's default server address ($XDG_RUNTIME_DIR/nvim.<pid>.N),
---- the way nvim-tree-remote finds it; a tree listens elsewhere (treemux's
---- --listen), so it never matches. Linux only (/proc).
+--- The editor: the nvim in another pane of this tmux window. Found by a
+--- process in the pane listening on nvim's default server address
+--- ($XDG_RUNTIME_DIR/nvim.<pid>.N), the way nvim-tree-remote finds it; a tree
+--- listens elsewhere (treemux's --listen), so it never matches. Linux only
+--- (/proc).
 local editor = {}
 
 --- @param pid string
@@ -124,13 +122,12 @@ local function children(pid)
   return ids
 end
 
---- The nvim in another pane of `target`'s window (default: this one).
---- @param target? string pane or window id
+--- The nvim in another pane of this window.
 --- @return { pane: string, addr: string }|nil
-function editor.find(target)
+function editor.find()
   local own = vim.env.TMUX_PANE
   local runtime = vim.env.XDG_RUNTIME_DIR or ""
-  for _, line in ipairs(vim.fn.systemlist { "tmux", "list-panes", "-t", target or own, "-F", "#{pane_id} #{pane_pid}" }) do
+  for _, line in ipairs(vim.fn.systemlist { "tmux", "list-panes", "-t", own, "-F", "#{pane_id} #{pane_pid}" }) do
     local pane, pid = line:match "^(%%%d+) (%d+)$"
     if pane and pane ~= own then
       local queue = { pid } -- the TUI nvim's server is its `nvim --embed` child
@@ -145,8 +142,7 @@ function editor.find(target)
 end
 
 --- The project the tree shows: the git root of its cwd (Neo-tree binds the
---- cwd to the tree root), else the cwd. Keys the editor window, so each
---- worktree of a session gets its own.
+--- cwd to the tree root), else the cwd. The editor starts there.
 --- @return string
 local function project_root()
   local cwd = vim.fn.getcwd()
@@ -154,49 +150,38 @@ local function project_root()
   return vim.v.shell_error == 0 and top ~= "" and top or cwd
 end
 
---- This session's editor window for `root`.
---- @param root string
---- @return string|nil window id
-function editor.window(root)
-  for _, line in ipairs(vim.fn.systemlist { "tmux", "list-windows", "-t", vim.env.TMUX_PANE, "-F", "#{window_id} #{@treemux_editor_root}" }) do
-    local id, marked = line:match "^(@%d+) (.*)$"
-    if marked == root then return id end
-  end
-end
+--- tmux split-window flags per treemux editor position
+--- (@treemux-editor-position, passed as g:nvim_tree_remote_tmux_split_position)
+local split_flags = { top = { "-v", "-b" }, bottom = { "-v" }, left = { "-h", "-b" }, right = { "-h" } }
 
---- The editor: this window's nvim, else the project's editor window's. With
---- `create`, a missing editor window is made: nvim in a new window after this
---- one, at the project root (the persistent sidebar's hook gives it a tree).
---- TREEMUX_EDITOR tells its VimEnter not to restore a session or open the
---- file picker: the opened file or forwarded key decides what it shows.
+--- The editor: the nvim in another pane of this window. With `create`, a
+--- missing one is made: nvim split off the shell's pane at
+--- @treemux-editor-position / @treemux-editor-size (treemux's defaults: top,
+--- 70%), at the project root. TREEMUX_EDITOR tells its VimEnter not to
+--- restore a session or open the file picker: the opened file or forwarded
+--- key decides what it shows.
 --- @param create boolean
 --- @return { pane: string, addr: string }|nil
 function editor.locate(create)
   local found = editor.find()
-  if found then return found end
-  local root = project_root()
-  local window = editor.window(root)
-  found = window and editor.find(window)
   if found or not create then return found end
-  -- a marked window whose nvim is gone (replaced by a shell): retire it
-  if window then vim.fn.system { "tmux", "set-option", "-wu", "-t", window, "@treemux_editor_root" } end
-  local here = vim.trim(vim.fn.system { "tmux", "display-message", "-p", "-t", vim.env.TMUX_PANE, "#{window_id}" })
-  window = vim.trim(vim.fn.system {
-    "tmux", "new-window", "-d", "-a", "-t", here, "-c", root,
-    "-e", "TREEMUX_EDITOR=1", "-P", "-F", "#{window_id}", "nvim",
-  })
+  local cmd = { "tmux", "split-window", "-d", "-t", vim.g.nvim_tree_remote_tmux_pane }
+  vim.list_extend(cmd, split_flags[vim.g.nvim_tree_remote_tmux_split_position] or split_flags.top)
+  local size = vim.g.nvim_tree_remote_tmux_split_size
+  if size and size ~= "" then vim.list_extend(cmd, { "-l", size }) end
+  vim.list_extend(cmd, { "-c", project_root(), "-e", "TREEMUX_EDITOR=1", "nvim" })
+  vim.fn.system(cmd)
   if vim.v.shell_error ~= 0 then return nil end
-  vim.fn.system { "tmux", "set-option", "-w", "-t", window, "@treemux_editor_root", root }
   vim.wait(5000, function()
-    found = editor.find(window)
+    found = editor.find()
     return found ~= nil
   end, 50)
   return found
 end
 
---- Show the editor's pane: switch to its window, then select it.
+--- Show the editor's pane.
 --- @param pane string
-local function show(pane) vim.fn.system { "tmux", "select-window", "-t", pane, ";", "select-pane", "-t", pane } end
+local function show(pane) vim.fn.system { "tmux", "select-pane", "-t", pane } end
 
 --- Focus the editor (creating it if needed) and run `fn(channel)` on an RPC
 --- channel to it.
