@@ -3,8 +3,8 @@
 # a mirror of another window's. Reclaim the oldest detached session (left by
 # a closed window, or restored by tmux-continuum after a reboot) so closed
 # windows don't pile up sessions; otherwise start a new one. pj-palette's
-# background task sessions (@pj_task, named <session>:<task>) are never
-# reclaimed, and targets use the session id since names may contain ':'.
+# background sessions (@pj_task, <session>:omp) are never reclaimed, and
+# targets use the session id since names may contain ':'.
 # The first window after boot starts the server, which is what triggers
 # continuum's restore.
 # ponytail: two windows opened in the same instant can claim the same detached

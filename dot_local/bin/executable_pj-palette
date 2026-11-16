@@ -10,6 +10,9 @@
 #                            run a pj task (the item's action)
 #   pj-palette --cmd ROOT CMD…
 #                            run a quick-action command in ROOT
+#   pj-palette --win SESSION NAME ROOT CMD…
+#                            start CMD… in ROOT in a new window NAME of tmux
+#                            session SESSION (id), without switching to it
 #   pj-palette --bg NAME [ROOT CMD…]
 #                            show background session NAME in a popup, first
 #                            starting CMD… in ROOT if it isn't running
@@ -22,13 +25,15 @@
 # stops it (the output stays). Once it has exited, enter or ctrl-c closes the
 # pane.
 #
-# Long-running items (dev/start/serve/watch/preview tasks, compose up) run in a
-# detached session named <session>:<tool-and-command> (leetcode:bun-run-dev),
-# shown in a popup: q hides the popup and leaves the task running, ctrl-c
-# asks for confirmation, then stops the task and ends its session. Running
-# ones are listed first, under Running, to bring them back. tmux.conf's
-# prefix + a starts omp the same way (<session>:omp); omp needs q, so its
-# popup hides with ctrl-c (or prefix + a) and ctrl-q quits it.
+# Long-running items (dev/start/serve/watch/preview tasks, compose up) run in
+# a new window of the current session named <tool-and-command> (bun-run-dev),
+# created in the background: focus stays where it is. One per task and
+# session; picking it again while it runs only says which window has it.
+# ctrl-c in the window stops the task and closes the window; a task that
+# exits by itself leaves [exit N] until enter. Running ones (any session) are
+# listed first, under Running, to switch to them. tmux.conf's prefix + a
+# starts omp in a detached session <session>:omp shown in a popup (--bg):
+# ctrl-c (or prefix + a) hides it, ctrl-q quits it.
 
 set -uo pipefail
 self=$(readlink -f "$0")
@@ -40,7 +45,7 @@ trap 'interrupted=1' INT
 
 finish() {
     local status=$1 key
-    # A background task stopped with ctrl-c ends its session (and popup).
+    # A background task stopped with ctrl-c closes its window.
     [ -n "${PJ_BG-}" ] && [ -n "$interrupted" ] && exit 0
     printf '\n\033[2m[exit %s] enter or ctrl-c to close\033[0m' "$status"
     trap 'exit 0' INT
@@ -73,45 +78,49 @@ case ${1-} in
     "$@"
     finish $?
     ;;
+--win)
+    sid=$2 name=$3 root=$4
+    shift 4
+    running=$(tmux list-windows -t "$sid" -F $'#{window_index}\t#{@pj_bg_task}' 2>/dev/null |
+        awk -F'\t' -v n="$name" '$2 == n { print $1; exit }')
+    if [ -n "$running" ]; then
+        tmux display-message "pj: $name is already running in window $running"
+        exit 0
+    fi
+    # @pj_bg_task / @pj_bg_root mark the window for the Running list and the
+    # check above. -n turns automatic-rename off, so it keeps the task's name.
+    win=$(tmux new-window -d -P -F '#{window_id}' -t "$sid:" -n "$name" -c "$root" -e PJ_BG=1 "$@") || exit 1
+    tmux set -w -t "$win" @pj_bg_task "$name" \; set -w -t "$win" @pj_bg_root "$root" 2>/dev/null
+    exit 0
+    ;;
 --bg)
     name=$2
     if ! id=$(session_id "$name"); then
-        [ $# -ge 4 ] || exit 0   # a Running item whose task has since ended
+        [ $# -ge 4 ] || exit 0   # a Running item whose session has since ended
         root=$3
         shift 3
-        # @pj_task marks the session for the Running list, for tmux.conf's
-        # prefix + a (which hides any of these popups) and for treemux's
-        # persistent sidebar (none in these popups). Set in the new-session
-        # command itself: the sidebar's after-new-session hook reads it.
-        id=$(tmux new-session -d -P -F '#{session_id}' -s "$name" -c "$root" -e PJ_BG=1 "$@" \; \
+        # @pj_task marks the session for the Running and omp lists, and for
+        # tmux.conf's prefix + a (which hides any of these popups).
+        id=$(tmux new-session -d -P -F '#{session_id}' -s "$name" -c "$root" "$@" \; \
             set @pj_task "$root") || exit 1
         tmux set -t "$id" status off \; set -t "$id" detach-on-destroy on
-        # Each session gets a key table for its hide/quit keys; other keys
-        # reach the program. A task's output takes no input, so q hides and
-        # ctrl-c (after a y/n confirm) stops the task. Interactive programs
-        # (omp) need q and typing, so ctrl-c hides and ctrl-q kills the session.
-        if [ "$1" = "$self" ]; then
-            tmux set -t "$id" key-table pj-task \; bind -T pj-task q detach-client \; \
-                bind -T pj-task C-c confirm-before -p 'Stop #{session_name}? (y/n)' 'send-keys C-c'
-        else
-            tmux set -t "$id" key-table pj-app \; bind -T pj-app C-c detach-client \; \
-                bind -T pj-app C-q kill-session
-        fi
+        # The session's own key table: interactive programs (omp) need q and
+        # typing, so ctrl-c hides and ctrl-q kills the session; other keys
+        # reach the program.
+        tmux set -t "$id" key-table pj-app \; bind -T pj-app C-c detach-client \; \
+            bind -T pj-app C-q kill-session
     fi
-    # Task output gets a big centered popup; interactive programs (omp) dock
-    # bottom-right beside the work. Positions past the client edge clamp to
-    # it (-x R would follow whichever pane tmux picks as current).
-    geometry=(-w 90% -h 80%)
-    [ "$(tmux display -p -t "$id" '#{key-table}')" = pj-app ] &&
-        geometry=(-w 35% -h 60% -x '#{client_width}' -y '#{client_height}')
-    tmux display-popup -E "${geometry[@]}" -b rounded -T " $name " "tmux attach -t '$id'"
+    # Docked bottom-right beside the work. Positions past the client edge
+    # clamp to it (-x R would follow whichever pane tmux picks as current).
+    tmux display-popup -E -w 35% -h 60% -x '#{client_width}' -y '#{client_height}' \
+        -b rounded -T " $name " "tmux attach -t '$id'"
     exit 0
     ;;
 esac
 
 have() { command -v "$1" >/dev/null 2>&1; }
 cwd=$(tmux display -p '#{pane_current_path}' 2>/dev/null) || cwd=$PWD
-session=$(tmux display -p '#{session_name}' 2>/dev/null)
+session_id=$(tmux display -p '#{session_id}' 2>/dev/null)
 cd "$cwd" || exit 1
 root=$(git rev-parse --show-toplevel 2>/dev/null) || root=$cwd
 
@@ -134,14 +143,14 @@ long_running() { [[ $1 =~ (^|:)(dev|start|serve|watch|preview)(:|$) ]]; }
 slug() { local s=${*,,}; s=${s//[^a-z0-9]/-}; tr -s - <<<"$s"; }
 
 # Item action (a bash line the palette evals) running `pj-palette ARGV…`:
-# in a full-width bottom split (25%) in DIR, or, given NAME, in the background
-# session <session>:NAME shown in a popup. Argv goes to tmux as is (no shell,
-# so fish re-parses nothing).
+# in a full-width bottom split (25%) in DIR, or, given NAME, in a background
+# window NAME of this session. Argv goes to tmux as is (no shell, so fish
+# re-parses nothing).
 task_action() { # dir name argv…
     local dir=$1 name=$2
     shift 2
     if [ -n "$name" ]; then
-        printf '%q ' "$self" --bg "$session:$name" "$dir" "$self" "$@"
+        printf '%q ' "$self" --win "$session_id" "$name" "$dir" "$self" "$@"
     else
         printf '%q ' tmux split-window -v -f -l 25% -c "$dir" "$self" "$@"
     fi
@@ -189,7 +198,12 @@ if [ "${1-}" = --omp ]; then
     exit 0
 fi
 
-# ── Background tasks still running (any project), to bring back ──────────
+# ── Running: background task windows (any session), then <session>:omp
+#    sessions, to bring back ─────────────────────────────────────────────────
+while IFS=$'\t' read -r sid sname wid idx task dir; do
+    [ -n "$task" ] && item Running '' "$task" "$sname · window $idx · in ${dir/#$HOME/\~}" "" \
+        "$(printf '%q ' tmux switch-client -t "$sid:$wid")"
+done < <(tmux list-windows -a -F $'#{session_id}\t#{session_name}\t#{window_id}\t#{window_index}\t#{@pj_bg_task}\t#{@pj_bg_root}' 2>/dev/null)
 while IFS=$'\t' read -r name dir; do
     [ -n "$dir" ] && item Running '' "$name" "in ${dir/#$HOME/\~}" "" "$(printf '%q ' "$self" --bg "$name")"
 done < <(tmux list-sessions -F $'#{session_name}\t#{@pj_task}' 2>/dev/null)

@@ -12,7 +12,7 @@
 #   tmux-sessions --dir DIR    switch to, or start in DIR, the session named
 #                              after DIR's basename without dots
 #
-# pj-palette's background task sessions (@pj_task) are left out. Sessions are
+# pj-palette's background sessions (@pj_task, <session>:omp) are left out. Sessions are
 # targeted by id since names may contain ':'.
 
 set -uo pipefail
