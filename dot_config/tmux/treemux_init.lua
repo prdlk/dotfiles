@@ -180,8 +180,9 @@ function editor.locate(create)
   if found or not create then return found end
   -- a marked window whose nvim is gone (replaced by a shell): retire it
   if window then vim.fn.system { "tmux", "set-option", "-wu", "-t", window, "@treemux_editor_root" } end
+  local here = vim.trim(vim.fn.system { "tmux", "display-message", "-p", "-t", vim.env.TMUX_PANE, "#{window_id}" })
   window = vim.trim(vim.fn.system {
-    "tmux", "new-window", "-d", "-a", "-t", vim.env.TMUX_PANE, "-c", root,
+    "tmux", "new-window", "-d", "-a", "-t", here, "-c", root,
     "-e", "TREEMUX_EDITOR=1", "-P", "-F", "#{window_id}", "nvim",
   })
   if vim.v.shell_error ~= 0 then return nil end
