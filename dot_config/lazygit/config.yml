@@ -519,3 +519,34 @@ customCommands:
   - key: "<c-o>"
     context: "files"
     command: "gop"
+  # Semver release tag: `tagger menu` lists next versions from origin's tags
+  # (ls-remote) plus local ones, `tagger push` re-checks origin, creates an
+  # annotated tag on HEAD and pushes only that tag. Overrides refresh (R) here;
+  # `r` still refreshes files.
+  - key: "R"
+    context: "files"
+    description: "Tag HEAD with next semver and push to origin"
+    prompts:
+      - type: "menuFromCommand"
+        title: "Tag HEAD (versions from origin + local)"
+        key: "Choice"
+        command: "tagger menu"
+        filter: "^(?P<value>[^\t]+)\t(?P<tag>[^\t]+)\t(?P<desc>.*)$"
+        valueFormat: "{{ .value }}"
+        labelFormat: "{{ .tag | green }}  {{ .desc }}"
+      - type: "input"
+        title: "Semver tag (e.g. v1.2.3, v2.0.0-rc.1)"
+        key: "Custom"
+        condition: '{{ eq .Form.Choice "custom" }}'
+        suggestions:
+          preset: "tags"
+      - type: "input"
+        title: "Tag message"
+        key: "Message"
+        initialValue: 'Release {{ if eq .Form.Choice "custom" }}{{ .Form.Custom }}{{ else }}{{ .Form.Choice }}{{ end }}'
+      - type: "confirm"
+        title: "Push tag to origin"
+        body: 'Tag {{ if eq .Form.Choice "custom" }}{{ .Form.Custom }}{{ else }}{{ .Form.Choice }}{{ end }} at HEAD ({{ runCommand "git log -1 --format=\"%h %s\"" }}) and push it to origin?'
+    command: 'tagger push {{ if eq .Form.Choice "custom" }}{{ .Form.Custom | quote }}{{ else }}{{ .Form.Choice | quote }}{{ end }} --message {{ .Form.Message | quote }}'
+    loadingText: "Pushing tag"
+    output: log
