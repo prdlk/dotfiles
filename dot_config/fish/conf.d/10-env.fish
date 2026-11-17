@@ -42,6 +42,9 @@ set -gx ANDROID_HOME $HOME/.local/share/android-sdk
 set -gx ANDROID_SDK_ROOT $ANDROID_HOME
 # Gradle/AGP builds (React Native, Expo) need JDK 17; the system default `java` stays as is.
 test -d /usr/lib/jvm/java-17-openjdk; and set -gx JAVA_HOME /usr/lib/jvm/java-17-openjdk
+# omp's bash tool exports CI=true into agent shells unless this is set; CI
+# mode turns off Metro's file watching (no Fast Refresh) and changes other CLIs.
+set -gx PI_BASH_NO_CI 1
 
 # Git hosts (non-secret; tokens are in secrets.fish)
 set -gx GITEA_LOGIN prad.codes

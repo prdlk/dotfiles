@@ -42,6 +42,9 @@ done
 unset _adir
 # Gradle/AGP builds (React Native, Expo) need JDK 17; the system default `java` stays as is.
 [ -d /usr/lib/jvm/java-17-openjdk ] && export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+# omp's bash tool exports CI=true into agent shells unless this is set; CI
+# mode turns off Metro's file watching (no Fast Refresh) and changes other CLIs.
+export PI_BASH_NO_CI=1
 
 # GITHUB_TOKEN from gh's keyring login — never stored on disk. An inherited
 # value wins, so nested shells skip the gh call.
