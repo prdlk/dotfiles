@@ -44,7 +44,7 @@ Every Ghostty window gets its own tmux session; no two windows mirror the same o
 1. If a detached session exists (left by a closed window, or restored by continuum after a reboot), it attaches to the oldest one, by session id. `pj-palette`'s background omp sessions (`@pj_task` set, named `<session>:omp`) are never reclaimed.
 2. Otherwise it starts a new session.
 
-Before starting tmux, the script puts mise's shims on `PATH`. A server started from a desktop-launched Ghostty therefore finds the tools tmux plugins shell out to: bun for the palette, fzf, and zoxide.
+Ghostty started from the desktop or the macOS Dock runs no shell init (on macOS its `PATH` is `/usr/bin:/bin:/usr/sbin:/sbin`). So before anything else, the script puts Homebrew's `bin` and `sbin` (`/opt/homebrew`, or `/usr/local` on Intel Macs), mise's shims and `~/.cargo/bin` on `PATH`. It then runs the `tmux` that `command -v tmux` finds there: `/usr/bin/tmux` on Arch, Homebrew's on macOS, mise's shim on Ubuntu. If there is no tmux, it prints the `PATH` it searched and opens the login shell instead. The tmux server inherits that `PATH`, so the tools tmux plugins shell out to (bun for the palette, fzf, zoxide) are found too.
 
 The window title is the tmux session name (`set-titles-string '#S'`), so the compositor's window groups list one entry per session. tmux's tab bar uses its own fixed cyberdream colors, the same `#16181a` background as Ghostty's `cyberdream` theme.
 

@@ -19,7 +19,7 @@ The prefix is `ctrl+b` (the byte Ghostty's `ctrl+shift` chords send). `ctrl+spac
 
 | Option | Value |
 | --- | --- |
-| `default-command` | `exec fish -l`, or the login shell (`$SHELL -l`) where fish is missing. `default-shell` is `/bin/sh`, so `run-shell`, `if-shell`, `#()` jobs, popups and `split-window` commands run under a POSIX shell. Left to the login shell (fish), each of those paid `fish -c`'s ~55 ms config load and could not parse the sh syntax they are written in |
+| `default-command` | `fish -l`, or the login shell (`$SHELL -l`) where fish is missing (picked by `if-shell` at config load). It must stay one plain command: tmux-resurrect restores a pane as `cat <contents>; exec <default-command>`, and a compound line (`a && exec b`) made `exec` run `a` in place of the shell, so every restored pane exited and the server with it. `default-shell` is `/bin/sh`, so `run-shell`, `if-shell`, `#()` jobs, popups and `split-window` commands run under a POSIX shell. Left to the login shell (fish), each of those paid `fish -c`'s ~55 ms config load and could not parse the sh syntax they are written in |
 | `default-terminal` | `tmux-256color`; `RGB` override for every terminal; `clipboard` and `hyperlinks` (OSC 8) features; `extkeys` for xterm-kitty. Features apply after `tmux kill-server` |
 | `extended-keys` | `on`, format `csi-u` |
 | `base-index` / `pane-base-index` | `1` / `1`; `renumber-windows on` |
@@ -94,7 +94,7 @@ Plugins live in `~/.config/tmux/plugins/`. A new machine gets them on `chezmoi a
 | `tmux-plugins/tpm` | Plugin manager |
 | `tmux-plugins/tmux-sensible` | Defaults |
 | `joshmedeski/tmux-nerd-font-window-name` | Fills `#{window_icon}` from `tmux-nerd-font-window-name.yml` |
-| `tmux-plugins/tmux-resurrect` | `@resurrect-capture-pane-contents on` |
+| `tmux-plugins/tmux-resurrect` | `@resurrect-dir $HOME/.local/share/tmux-resurrect`, `@resurrect-capture-pane-contents on` |
 | `tmux-plugins/tmux-continuum` | `@continuum-save-interval 10`, `@continuum-restore on` |
 | `prdlk/tmux-palette-plugin` | Fork of [eduwass/tmux-palette](https://github.com/eduwass/tmux-palette) that adds a custom palette `query` item (an item for the typed text, listed after the matches). `@palette-key C-Space` (root table, no prefix). Needs [Bun](https://bun.sh); tpm runs `bun install` on first load |
 | `prdlk/treemux` | Fork of [kiyoon/treemux](https://github.com/kiyoon/treemux) whose sidebar is a full-height column at the window's left or right edge, see [below](#treemux-file-tree-sidebar). `@treemux-tree-client neo-tree`, `@treemux-tree-position left`, `@treemux-tree-width 32`, `@treemux-nvim-command "NVIM_APPNAME=nvim-treemux nvim -u $HOME/.config/tmux/treemux_init.lua"`, `@treemux-refresh-interval 0.1` |
@@ -130,7 +130,7 @@ Speed: opening takes ~100 ms to the drawn tree, closing ~10 ms, and a `cd` in th
 
 ### Persistence
 
-resurrect saves sessions, windows, panes, cwds, pane contents, and a default set of programs (nvim, less, man, …). Keys: `prefix C-s` saves, `prefix C-r` restores. continuum saves automatically every 10 minutes. When a tmux server starts and no other tmux server is running, continuum restores the last save. In practice that means the first Ghostty window after login or a reboot.
+resurrect saves sessions, windows, panes, cwds, pane contents, and a default set of programs (nvim, less, man, …) to `~/.local/share/tmux-resurrect` (`last` links to the newest save). Keys: `prefix C-s` saves, `prefix C-r` restores. continuum saves automatically every 10 minutes. When a tmux server starts and no other tmux server is running, continuum restores the last save. In practice that means the first Ghostty window after login or a reboot.
 
 ## tmux-nerd-font-window-name.yml
 
