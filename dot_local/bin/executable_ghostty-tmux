@@ -11,14 +11,26 @@
 # session; take a lock (flock) here if that ever bites.
 
 # A server started here inherits this PATH. Ghostty launched from the desktop
-# has no shell init, so add mise's shims for tools tmux plugins shell out to
-# (bun for tmux-palette, fzf, zoxide) and cargo's bin for the cargo-installed
-# ones (wt, which lazygit's worktree keys call from the prefix g popup).
+# or the macOS Dock has no shell init (macOS: PATH is /usr/bin:/bin:/usr/sbin:
+# /sbin), so add where tmux itself and the tools tmux plugins shell out to
+# live: Homebrew's prefix (macOS: tmux, bun, fzf, zoxide), mise's shims
+# (Ubuntu's tmux, bun for tmux-palette, fzf, zoxide) and cargo's bin for the
+# cargo-installed ones (wt, which lazygit's worktree keys call from the
+# prefix g popup). Arch's tmux is /usr/bin/tmux, already on PATH.
+for brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+    [[ -x $brew ]] && { PATH="${brew%/bin/brew}/bin:${brew%/bin/brew}/sbin:$PATH"; break; }
+done
 [[ -d $HOME/.local/share/mise/shims ]] && PATH="$HOME/.local/share/mise/shims:$PATH"
 [[ -d $HOME/.cargo/bin ]] && PATH="$HOME/.cargo/bin:$PATH"
+export PATH
 
-oldest=$(tmux list-sessions -f '#{&&:#{==:#{session_attached},0},#{!:#{@pj_task}}}' \
+if ! tmux=$(command -v tmux); then
+    printf 'ghostty-tmux: no tmux on PATH (%s); starting %s instead\n' "$PATH" "${SHELL:-/bin/sh}" >&2
+    exec "${SHELL:-/bin/sh}" -l
+fi
+
+oldest=$("$tmux" list-sessions -f '#{&&:#{==:#{session_attached},0},#{!:#{@pj_task}}}' \
     -F '#{session_created} #{session_id}' 2>/dev/null | sort -n | head -1 | cut -d' ' -f2)
 
-[[ -n $oldest ]] && exec tmux attach-session -t "$oldest"
-exec tmux new-session
+[[ -n $oldest ]] && exec "$tmux" attach-session -t "$oldest"
+exec "$tmux" new-session
