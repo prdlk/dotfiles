@@ -81,6 +81,7 @@ Runs for every shell, including non-interactive ones, so scripts get the same `P
 | `GHQ_ROOT`, `CODE_ROOT` | `~/Code` |
 | `ANDROID_HOME`, `ANDROID_SDK_ROOT` | `~/.local/share/android-sdk` |
 | `JAVA_HOME` | `/usr/lib/jvm/java-17-openjdk` when installed (Gradle/AGP builds) |
+| `PI_BASH_NO_CI` | `1`: omp's bash tool stops exporting `CI=true` into agent shells (CI mode turns off Metro's file watching) |
 | `GITEA_LOGIN` | `prad.codes` |
 | `GITLAB_HOST` | `git.sonr.org` |
 | `GITHUB_TOKEN` | `gh auth token`, unless already set and only if `gh` is logged in |
