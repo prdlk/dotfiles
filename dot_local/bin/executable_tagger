@@ -1,0 +1,217 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
+"""Suggest and push the next semver tag, using the remote's tags as well as local ones.
+
+  tagger menu [--remote origin]
+      One line per candidate: VALUE<TAB>TAG<TAB>DESCRIPTION. Feeds lazygit's
+      menuFromCommand prompt (files panel, R). VALUE "custom" means "ask me".
+
+  tagger push TAG [--message MSG] [--remote origin] [--ref HEAD]
+      Re-checks the remote, creates an annotated tag on REF (or reuses an
+      identical unpushed local tag), and pushes only refs/tags/TAG.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+
+# semver.org 2.0.0 grammar, with an optional leading "v".
+SEMVER = re.compile(
+    r"^(?P<prefix>v?)"
+    r"(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)"
+    r"(?:-(?P<pre>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+    r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+    r"(?:\+(?P<build>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+)
+
+# Never let git block on a credential prompt: lazygit has no terminal for it.
+GIT_ENV = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+
+
+class TaggerError(Exception):
+    pass
+
+
+@dataclass(frozen=True)
+class Version:
+    prefix: str
+    major: int
+    minor: int
+    patch: int
+    pre: tuple[str, ...] = ()
+
+    @classmethod
+    def parse(cls, tag: str) -> Version | None:
+        m = SEMVER.match(tag)
+        if not m:
+            return None
+        pre = tuple(m["pre"].split(".")) if m["pre"] else ()
+        return cls(m["prefix"], int(m["major"]), int(m["minor"]), int(m["patch"]), pre)
+
+    @property
+    def key(self) -> tuple:
+        # Precedence per semver §11: a release outranks its pre-releases; numeric
+        # identifiers sort below alphanumeric ones; a shorter identifier list wins ties.
+        pre = tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in self.pre)
+        return (self.major, self.minor, self.patch, not self.pre, pre)
+
+    def __str__(self) -> str:
+        core = f"{self.prefix}{self.major}.{self.minor}.{self.patch}"
+        return f"{core}-{'.'.join(self.pre)}" if self.pre else core
+
+    def bump(self, part: str) -> Version:
+        if part == "major":
+            return Version(self.prefix, self.major + 1, 0, 0)
+        if part == "minor":
+            return Version(self.prefix, self.major, self.minor + 1, 0)
+        return Version(self.prefix, self.major, self.minor, self.patch + 1)
+
+    def release(self) -> Version:
+        return Version(self.prefix, self.major, self.minor, self.patch)
+
+    def next_pre(self) -> Version:
+        # rc.1 -> rc.2, beta -> beta.1
+        last = self.pre[-1]
+        pre = (*self.pre[:-1], str(int(last) + 1)) if last.isdigit() else (*self.pre, "1")
+        return Version(self.prefix, self.major, self.minor, self.patch, pre)
+
+
+def git(*args: str, check: bool = True) -> str:
+    proc = subprocess.run(["git", *args], capture_output=True, text=True, env=GIT_ENV)
+    if check and proc.returncode != 0:
+        raise TaggerError(f"git {' '.join(args)} failed:\n{proc.stderr.strip()}")
+    return proc.stdout.strip() if proc.returncode == 0 else ""
+
+
+def remote_tags(remote: str) -> dict[str, str]:
+    """Tag name -> object id, straight from the remote (not the possibly stale local copy)."""
+    if remote not in git("remote").split():
+        raise TaggerError(f"no remote named {remote!r} in this repository")
+    try:
+        out = subprocess.run(
+            ["git", "ls-remote", "--tags", "--refs", remote],
+            capture_output=True, text=True, env=GIT_ENV, timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        raise TaggerError(f"timed out listing tags on {remote}") from None
+    if out.returncode != 0:
+        raise TaggerError(f"cannot list tags on {remote}:\n{out.stderr.strip()}")
+    tags = {}
+    for line in out.stdout.splitlines():
+        oid, ref = line.split("\t", 1)
+        tags[ref.removeprefix("refs/tags/")] = oid
+    return tags
+
+
+def local_tags() -> set[str]:
+    return set(git("tag", "--list").splitlines())
+
+
+def latest(tags: set[str]) -> tuple[str, Version] | None:
+    """Highest-precedence semver tag as (tag name, parsed version)."""
+    parsed = [(t, v) for t in tags if (v := Version.parse(t))]
+    return max(parsed, key=lambda tv: tv[1].key, default=None)
+
+
+def cmd_menu(args: argparse.Namespace) -> None:
+    remote = remote_tags(args.remote)
+    found = latest(set(remote) | local_tags())
+
+    if found is None:
+        context = f"(no semver tags locally or on {args.remote})"
+        rows = [("v0.1.0", "initial"), ("v1.0.0", "initial stable"), ("v0.0.1", "initial patch")]
+    else:
+        name, top = found
+        where = "" if name in remote else f", local only, not on {args.remote}"
+        context = f"(latest {name}{where})"
+        rows = []
+        if top.pre:
+            rows += [(str(top.release()), "release"), (str(top.next_pre()), "pre-release")]
+        for part in ("patch", "minor", "major"):
+            candidate = str(top.release().bump(part))
+            if all(candidate != tag for tag, _ in rows):
+                rows.append((candidate, part))
+
+    width = max(len(tag) for tag, _ in rows)
+    for tag, kind in rows:
+        print(f"{tag}\t{tag:<{width}}\t{kind:<14} {context}")
+    print(f"custom\t{'custom':<{width}}\ttype any semver tag")
+
+
+def cmd_push(args: argparse.Namespace) -> None:
+    tag = args.tag.strip()
+    version = Version.parse(tag)
+    if version is None:
+        raise TaggerError(f"{tag!r} is not a semver tag (expected e.g. v1.2.3 or v1.2.3-rc.1)")
+
+    commit = git("rev-parse", "--verify", f"{args.ref}^{{commit}}")
+    remote = remote_tags(args.remote)
+    if tag in remote:
+        raise TaggerError(f"{tag} already exists on {args.remote}")
+
+    found = latest((set(remote) | local_tags()) - {tag})
+    if found and version.key <= found[1].key:
+        print(f"warning: {tag} does not sort above the latest tag {found[0]}", file=sys.stderr)
+    if not git("branch", "-r", "--contains", commit, "--list", f"{args.remote}/*"):
+        print(
+            f"warning: {commit[:8]} is on no {args.remote} branch; the tag push uploads it anyway",
+            file=sys.stderr,
+        )
+
+    created = False
+    existing = git("rev-parse", "--verify", "--quiet", f"refs/tags/{tag}^{{commit}}", check=False)
+    if existing:
+        if existing != commit:
+            raise TaggerError(
+                f"local tag {tag} points at {existing[:8]}, not {args.ref} ({commit[:8]}); "
+                f"delete it with `git tag -d {tag}` or pick another version"
+            )
+        print(f"pushing existing local tag {tag} (message unchanged)")
+    else:
+        git("tag", "--annotate", "--message", args.message or f"Release {tag}", tag, commit)
+        created = True
+
+    push = subprocess.run(
+        ["git", "push", args.remote, f"refs/tags/{tag}"], capture_output=True, text=True, env=GIT_ENV
+    )
+    if push.returncode != 0:
+        if created:  # leave no half-done state so a retry starts clean
+            git("tag", "--delete", tag, check=False)
+        raise TaggerError(f"push failed:\n{push.stderr.strip()}")
+    print(f"pushed {tag} -> {args.remote} at {commit[:8]} {git('log', '-1', '--format=%s', commit)}")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="tagger", description=__doc__.split("\n", 1)[0])
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    menu = sub.add_parser("menu", help="print next-version candidates for lazygit")
+    menu.add_argument("--remote", default="origin")
+    menu.set_defaults(func=cmd_menu)
+
+    push = sub.add_parser("push", help="create the tag and push it to the remote")
+    push.add_argument("tag")
+    push.add_argument("-m", "--message", default="")
+    push.add_argument("--remote", default="origin")
+    push.add_argument("--ref", default="HEAD")
+    push.set_defaults(func=cmd_push)
+
+    args = parser.parse_args()
+    try:
+        args.func(args)
+    except TaggerError as err:
+        print(f"tagger: {err}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
