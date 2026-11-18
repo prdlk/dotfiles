@@ -470,7 +470,8 @@ local neotree_opts = {
     -- +Neotree, not from hijacking that directory buffer. Following the
     -- "current file" would then chase that directory buffer, which is the
     -- root node, and neo-tree recursed until the stack overflowed; treemux
-    -- itself keeps the tree on the shell's cwd.
+    -- itself keeps the tree on the shell's cwd. The editor's current file is
+    -- revealed by `treemux_reveal` below instead.
     hijack_netrw_behavior = "disabled",
     follow_current_file = { enabled = false },
     use_libuv_file_watcher = true,
@@ -619,3 +620,44 @@ for _, lhs in ipairs { "Q", "<C-q>", "ZZ", "<A-q>" } do
   vim.keymap.set("n", lhs, close_sidebar, { desc = "Close the treemux sidebar" })
 end
 vim.keymap.set("n", "T", "gg", { desc = "Go to top of the tree" })
+
+--- Follow the editor: its nvim (config.treemux in ~/.config/nvim) pushes the
+--- current buffer's real path here on BufEnter / FocusGained. Only the cursor
+--- moves, and only within the current root: treemux's watcher owns the root
+--- (it follows the shell's cwd and caches what it set), so a file elsewhere
+--- is left alone. A filtered file is simply not landed on.
+--- @param path string absolute, symlinks resolved
+function _G.treemux_reveal(path)
+  local manager = require "neo-tree.sources.manager"
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if vim.bo[vim.api.nvim_win_get_buf(win)].filetype == "neo-tree" then
+      local state = manager.get_state_for_window(win)
+      local root = state and state.path
+      if not root or (state.name ~= "filesystem" and state.name ~= "git_status") then return end
+      if root ~= "/" and path:sub(1, #root + 1) ~= root .. "/" then return end
+      local node = state.tree and state.tree:get_node()
+      if node and node:get_id() == path then return end
+      require("neo-tree.sources." .. state.name).navigate(state, root, path)
+      return
+    end
+  end
+end
+
+vim.api.nvim_create_autocmd("VimEnter", {
+  once = true,
+  desc = "Publish this sidebar's RPC address, then show the editor's file",
+  callback = function()
+    if not vim.env.TMUX_PANE or vim.v.servername == "" then return end
+    vim.system { "tmux", "set-option", "-p", "-t", vim.env.TMUX_PANE, "@treemux-nvim-addr", vim.v.servername }
+    -- after treemux's watcher has put the tree on the shell's cwd (it polls
+    -- for the tree every 20 ms), ask an editor already open to push its file
+    vim.defer_fn(function()
+      local target = editor.locate(false)
+      if not target then return end
+      local ok, chan = pcall(vim.fn.sockconnect, "pipe", target.addr, { rpc = true })
+      if not ok or chan == 0 then return end
+      pcall(vim.rpcrequest, chan, "nvim_exec_lua", "local ok, t = pcall(require, 'config.treemux') if ok and t.reveal then t.reveal() end", {})
+      vim.fn.chanclose(chan)
+    end, 500)
+  end,
+})

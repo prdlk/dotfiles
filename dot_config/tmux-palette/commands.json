@@ -48,6 +48,16 @@
     }
   },
   {
+    "icon": "",
+    "title": "ytunnel",
+    "description": "Cloudflare tunnels dashboard in a popup",
+    "category": "Tools",
+    "aliases": ["cft"],
+    "action": {
+      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' ytunnel"
+    }
+  },
+  {
     "icon": "",
     "title": "mandible",
     "description": "CLI reference for a tool, in a popup",
