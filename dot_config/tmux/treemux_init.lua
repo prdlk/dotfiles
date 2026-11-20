@@ -72,6 +72,50 @@ end
 --- @return string[]
 local function copy(list) return vim.list_extend({}, list) end
 
+--- Split glob lists into plain names and real globs. Neo-tree tests every
+--- entry against each `*_by_pattern` Lua pattern in turn (most of the shared
+--- list is plain names), but looks `hide_by_name` / `never_show` up in a
+--- table, so a plain name costs one hash lookup instead of a pattern scan.
+--- @param globs string[]
+--- @return string[] names, string[] patterns
+local function split_globs(globs)
+  local names, patterns = {}, {}
+  for _, glob in ipairs(globs) do
+    table.insert(glob:find "[%*%?%[{/]" and patterns or names, glob)
+  end
+  return names, patterns
+end
+
+--- File icons from mini.icons, without paying its per-name
+--- vim.filetype.match() fallback (~0.1 ms) for every file: that was a third
+--- of the render time in a 5000-entry directory like /usr/lib or /usr/bin.
+--- Names mini lists get its own icon; otherwise the last extension decides
+--- (trailing version numbers dropped: libfoo.so.1.2 -> so), which mini
+--- caches per extension. Only names that can carry a filename-based
+--- filetype (capitalised like Makefile / Dockerfile, dotfiles like
+--- .gitignore, and a few lower-case build files) go through the full lookup;
+--- binaries and versioned libraries get the default file icon.
+local explicit_files
+local lower_build_files = {
+  makefile = true, gnumakefile = true, justfile = true, dockerfile = true,
+  containerfile = true, rakefile = true, gemfile = true, brewfile = true,
+}
+local function file_icon(name)
+  local icons = require "mini.icons"
+  if not explicit_files then
+    explicit_files = {}
+    for _, n in ipairs(icons.list "file") do explicit_files[n] = true end
+  end
+  if explicit_files[name] then return icons.get("file", name) end
+  local ext = name:gsub("%.%d[%d.]*$", ""):match "^.+%.([^.]+)$"
+  if ext then
+    local icon, hl, is_default = icons.get("extension", ext)
+    if not is_default then return icon, hl end
+  end
+  if name:find "^[%u.]" or lower_build_files[name] then return icons.get("file", name) end
+  return icons.get("default", "file")
+end
+
 --- tmux-send key: send the selection or the path under the cursor, then
 --- leave visual mode. Without a count tmux-send targets the previously used
 --- pane, which is unset at first; target the shell's pane instead (treemux
@@ -406,6 +450,13 @@ local neotree_opts = {
   },
   default_component_configs = {
     container = { enable_character_fade = true },
+    icon = {
+      provider = function(icon, node)
+        if node.type == "file" then
+          icon.text, icon.highlight = file_icon(node.name)
+        end
+      end,
+    },
     indent = {
       indent_size = 2,
       padding = 1,
@@ -591,9 +642,10 @@ require("lazy").setup(pinned {
       -- them from the shared module on every setup (`:Lazy reload` re-runs
       -- this with the same opts table)
       local filtered = opts.filesystem.filtered_items
-      filtered.hide_by_pattern = copy(ignore_patterns.patterns)
-      filtered.never_show = copy(ignore_patterns.never_show)
-      filtered.never_show_by_pattern = copy(ignore_patterns.never_show_patterns)
+      filtered.hide_by_name, filtered.hide_by_pattern = split_globs(ignore_patterns.patterns)
+      local never_names, never_patterns = split_globs(ignore_patterns.never_show_patterns)
+      filtered.never_show = vim.list_extend(copy(ignore_patterns.never_show), never_names)
+      filtered.never_show_by_pattern = never_patterns
       require("neo-tree").setup(opts)
     end,
   },
