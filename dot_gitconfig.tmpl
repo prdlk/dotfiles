@@ -11,8 +11,12 @@
 	pushInsteadOf = https://github.com/
 [pager]
 	diff = diffnav
+# Layout here; colours in the `dark` / `light` features. `dark` is the default
+# (diffnav, plain delta). lazygit on Omarchy passes --features=<theme mode>
+# (~/.config/omarchy/themed/lazygit.yml.tpl), since delta can't see the
+# terminal's background from inside it.
 [delta]
-  dark = true
+  features = dark
   tabs = 2
 
   file-style = omit
@@ -21,26 +25,40 @@
   line-numbers-left-format = "{nm:>4} "
   line-numbers-right-format = "│ {np:>4} "
   line-numbers-left-style = white dim
-  line-numbers-right-style = "#1f2335" dim
   line-numbers-zero-style = white dim
-  line-numbers-plus-style = white dim 
+  line-numbers-plus-style = white dim
   line-numbers-minus-style = white dim
-  line-numbers-zero-style = white dim
 
   wrap-left-symbol = " "
   wrap-right-symbol = " "
   wrap-right-prefix-symbol = " "
 
+  hunk-label = "  󰡏 "
+[delta "dark"]
+  dark = true
+  line-numbers-right-style = "#1f2335" dim
   plus-style = syntax "#0e250e"
   plus-emph-style = syntax "#103610"
   minus-style = syntax "#402a26"
   minus-emph-style = syntax "#45221c"
-
-  hunk-label = "  󰡏 "
   hunk-header-line-number-style = "#10233A"
   hunk-header-style = "#868E99"
   hunk-header-file-style = "#868E99" dim
   hunk-header-decoration-style = "#163050" ol ul
+# Light terminals (Omarchy's Hazy Peak): syntax in the terminal's own ANSI
+# palette, grey additions, Hazy Peak's #c67777 tinted into removals.
+[delta "light"]
+  light = true
+  syntax-theme = ansi
+  line-numbers-right-style = "#aeaeae"
+  plus-style = syntax "#bababa"
+  plus-emph-style = syntax "#a8a8a8"
+  minus-style = syntax "#d4bcbc"
+  minus-emph-style = syntax "#d9a9a9"
+  hunk-header-line-number-style = "#474747"
+  hunk-header-style = "#727272"
+  hunk-header-file-style = "#727272" dim
+  hunk-header-decoration-style = "#aeaeae" ol ul
 [core]
 	pager = git-split-diffs --color | less -+LFX
 [split-diffs]

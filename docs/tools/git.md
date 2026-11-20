@@ -41,30 +41,31 @@ Three pagers are configured, each for a different path:
 
 ### delta styling
 
-The `[delta]` section is not a pager setting; delta reads it whenever it runs. Here that means diffnav and [lazygit](lazygit.md), which renders diffs with `delta --dark --paging=never`.
+The `[delta]` section is not a pager setting; delta reads it whenever it runs. Here that means diffnav and [lazygit](lazygit.md). Layout lives in `[delta]`. Colors live in two features: `features = dark` makes `[delta "dark"]` the default, and `--features=light` on the command line selects `[delta "light"]` instead. On Omarchy, lazygit passes `--features=<theme mode>`, so diffs follow the theme there. diffnav always gets `dark`.
 
-| Option | Value |
+| `[delta]` option | Value |
 | --- | --- |
-| `dark` | `true` |
+| `features` | `dark` |
 | `tabs` | `2` |
 | `file-style` / `file-decoration-style` | `omit` / `none` (no file header) |
 | `line-numbers-left-format` | `"{nm:>4} "` |
 | `line-numbers-right-format` | `"│ {np:>4} "` |
-| `line-numbers-left-style` | `white dim` |
-| `line-numbers-right-style` | `"#1f2335" dim` |
-| `line-numbers-zero-style`, `-plus-style`, `-minus-style` | `white dim` |
+| `line-numbers-left-style`, `-zero-style`, `-plus-style`, `-minus-style` | `white dim` (ANSI, so the terminal palette decides) |
 | `wrap-left-symbol`, `wrap-right-symbol`, `wrap-right-prefix-symbol` | a single space each (wrap markers hidden) |
-| `plus-style` | `syntax "#0e250e"` |
-| `plus-emph-style` | `syntax "#103610"` |
-| `minus-style` | `syntax "#402a26"` |
-| `minus-emph-style` | `syntax "#45221c"` |
 | `hunk-label` | a Nerd Font glyph |
-| `hunk-header-line-number-style` | `"#10233A"` |
-| `hunk-header-style` | `"#868E99"` |
-| `hunk-header-file-style` | `"#868E99" dim` |
-| `hunk-header-decoration-style` | `"#163050" ol ul` |
 
-Added and removed lines keep syntax highlighting (`syntax` foreground) on dark green and dark red backgrounds.
+| Feature option | `dark` | `light` |
+| --- | --- | --- |
+| mode | `dark = true` | `light = true` |
+| `syntax-theme` | delta's default | `ansi` (the terminal's 16 colors: Hazy Peak's graphite) |
+| `line-numbers-right-style` | `"#1f2335" dim` | `"#aeaeae"` |
+| `plus-style` / `plus-emph-style` | `syntax "#0e250e"` / `syntax "#103610"` | `syntax "#bababa"` / `syntax "#a8a8a8"` |
+| `minus-style` / `minus-emph-style` | `syntax "#402a26"` / `syntax "#45221c"` | `syntax "#d4bcbc"` / `syntax "#d9a9a9"` |
+| `hunk-header-line-number-style` | `"#10233A"` | `"#474747"` |
+| `hunk-header-style` / `-file-style` | `"#868E99"` / `"#868E99" dim` | `"#727272"` / `"#727272" dim` |
+| `hunk-header-decoration-style` | `"#163050" ol ul` | `"#aeaeae" ol ul` |
+
+Added and removed lines keep syntax highlighting (`syntax` foreground). Dark puts them on dark green and dark red. Light puts them on grey and on Hazy Peak's `#c67777` red mixed into the fog.
 
 ## Difftool
 
