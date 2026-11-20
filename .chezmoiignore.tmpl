@@ -27,6 +27,13 @@ key.txt.age
 .config/free-router
 {{- end }}
 
+# On Omarchy the tmux-palette colours follow the active theme: env/omarchy-desktop
+# links ~/.config/tmux-palette/theme.json to the theme's generated
+# tmux-palette.json. The cyberdream theme.json here is for every other machine.
+{{- if lookPath "omarchy" }}
+.config/tmux-palette/theme.json
+{{- end }}
+
 # Niri compositor hook kept in the fish config; never applied here
 .config/fish/auto-Niri.fish
 

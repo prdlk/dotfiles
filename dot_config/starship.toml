@@ -1,5 +1,10 @@
 "$schema" = 'https://starship.rs/config-schema.json'
-palette = "cyberdream"
+
+# No palette: every style is an ANSI name (blue, purple, bright-black, ...), so
+# the prompt takes the terminal's 16 colours. On Omarchy those come from the
+# active theme's colors.toml (Ghostty includes the generated ghostty.conf, tmux
+# panes get the OSC palette), so cyberdream draws neon and Hazy Peak graphite
+# with its #c67777 red, and a theme switch recolours the prompt with no edit.
 
 format = """
 $username\
@@ -35,7 +40,7 @@ format = "[$branch]($style)"
 style = "bright-black"
 
 [git_status]
-format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](218) ($ahead_behind$stashed)]($style)"
+format = "[[(*$conflicted$untracked$modified$staged$renamed$deleted)](red) ($ahead_behind$stashed)]($style)"
 style = "cyan"
 conflicted = "​"
 untracked = "​"
@@ -64,33 +69,3 @@ disabled = false
 format = '[$time]($style)'
 time_format = '%-I:%M %p'
 style = "bright-black"
-
-[palettes.cyberdream]
-# https://github.com/scottmckendry/cyberdream.nvim
-black = "#1e2124"
-red = "#ff6e5e"
-green = "#5eff6c"
-yellow = "#f1ff5e"
-blue = "#5ea1ff"
-purple = "#bd5eff"
-cyan = "#5ef1ff"
-white = "#ffffff"
-
-bright-black = "#4a4d4f"
-bright-red = "#ff8b7e"
-bright-green = "#7eff89"
-bright-yellow = "#f3ff7e"
-bright-blue = "#7eb3ff"
-bright-purple = "#ff7ef3"
-bright-cyan = "#7ef3ff"
-bright-white = "#ffffff"
-
-# Dim variants (usable as named colors in styles)
-dim-black = "#1c1f22"
-dim-red = "#d05c50"
-dim-green = "#4fd05b"
-dim-yellow = "#c5d050"
-dim-blue = "#4f85d1"
-dim-purple = "#d050c6"
-dim-cyan = "#4fc5d1"
-dim-white = "#d0d0d1"

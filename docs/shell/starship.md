@@ -1,6 +1,6 @@
 # Starship
 
-The cross-shell prompt — a minimal left prompt, a clock on the right, and a cyberdream palette.
+The cross-shell prompt: a minimal left prompt, a clock on the right, and ANSI colors that follow the terminal (and so the active Omarchy theme).
 
 [Starship](https://starship.rs) renders the prompt in fish, bash, and zsh from one config file.
 
@@ -28,7 +28,6 @@ zsh has no built-in transience, so `~/.zshrc` collapses past prompts itself, ren
 
 ```toml
 "$schema" = 'https://starship.rs/config-schema.json'
-palette = "cyberdream"
 
 format = """
 $username\
@@ -53,13 +52,13 @@ The left prompt is a single line with no line break before `$character`. Only th
 | `directory` | default | `blue` | |
 | `git_branch` | `[$branch]($style)` | `bright-black` | Branch name only, no symbol or "on" |
 | `git_state` | `\([$state( $progress_current/$progress_total)]($style)\) ` | `bright-black` | For example `(REBASING 2/5)` |
-| `git_status` | `[[(*$conflicted$untracked$modified$staged$renamed$deleted)](218) ($ahead_behind$stashed)]($style)` | `cyan` | See below |
+| `git_status` | `[[(*$conflicted$untracked$modified$staged$renamed$deleted)](red) ($ahead_behind$stashed)]($style)` | `cyan` | See below |
 | `cmd_duration` | `[$duration]($style) ` | `yellow` | Default threshold |
 | `python` | `[$virtualenv]($style) ` | `bright-black` | `detect_extensions = []`, `detect_files = []` |
 | `time` | `[$time]($style)` | `bright-black` | `disabled = false`, `time_format = '%-I:%M %p'` (for example `3:07 PM`) |
 | `character` | default | | Symbols below |
 
-**git_status.** The `conflicted`, `untracked`, `modified`, `staged`, `renamed`, and `deleted` symbols are all set to a zero-width space. Any dirty state therefore shows a single `*` in 256-color `218` (pink) instead of per-state counts. `stashed` is `≡`. `ahead_behind` keeps starship's default arrows and is drawn in `cyan`.
+**git_status.** The `conflicted`, `untracked`, `modified`, `staged`, `renamed`, and `deleted` symbols are all set to a zero-width space. Any dirty state therefore shows a single `*` in `red` instead of per-state counts. `stashed` is `≡`. `ahead_behind` keeps starship's default arrows and is drawn in `cyan`.
 
 **python.** With both detect lists empty, the module does not trigger on `.py` files or `pyproject.toml`. It shows only the name of an active virtualenv.
 
@@ -73,19 +72,18 @@ The left prompt is a single line with no line break before `$character`. Only th
 
 fish runs in vi mode ([key bindings](fish.md#key-bindings)), so `vimcmd_symbol` appears there. zsh uses the emacs keymap and never shows it.
 
-## Palette
+## Colors
 
-`palette = "cyberdream"` selects the `[palettes.cyberdream]` table, colors from [cyberdream.nvim](https://github.com/scottmckendry/cyberdream.nvim). Every named color in the module styles resolves through this table.
+There is no `palette`. Every module style is an ANSI color name, so the prompt draws with the terminal's 16 colors (`purple` is ANSI 5, `bright-black` ANSI 8). On Omarchy those colors come from the active theme's `colors.toml`: Ghostty includes the generated `ghostty.conf` ([Ghostty](../terminal/ghostty.md)), and Omarchy sends the same palette into running tmux panes. A theme switch therefore recolors the prompt with no edit here. Elsewhere, Ghostty's `cyberdream` theme supplies them.
 
-| Name | Normal | `bright-*` | `dim-*` |
+| Name | cyberdream | Hazy Peak | Used by |
 | --- | --- | --- | --- |
-| black | `#1e2124` | `#4a4d4f` | `#1c1f22` |
-| red | `#ff6e5e` | `#ff8b7e` | `#d05c50` |
-| green | `#5eff6c` | `#7eff89` | `#4fd05b` |
-| yellow | `#f1ff5e` | `#f3ff7e` | `#c5d050` |
-| blue | `#5ea1ff` | `#7eb3ff` | `#4f85d1` |
-| purple | `#bd5eff` | `#ff7ef3` | `#d050c6` |
-| cyan | `#5ef1ff` | `#7ef3ff` | `#4fc5d1` |
-| white | `#ffffff` | `#ffffff` | `#d0d0d1` |
+| `blue` | `#5ea1ff` | `#333333` | directory |
+| `purple` | `#bd5eff` | `#3d3d3d` | `❯` |
+| `red` | `#ff6e5e` | `#c67777` | `❯` after a failure, dirty `*` |
+| `green` | `#5eff6c` | `#5e5e5e` | `❮` (vi normal) |
+| `cyan` | `#5ef1ff` | `#525252` | ahead/behind, stash |
+| `yellow` | `#f1ff5e` | `#727272` | command duration |
+| `bright-black` | `#7b8496` | `#8a8a8a` | branch, git state, virtualenv, clock |
 
-`bright-black` (`#4a4d4f`) is the muted gray used for the branch, git state, virtualenv, and clock. The `dim-*` entries are defined but no module uses them.
+Hazy Peak's values are read off its reference screenshot: graphite steps on `#cccccc`, with the Umbriel warning red `#c67777` as the only color. On Omarchy, cyberdream's `bright-black` is its `muted` `#7b8496`. The old palette's `#4a4d4f` was close to unreadable on `#16181a`.

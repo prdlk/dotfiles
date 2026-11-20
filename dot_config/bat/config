@@ -2,9 +2,13 @@
 # a command-line option that you want to pass to `bat` by default. You can
 # run `bat --help` to get a list of all possible configuration options.
 
-# Specify desired highlighting theme (e.g. "TwoDark"). Run `bat --list-themes`
-# for a list of all available themes
---theme="cyberdream"
+# Theme by the terminal's background (bat asks the terminal when its output is
+# one): cyberdream on dark, `ansi` on light, which draws with the terminal's
+# own 16 colours -- Omarchy's Hazy Peak graphite. Piped output (yazi previews,
+# fzf) cannot ask and gets the dark theme; yazi passes --theme=ansi itself.
+--theme=auto
+--theme-dark="cyberdream"
+--theme-light="ansi"
 
 # Enable this to use italic text on the terminal. This is not supported on all
 # terminal emulators (like tmux, by default):

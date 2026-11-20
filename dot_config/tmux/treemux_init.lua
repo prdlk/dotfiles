@@ -582,9 +582,12 @@ require("lazy").setup(pinned {
     priority = 1000,
     config = function()
       require("cyberdream").setup { variant = "muted", transparent = true, hide_fillchars = true }
-      vim.cmd.colorscheme "cyberdream"
+      -- cyberdream or koda-light by the desktop's light/dark mode, swapped
+      -- live with 'background', as in the editor (its config.theme)
+      vim.cmd.colorscheme(require("config.theme").init())
     end,
   },
+  { "oskarnurm/koda.nvim", lazy = true, opts = function() return require("config.theme").koda_opts end },
   -- Neo-tree asks nvim-web-devicons for icons; mini.icons stands in for it,
   -- as in the editor
   {
@@ -651,7 +654,7 @@ require("lazy").setup(pinned {
   },
 }, {
   lockfile = vim.fn.stdpath "data" .. "/lazy-lock.json",
-  install = { colorscheme = { "cyberdream" } },
+  install = { colorscheme = { "cyberdream", "koda-light" } },
   change_detection = { enabled = false },
   rocks = { enabled = false },
   performance = {

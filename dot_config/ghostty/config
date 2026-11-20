@@ -118,6 +118,10 @@ shell-integration-features = cursor,sudo,title,no-cursor
 # Rando stuff
 gtk-single-instance = true
 
-# Colors: cyberdream (themes/cyberdream), the palette shared with tmux, nvim,
-# yazi, and television.
+# Colors: cyberdream (themes/cyberdream) everywhere, then on Omarchy the active
+# theme's generated colors on top, so Ghostty follows every theme switch (Hazy
+# Peak, cyberdream, ...; omarchy-restart-terminal sends SIGUSR2 to reload). The
+# leading `?` makes the file optional: machines without Omarchy keep cyberdream.
+# Explicit colors override a theme's, whatever the order.
 theme = cyberdream
+config-file = ?~/.local/state/omarchy/current/theme/ghostty.conf

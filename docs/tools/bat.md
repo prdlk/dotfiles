@@ -1,8 +1,8 @@
 # bat
 
-bat with the cyberdream tmTheme, an external PureScript syntax, and automatic cache rebuilds on apply.
+bat with the cyberdream tmTheme on dark terminals and the terminal's ANSI palette on light ones, an external PureScript syntax, and automatic cache rebuilds on apply.
 
-[bat](https://github.com/sharkdp/bat) is a `cat` replacement with syntax highlighting and git gutter marks. The repo sets its theme to cyberdream, adds a PureScript grammar, and rebuilds bat's cache whenever those inputs change.
+[bat](https://github.com/sharkdp/bat) is a `cat` replacement with syntax highlighting and git gutter marks. The repo picks cyberdream or `ansi` by terminal background, adds a PureScript grammar, and rebuilds bat's cache whenever those inputs change.
 
 | | |
 | --- | --- |
@@ -13,13 +13,17 @@ bat with the cyberdream tmTheme, an external PureScript syntax, and automatic ca
 
 ## config
 
-bat's config file holds default command-line flags. One is active:
+bat's config file holds default command-line flags. Three are active:
 
 **~/.config/bat/config**
 
 ```sh
---theme="cyberdream"
+--theme=auto
+--theme-dark="cyberdream"
+--theme-light="ansi"
 ```
+
+`auto` asks the terminal for its background color (OSC 11; tmux answers with the pane's). A dark background gets cyberdream. A light one, such as Omarchy's Hazy Peak, gets `ansi`, which draws with the terminal's 16 colors and so renders in the theme's graphite palette. bat can only ask when its output is a terminal. Piped output (fzf previews, `lc-elir`) falls back to dark. [Yazi](yazi.md) previews pass `--theme=ansi` themselves for that reason.
 
 The file also carries bat's stock commented examples (`--italic-text=always`, `--paging=never`, a mouse-enabled `--pager`, `--map-syntax`); none are enabled.
 
@@ -40,7 +44,7 @@ The file also carries bat's stock commented examples (`--italic-text=always`, `-
 The same file is also used outside bat:
 
 - The [yazi](yazi.md) cyberdream flavor points `syntect_theme` at `~/.config/bat/themes/cyberdream.tmTheme`.
-- Yazi text previews run `bat -p --color=always` through the piper plugin, so they get this theme via the config file.
+- Yazi text previews run `bat -p --color=always --theme=ansi` through the piper plugin, so they use the terminal's palette rather than this theme.
 
 ## PureScript syntax
 
