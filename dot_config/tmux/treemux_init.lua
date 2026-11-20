@@ -1,5 +1,5 @@
 -- Neovim init for the treemux sidebar (kiyoon/treemux, see tmux.conf): a
--- Neo-tree file explorer in a tmux pane left of the shell. It runs as
+-- Neo-tree file explorer in a tmux pane right of the shell. It runs as
 -- `NVIM_APPNAME=nvim-treemux nvim -u <this file>`, so its plugins, lockfile,
 -- shada and state live under ~/.local/share/nvim-treemux and never touch the
 -- editor's lazy-lock.json.
