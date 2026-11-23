@@ -1,5 +1,5 @@
 -- Neovim init for the treemux sidebar (kiyoon/treemux, see tmux.conf): a
--- Neo-tree file explorer in a tmux pane right of the shell. It runs as
+-- Neo-tree file explorer in a tmux pane left of the shell. It runs as
 -- `NVIM_APPNAME=nvim-treemux nvim -u <this file>`, so its plugins, lockfile,
 -- shada and state live under ~/.local/share/nvim-treemux and never touch the
 -- editor's lazy-lock.json.
@@ -331,6 +331,15 @@ function editor.mappings()
   return lhs
 end
 
+--- Neo-tree's indent component, without the space the renderer put before
+--- the icon of a top-level node: under the hidden root with padding 0 its
+--- indent is "", and the renderer pads whatever follows text that does not
+--- end in a space. Rendering nothing instead leaves the icon in column 0.
+local function indent(config, node, state)
+  local result = require("neo-tree.sources.common.components").indent(config, node, state)
+  if result.text ~= "" then return result end
+end
+
 local neotree_opts = {
   -- git_status: the repository's changed files only, toggled by <C-m>
   sources = { "filesystem", "git_status" },
@@ -338,11 +347,12 @@ local neotree_opts = {
   popup_border_style = "rounded",
   enable_diagnostics = true,
   git_status_async = true,
-  -- treemux reveals the shell's cwd and, when the cursor does not land on it,
-  -- assumes it is filtered and toggles hidden files on. The cwd is the root at
-  -- first, and a hidden root node is never landed on, so every new sidebar
-  -- came up showing everything ignore_patterns hides.
-  hide_root_node = false,
+  -- No root line: the tree starts at the root's children, flush left
+  -- (retain_hidden_root_indent off). treemux's follow.lua does not try to
+  -- land on the hidden root, which would read as a filtered directory and
+  -- turn hidden files on.
+  hide_root_node = true,
+  retain_hidden_root_indent = false,
   sort_case_insensitive = false,
   source_selector = { winbar = false, statusline = false },
   -- AstroNvim's Neo-tree commands, which the editor's tree had
@@ -459,7 +469,7 @@ local neotree_opts = {
     },
     indent = {
       indent_size = 2,
-      padding = 1,
+      padding = 0,
       with_markers = true,
       indent_marker = "│",
       last_indent_marker = "└",
@@ -492,6 +502,7 @@ local neotree_opts = {
     symlink_target = { enabled = false },
   },
   filesystem = {
+    components = { indent = indent },
     window = {
       mappings = {
         ["H"] = "navigate_up",
@@ -538,6 +549,7 @@ local neotree_opts = {
       -- config.ignore_patterns in `config` below
     },
   },
+  git_status = { components = { indent = indent } },
   event_handlers = {
     {
       event = "file_open_requested",
