@@ -42,7 +42,7 @@ case ${1-} in
     shift 2
     # argv form: tmux runs it without a shell and expands no formats in it.
     title=${*/#"$self"/${self##*/}}
-    exec tmux display-popup -E -w 80% -h 60% -d "$dir" -T " ${title//#/##} " "$self" --exec "$@"
+    exec "$HOME/.config/tmux/popup-full.sh" -E -d "$dir" -T " ${title//#/##} " "$self" --exec "$@"
     ;;
 --do)
     cd "$2" || exit 1
@@ -108,7 +108,7 @@ workmux status --all --json 2>/dev/null | jq --arg self "$self" --arg home "$HOM
          aliases: ["add", "prompt"], action: run("--popup"; [$self, "--prompt"])}
        end),
       {category: "Workmux", icon: "\uf0e4", title: "Dashboard", description: "agents and worktrees TUI in a popup",
-       aliases: ["dash"], action: {tmux: "display-popup -E -w 90% -h 90% workmux dashboard"}},
+       aliases: ["dash"], action: {shell: "~/.config/tmux/popup-full.sh -E workmux dashboard"}},
       {category: "Workmux", icon: "\uf0db", title: "Sidebar", description: "toggle the agent status sidebar",
        shortcut: "Ctrl+Shift+A", aliases: ["side"], action: {tmux: "run-shell -b \("workmux sidebar" | @sh)"}},
       {category: "Workmux", icon: "\uf0e2", title: "Last done", description: "jump to the agent that last finished or is waiting",

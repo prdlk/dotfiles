@@ -115,10 +115,8 @@ case ${1-} in
         tmux set -t "$id" key-table pj-app \; bind -T pj-app C-c detach-client \; \
             bind -T pj-app C-q kill-session
     fi
-    # Docked bottom-right beside the work. Positions past the client edge
-    # clamp to it (-x R would follow whichever pane tmux picks as current).
-    tmux display-popup -E -w 35% -h 60% -x '#{client_width}' -y '#{client_height}' \
-        -b rounded -T " $name " "tmux attach -t '$id'"
+    # Full width below the status bar, like every floating window.
+    "$HOME/.config/tmux/popup-full.sh" -E -b rounded -T " $name " "tmux attach -t '$id'"
     exit 0
     ;;
 esac
