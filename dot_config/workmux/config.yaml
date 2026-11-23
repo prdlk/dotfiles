@@ -1,8 +1,9 @@
-# workmux global config (https://workmux.dev). One tmux session per worktree:
-# an omp window (focused, gets the prompt) and an nvim window. Start work from
-# the Workmux palette (prefix w, or ctrl+space → Workmux; ~/.local/bin/
-# workmux-palette) or `workmux add <branch>` in a repo. A .workmux.yaml in a
-# repo overrides any of this.
+# workmux global config (https://workmux.dev). One tmux session per worktree,
+# laid out like fish's omp-continue: nvim (focused) with omp on its right and
+# the treemux file tree on its left. Start work from the Workmux palette
+# (prefix w, or ctrl+space → Workmux; ~/.local/bin/workmux-palette) or
+# `workmux add <branch>` in a repo. A .workmux.yaml in a repo overrides any
+# of this.
 
 nerdfont: true
 
@@ -48,14 +49,24 @@ auto_name:
 
     Output only the branch name, nothing else.
 
-# Windows stay unnamed so tmux.conf's automatic-rename-format labels them
-# (omp icon + repo, nvim icon + file) like every other tab.
+# One window, unnamed so tmux.conf's automatic-rename-format labels it (nvim
+# icon + file) like every other tab. The omp pane is workmux's <agent> pane,
+# so it still gets the prompt (-p/-P/-e) and the agent status; nvim then runs
+# omp-continue's layout, `nvim +OmpContinue` (the fish function's command
+# inside tmux; the function itself is out of reach, since workmux types pane
+# commands into tmux's default-shell, /bin/sh). :OmpContinue reuses an omp
+# pane already in its window and only splits off its own `omp --continue`
+# when there is none, and nvim starts first, so it waits (5 s at most) for
+# the agent pane's omp to come up. exec keeps nvim the pane's command.
 windows:
   - panes:
-      - command: <agent>
+      - command: >-
+          i=0; until tmux list-panes -t "$TMUX_PANE" -F '#{pane_current_command}' | grep -qx omp || [ $i -ge 50 ]; do sleep 0.1; i=$((i+1)); done;
+          exec nvim +OmpContinue
         focus: true
-  - panes:
-      - command: nvim
+      - command: <agent>
+        split: horizontal
+        percentage: 45
 
 # tmux.conf's window-status formats render #{@workmux_status} themselves;
 # workmux's own format would replace the powerline tabs.
