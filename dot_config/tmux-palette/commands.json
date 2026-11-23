@@ -28,6 +28,14 @@
     "action": { "shell": "~/.config/tmux/popup-full.sh -E btop" }
   },
   {
+    "icon": "",
+    "title": "systemctl-tui",
+    "description": "systemd services and their logs in a full-width popup",
+    "category": "Tools",
+    "aliases": ["sc", "systemd", "services"],
+    "action": { "shell": "~/.config/tmux/popup-full.sh -E systemctl-tui" }
+  },
+  {
     "icon": "󰡨",
     "title": "Lazydocker",
     "description": "full-width popup in the pane's directory",
