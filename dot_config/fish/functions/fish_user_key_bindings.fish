@@ -17,8 +17,8 @@ function fish_user_key_bindings
         # and down also open tv cables — same keys in zsh and bash. tv runs
         # --inline below the prompt; _tv_inline/_gho_bind/_pj_bind put the
         # prompt back in place (or below any output) afterwards. ctrl-a:
-        # omp-session resumes or starts omp for the repo (same in zsh); when it
-        # opens the omp-sessions cable and it is cancelled, it steps back up.
+        # omp-continue, the nvim + `omp --continue` + treemux tmux layout
+        # (zsh's ctrl-a still runs omp-session).
         # ctrl-n: always a new omp session.
         bind -M $mode ctrl-e 'nvim; commandline -f repaint'
         bind -M $mode ctrl-b purple repaint
@@ -26,7 +26,7 @@ function fish_user_key_bindings
 
         bind -M $mode ctrl-o _gho_bind
         bind -M $mode ctrl-p _pj_bind
-        bind -M $mode ctrl-a 'omp-session; commandline -f repaint'
+        bind -M $mode ctrl-a 'omp-continue; commandline -f repaint'
         bind -M $mode ctrl-n 'omp; commandline -f repaint'
         bind -M $mode ctrl-w 'atuin ai inline; commandline -f repaint'
         # ctrl-z at the prompt: fg the only background job, or pick one from
