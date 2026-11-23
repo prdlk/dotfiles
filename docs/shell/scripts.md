@@ -37,6 +37,7 @@ Several scripts below also exist as fish functions of the same name (`ai`, `c2p`
 | [`gh-sonr-org-migrate`](#gh-sonr-org-migrate) | bash | Consolidate `*sonr*` GitHub orgs into `sonr-io` |
 | [`ghg-clone`](#ghg-clone) | sh | `ghq get` and print the clone path |
 | [`ghn`](#ghn) | sh | Create a private repo, clone it, print the path |
+| [`ghqsync`](#ghqsync) | sh | Commit, rebase and push every ghq clone we can push to |
 | [`git-summary`](#git-summary) | sh | Aggregate a repo's `AGENTS.md` files with code2prompt |
 | [`goliath`](#goliath) | sh | Shell on goliath: `kitten ssh` on the home Wi-Fi, mosh elsewhere |
 | [`gop`](#gop) | sh | Open the current repo's web page |
@@ -232,6 +233,19 @@ Creates a new **private** repo and clones it:
 You pick the host with `gum choose`. The script prints the clone directory, and the `ghn` shell function cds into it.
 
 **Needs:** `gum`, `ghq`, and `tea` or `gh`.
+
+## ghqsync
+
+```sh
+ghqsync          # sync every repo
+ghqsync --list   # print the repos it would sync
+```
+
+[`dotsync`](#dotsync) for the ghq clones: the same per-repo sequence (detached HEAD skipped, `gh commit --auto` for uncommitted changes, no upstream skipped, `git pull --rebase` with the rebase aborted on a conflict, `git push` when ahead), without the `chezmoi apply` at the end.
+
+**Repos.** Every `ghq list -p` clone whose `origin` is `github.com/prdlk/*`, `github.com/wltbs/*`, `github.com/sonr-io/*` or anything on `prad.codes`, matched on the URL (https, ssh or scp-like) rather than the clone path. Third-party clones (tpm, agent-root, …) are never touched. Submodules whose origin matches too are synced deepest first, before their parent. Every skipped or failed repo is reported on stderr and makes the exit status 1; the other repos still sync.
+
+**Needs:** `git`, `ghq`, `gh` with the `prdlk/gh-commit` extension (and its `opencode`).
 
 ## git-summary
 
@@ -472,7 +486,7 @@ With no arguments it prints palette items as JSON, grouped by category:
 | Sessions | Every session but the current one, the client's last session first. Attached ones have a green icon | `switch-client` |
 | Windows | Every window of every session, as `<session>:<index> · <cwd>` | `switch-client` to that window |
 | Zoxide | `zoxide query -l` | `--dir` |
-| Config | Directories in `~/.config` that zoxide does not list | `--dir` |
+| Config | Directories in `~/.config` that zoxide does not list, except `~/.config/chezmoi` (chezmoi's config and state) | `--dir` |
 | Rename | One per session | `command-prompt` prefilled with the name |
 | Kill | One per session except the current one | `kill-session` |
 

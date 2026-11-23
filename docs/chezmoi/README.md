@@ -85,7 +85,7 @@ README.md
 | `.chezmoiignore.tmpl` | — | Target paths chezmoi skips: repo docs, runtime state, mise config. The same on every OS. |
 | `.chezmoiscripts/`, root `run_*` | — | Install and housekeeping scripts. See [Apply scripts](scripts.md). |
 | `dot_config/` | `~/.config/` | Per-tool config, including Ghostty, tmux and tmux-palette as local files. Documented under [Shell](../shell/README.md), [Terminal](../terminal/README.md), [Tools](../tools/README.md). |
-| `dot_local/bin/` | `~/.local/bin/` | 28 standalone scripts shared by every shell, including `chezmoi-desktop` and `dotsync`. |
+| `dot_local/bin/` | `~/.local/bin/` | 30 standalone scripts shared by every shell, including `chezmoi-desktop`, `dotsync` and `ghqsync`. |
 | `dot_leetcode/` | `~/.leetcode/` | leetcode CLI workspace state. |
 | `docs/`, `AGENTS.md`, `README.md` | — | These docs, the repo agent rules, and the repo README. Listed in `.chezmoiignore.tmpl`, never applied. |
 
