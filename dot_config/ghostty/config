@@ -91,6 +91,8 @@ keybind = ctrl+shift+z=text:\x02z
 keybind = ctrl+shift+page_up=text:\x02[
 keybind = ctrl+shift+slash=text:\x02?
 keybind = ctrl+shift+alt+,=text:\x02q
+# last shell command's output to the clipboard: tmux prefix Y
+keybind = ctrl+shift+y=text:\x02Y
 
 # sessions: quitting Ghostty detaches; the session lives on in tmux
 keybind = ctrl+shift+n=text:\x02C
