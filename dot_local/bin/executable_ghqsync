@@ -1,0 +1,102 @@
+#!/bin/sh
+# ghqsync: sync every ghq clone we can push to with its remote.
+#
+# Repos: `ghq list -p` (every ghq root) whose origin is ours: github.com/prdlk,
+# github.com/wltbs, github.com/sonr-io, or anything on prad.codes. Third-party
+# clones are left alone. Submodules of a repo that are ours too are synced
+# before the repo.
+#
+# Per repo: uncommitted changes are committed with `gh commit --auto`
+# (generated messages), then `git pull --rebase` and `git push` when ahead.
+# A repo that cannot be synced cleanly (detached HEAD, no upstream, rebase
+# conflict, failed push) is left as it was and reported; the exit status is
+# then 1. The same per-repo sequence as dotsync, without the chezmoi apply.
+#
+# Usage: ghqsync          sync all
+#        ghqsync --list   print the repos it would sync
+
+failed=0
+say() { printf '%s\n' "$*"; }
+fail() { printf 'ghqsync: %s\n' "$*" >&2; failed=1; }
+
+# host/owner/repo of a remote URL (https, ssh or scp-like).
+norm() { printf '%s\n' "$1" | sed -E 's#^[a-z+]+://##; s#^[^@/]+@##; s#:#/#; s#\.git$##'; }
+origin() { git -C "$1" remote get-url origin 2>/dev/null; }
+
+is_own() {
+    u=$(origin "$1") || return 1
+    case $(norm "$u") in
+    github.com/prdlk/* | github.com/wltbs/* | github.com/sonr-io/* | prad.codes/*) return 0 ;;
+    esac
+    return 1
+}
+
+# Every repo, submodules (deepest first) before their parent.
+repos() {
+    ghq list -p | while read -r r; do
+        is_own "$r" || continue
+        git -C "$r" submodule foreach --quiet --recursive 'printf "%s\n" "$toplevel/$sm_path"' 2>/dev/null |
+            awk '{ l[NR] = $0 } END { for (i = NR; i > 0; i--) print l[i] }' |
+            while read -r s; do is_own "$s" && printf '%s\n' "$s"; done
+        printf '%s\n' "$r"
+    done | awk '!seen[$0]++'
+}
+
+sync_repo() {
+    dir=$1
+    name=$(printf '%s\n' "$dir" | sed "s#^$HOME/#~/#")
+    if ! branch=$(git -C "$dir" symbolic-ref --quiet --short HEAD); then
+        fail "$name: detached HEAD, skipped"
+        return
+    fi
+    if [ -n "$(git -C "$dir" status --porcelain)" ]; then
+        say "$name: committing local changes (gh commit --auto)"
+        if ! (cd "$dir" && gh commit --auto); then
+            fail "$name: gh commit failed, skipped"
+            return
+        fi
+        if [ -n "$(git -C "$dir" status --porcelain)" ]; then
+            fail "$name: uncommitted changes left after gh commit, skipped"
+            return
+        fi
+    fi
+    if ! git -C "$dir" rev-parse --quiet --verify '@{upstream}' >/dev/null; then
+        fail "$name: $branch has no upstream, skipped"
+        return
+    fi
+    if ! git -C "$dir" pull --rebase --quiet; then
+        git -C "$dir" rebase --abort 2>/dev/null
+        fail "$name: rebase onto $(git -C "$dir" rev-parse --abbrev-ref '@{upstream}') failed, left as it was"
+        return
+    fi
+    ahead=$(git -C "$dir" rev-list --count '@{upstream}..HEAD')
+    if [ "$ahead" -gt 0 ]; then
+        if git -C "$dir" push --quiet; then
+            say "$name: pushed $ahead commit(s)"
+        else
+            fail "$name: push failed"
+        fi
+    else
+        say "$name: up to date"
+    fi
+}
+
+case $* in
+--list)
+    repos
+    exit 0
+    ;;
+'') ;;
+*)
+    echo "usage: ghqsync [--list]" >&2
+    exit 2
+    ;;
+esac
+
+# Not a `while read` pipe: gh commit must keep the terminal as stdin.
+list=$(repos)
+IFS='
+'
+for r in $list; do sync_repo "$r"; done
+unset IFS
+exit "$failed"

@@ -4,8 +4,9 @@
 #
 #   tmux-sessions              print palette items (JSON): the other sessions
 #                              (last one first), every window of every session,
-#                              zoxide's directories, ~/.config's directories,
-#                              and a Rename and a Kill item per session
+#                              zoxide's directories, ~/.config's directories
+#                              (but chezmoi's own config/state dir), and a
+#                              Rename and a Kill item per session
 #   tmux-sessions --new QUERY  the palette's query item (what was typed): switch
 #                              to session QUERY, or start it in QUERY if that is
 #                              a directory, else in zoxide's best match for it
@@ -58,7 +59,7 @@ esac
     tmux list-sessions -F $'S\t#{session_id}\t#{session_name}\t#{@pj_task}\t#{session_attached}\t#{session_windows}\t#{session_path}'
     tmux list-windows -a -F $'W\t#{session_id}\t#{session_name}\t#{@pj_task}\t#{window_id}\t#{window_index}\t#{window_name}\t#{pane_current_path}'
     zoxide query -l 2>/dev/null | sed 's/^/Z\t/'
-    find -L "$HOME/.config" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort | sed 's/^/C\t/'
+    find -L "$HOME/.config" -mindepth 1 -maxdepth 1 -type d ! -path "$HOME/.config/chezmoi" 2>/dev/null | sort | sed 's/^/C\t/'
 } | jq -Rn --arg self "$self" --arg home "$HOME" \
     --arg cur "$(tmux display -p '#{session_id}')" --arg last "$(tmux display -p '#{client_last_session}')" '
     def tilde: if startswith($home) then "~" + .[($home | length):] else . end;
