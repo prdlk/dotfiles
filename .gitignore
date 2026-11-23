@@ -8,5 +8,6 @@
 .dolt/
 *.db
 .beads-credential-key
+key.txt.age
 
 __pycache__/
