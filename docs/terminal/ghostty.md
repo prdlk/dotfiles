@@ -83,7 +83,7 @@ Closing a window only detaches its session; the shells keep running in the tmux 
 | `ctrl+shift+/` | `prefix ?` | Keybinding help popup |
 | `ctrl+shift+alt+,` | `prefix q` | Reload tmux config |
 | `ctrl+shift+n` | `prefix C` | New session |
-| `ctrl+shift+a`, `ctrl+shift+s` | `prefix S` | [workmux](../tools/workmux.md) dashboard in a 90% popup; the session/window tree stays on `prefix s`. The [Workmux palette](../shell/scripts.md#workmux-palette) has no chord: `prefix w` |
+| `ctrl+shift+a`, `ctrl+shift+s` | `prefix S` | [workmux](../tools/workmux.md) dashboard in a full-width popup below the tab bar; the session/window tree stays on `prefix s`. The [Workmux palette](../shell/scripts.md#workmux-palette) has no chord: `prefix w` |
 | `ctrl+shift+q` | `prefix d` | Detach (closes the Ghostty window; the session lives on) |
 
 ## Themes
