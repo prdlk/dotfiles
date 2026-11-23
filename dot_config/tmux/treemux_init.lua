@@ -331,15 +331,6 @@ function editor.mappings()
   return lhs
 end
 
---- Neo-tree's indent component, without the space the renderer put before
---- the icon of a top-level node: under the hidden root with padding 0 its
---- indent is "", and the renderer pads whatever follows text that does not
---- end in a space. Rendering nothing instead leaves the icon in column 0.
-local function indent(config, node, state)
-  local result = require("neo-tree.sources.common.components").indent(config, node, state)
-  if result.text ~= "" then return result end
-end
-
 local neotree_opts = {
   -- git_status: the repository's changed files only, toggled by <C-m>
   sources = { "filesystem", "git_status" },
@@ -469,7 +460,8 @@ local neotree_opts = {
     },
     indent = {
       indent_size = 2,
-      padding = 0,
+      -- one column before the top-level icons (the root line is hidden)
+      padding = 1,
       with_markers = true,
       indent_marker = "│",
       last_indent_marker = "└",
@@ -502,7 +494,6 @@ local neotree_opts = {
     symlink_target = { enabled = false },
   },
   filesystem = {
-    components = { indent = indent },
     window = {
       mappings = {
         ["H"] = "navigate_up",
@@ -549,7 +540,6 @@ local neotree_opts = {
       -- config.ignore_patterns in `config` below
     },
   },
-  git_status = { components = { indent = indent } },
   event_handlers = {
     {
       event = "file_open_requested",
