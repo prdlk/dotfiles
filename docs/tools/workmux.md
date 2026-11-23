@@ -2,7 +2,7 @@
 
 workmux global config: one git worktree and one tmux session per agent, driven from the Workmux palette.
 
-[workmux](https://workmux.dev) pairs each git worktree with a tmux target and starts an agent in it. Here every worktree gets its own tmux session (an omp window and an nvim window), and the [Workmux palette](../shell/scripts.md#workmux-palette) (tmux `prefix w`, `ctrl+s` in the agent sidebar, or `ctrl+space` → Workmux) covers the lifecycle: open, new, close, merge, remove, and jumping to agents by status.
+[workmux](https://workmux.dev) pairs each git worktree with a tmux target and starts an agent in it. Here every worktree gets its own tmux session laid out like fish's `omp-continue` (`ctrl-a`): nvim with omp on its right and the treemux file tree on its left, in one window. The [Workmux palette](../shell/scripts.md#workmux-palette) (tmux `prefix w`, `ctrl+s` in the agent sidebar, or `ctrl+space` → Workmux) covers the lifecycle: open, new, close, merge, remove, and jumping to agents by status.
 
 | | |
 | --- | --- |
@@ -22,7 +22,7 @@ workmux global config: one git worktree and one tmux session per agent, driven f
 | `base_branch` | `auto` | New branches start from the repo's main branch, not the branch the pane is on. |
 | `agent` | `omp` | `<agent>` runs omp; it receives `-p`/`-P`/`-e` prompts and names branches for `add -A`. |
 | `auto_name.system_prompt` | rules below | Keeps `add -A` branch names short (see [Branch names](#branch-names)). |
-| `windows` | omp (focused), nvim | Two unnamed windows, so `automatic-rename-format` labels them like every other tab. |
+| `windows` | one window: `nvim +OmpContinue` (focused), `<agent>` split right at 45% | workmux's `<agent>` pane is omp, so it still gets the prompt (`-p`/`-P`/`-e`, the palette's New item) and the status hooks. The nvim pane then runs `omp-continue`'s layout: `:OmpContinue` reuses that omp pane (marking it `@treemux-keep-width`) and opens the treemux sidebar on the left; focus stays in nvim. `:OmpContinue` would split off its own `omp --continue` if no omp were in the window yet, and nvim starts first, so its pane waits up to 5 s for the agent pane's `omp` before `exec nvim +OmpContinue`. The fish function itself can't be called: workmux types pane commands into tmux's `default-shell`, `/bin/sh`. Unnamed, so `automatic-rename-format` labels the tab |
 | `status_format` | `false` | workmux leaves `window-status-format` alone; `tmux.conf` renders `#{@workmux_status}` itself (see [Window tabs](../terminal/tmux.md#window-tabs)). |
 
 A `.workmux.yaml` in a repo overrides any of these.
