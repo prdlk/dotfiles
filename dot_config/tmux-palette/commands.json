@@ -3,11 +3,11 @@
     "icon": "",
     "title": "Lazygit",
     "shortcut": "Ctrl+Shift+G",
-    "description": "centered 95% popup in the pane's directory",
+    "description": "full-width popup in the pane's directory",
     "category": "Tools",
     "aliases": ["lg"],
     "action": {
-      "tmux": "display-popup -E -x C -y C -w 95% -h 95% -d '#{pane_current_path}' lazygit"
+      "shell": "~/.config/tmux/popup-full.sh -E -d '#{pane_current_path}' lazygit"
     }
   },
   {
@@ -22,48 +22,48 @@
   {
     "icon": "",
     "title": "btop",
-    "description": "resource monitor in a popup",
+    "description": "resource monitor in a full-width popup",
     "category": "Tools",
     "aliases": ["top", "htop"],
-    "action": { "popup": "btop" }
+    "action": { "shell": "~/.config/tmux/popup-full.sh -E btop" }
   },
   {
     "icon": "󰡨",
     "title": "Lazydocker",
-    "description": "popup in the pane's directory",
+    "description": "full-width popup in the pane's directory",
     "category": "Tools",
     "aliases": ["dd"],
     "action": {
-      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' lazydocker"
+      "shell": "~/.config/tmux/popup-full.sh -E -d '#{pane_current_path}' lazydocker"
     }
   },
   {
     "icon": "󰙜",
     "title": "Portop",
-    "description": "popup in the pane's directory",
+    "description": "full-width popup in the pane's directory",
     "category": "Tools",
     "aliases": ["pp"],
     "action": {
-      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' portop"
+      "shell": "~/.config/tmux/popup-full.sh -E -d '#{pane_current_path}' portop"
     }
   },
   {
     "icon": "",
     "title": "ytunnel",
-    "description": "Cloudflare tunnels dashboard in a popup",
+    "description": "Cloudflare tunnels dashboard in a full-width popup",
     "category": "Tools",
     "aliases": ["cft"],
     "action": {
-      "tmux": "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' ytunnel"
+      "shell": "~/.config/tmux/popup-full.sh -E -d '#{pane_current_path}' ytunnel"
     }
   },
   {
     "icon": "",
     "title": "mandible",
-    "description": "CLI reference for a tool, in a popup",
+    "description": "CLI reference for a tool, in a full-width popup",
     "category": "Tools",
     "aliases": ["man"],
-    "action": { "popup": "~/.local/bin/mandible-pick" }
+    "action": { "shell": "~/.config/tmux/popup-full.sh -E ~/.local/bin/mandible-pick" }
   },
   {
     "icon": "",
