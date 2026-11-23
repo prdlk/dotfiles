@@ -1,5 +1,5 @@
 # Font Configuration
-font-size = 11
+font-size = 12
 font-family = VictorMono Nerd Font
 background-blur = true
 
@@ -15,6 +15,7 @@ cursor-style-blink = true
 
 # Scrollback
 scrollback-limit = 3023
+
 
 # Terminal features
 mouse-hide-while-typing = true
