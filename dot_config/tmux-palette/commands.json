@@ -98,7 +98,7 @@
     "category": "Tools",
     "aliases": ["nv"],
     "action": {
-      "tmux": "split-window -h -b -l 60% -c '#{pane_current_path}' 'exec nvim'"
+      "tmux": "split-window -h -b -l 60% -c '#{pane_current_path}' 'exec nvim' \\; set -p @pane-fixed 1"
     }
   },
   {
@@ -124,7 +124,7 @@
     "category": "Tools",
     "aliases": ["hist"],
     "action": {
-      "tmux": "split-window -v -l 25% -c '#{pane_current_path}' 'exec atuin-pick'"
+      "tmux": "split-window -v -l 25% -c '#{pane_current_path}' 'exec atuin-pick' \\; set -p @pane-fixed 1"
     }
   },
   {

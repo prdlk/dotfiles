@@ -1,13 +1,25 @@
 # Font Configuration
-font-size = 12
-font-family = VictorMono Nerd Font
-background-blur = true
+font-size = 10.5
+font-family = VictorMono Nerd Font Mono
 
 # Window Configuration
 window-decoration = false
-window-padding-x = 0
-window-padding-y = 0
-background-opacity = 1.0
+# Room around the grid so the glass (and the gloss shader's rim) shows at the
+# edges; balance centres the leftover sub-cell space.
+window-padding-x = 12
+window-padding-y = 10
+window-padding-balance = true
+
+# Frosted glass: a translucent background; Hyprland blurs what shows through
+# (decoration:blur and the terminal opt-in in hypr/looknfeel.lua). Text stays
+# opaque. On Linux the blur intensity is the compositor's, so `true` is all
+# Ghostty needs to request it (ext-background-effect-v1).
+background-opacity = 0.80
+background-blur = true
+# Gloss: a faint top-left specular sheen and a thin rim highlight on top of
+# the glass. The shader is static, so skip the per-frame animation loop.
+custom-shader = ~/.config/ghostty/shaders/gloss.glsl
+custom-shader-animation = false
 
 # Cursor Configuration
 cursor-style = underline
