@@ -75,6 +75,21 @@ The status line copies kitty's tab bar (`tab_bar_style powerline`, `tab_powerlin
 
 Colors are the user options `@tab-bg` (window background: the notch arrow and the session pill's text), `@tab-fg`, `@tab-active-bg`, `@tab-active-fg`, `@tab-ok` (tmux-expose's attached cards) and `@popup-fg`. `tmux.conf` sets them to cyberdream, the palette of machines without Omarchy. Then it runs `source-file -q ~/.local/state/omarchy/current/theme/tmux-colors.conf`, which Omarchy renders for the active theme from `~/.config/omarchy/themed/tmux-colors.conf.tpl` (in the [prdlk/omarchy](https://github.com/prdlk/omarchy) external). The `theme-set` hook `20-tmux-nvim` re-sources it on every switch, so the bar, popups and pane borders follow the theme without a reload. Active background = accent mixed 20% into background, the same derivation as the kitty tab bar. Cyberdream renders the defaults exactly (`#243348` from accent `#5ea1ff` over `#16181a`). Hazy Peak gets `#adadad` with `#333333` text over `#cccccc`.
 
+### Panes
+
+Panes have no style of their own: global `window-style` and `window-active-style` are `default` (`~/.config/tmux/pane-styles.conf`), so every pane shows the terminal's foreground and Ghostty's translucent background. Omarchy's theme switch sets both to the theme's opaque colors; the `20-tmux-nvim` hook re-sources the file afterwards. The active pane's border is `@tab-active-fg`, the others `brightblack`. The popup backdrop sets its window-level styles over these and unsets them when the popup closes.
+
+Panes even out on their own: `window-pane-changed` (focus moved to another pane, by key or mouse) and `client-resized` run `select-layout -E`, which spreads the active pane and its neighbors evenly. A manual `resize-pane` lasts until the next focus change. Windows that hold a pane with a size of its own are skipped, read from pane options across the window (`#{P:…}` in `@pane-even-if`):
+
+| Pane option | Set by |
+| --- | --- |
+| `@treemux-nvim-addr` | The treemux sidebar. Its anchor hook (`after-select-layout`) does not fire for a layout change made inside a hook, so an even layout would hand it columns |
+| `@treemux-keep-width` | Neovim's omp pane (`omp-continue`, `<C-a><C-a>`), set in the same tmux command as the split or join; the [workmux](../tools/workmux.md) window's omp pane |
+| `@workmux_role` | The workmux agent sidebar |
+| `@pane-fixed` | The palette's **Neovim Split** (60%) and **Shell History** (25%), and `pj-palette`'s one-off task split (25%), each as `split-window … \; set -p @pane-fixed 1` |
+
+Hooks run after the command list that triggered them, so a marker set in the same list as the split is in place before the hook looks.
+
 ### Popups
 
 Every floating window (`prefix ?`, `prefix E`, `prefix S`, `prefix g`, `prefix a` and the other `pj-palette --bg` sessions, the tmux-palette tool items, and workmux-palette's dashboard and lifecycle popups) opens through `~/.config/tmux/popup-full.sh`, which passes its arguments on to `display-popup -x 0 -y S -w 100% -h <client height minus status lines>`: full width, the edge on the line next to the status bar, so the tab bar stays visible. The status line count comes from the client's session `status` option (`on` = 1, a number, or `off` = 0). display-popup does not expand formats in `-h`, so the script computes the height; bindings reach it through `run-shell -b` with the path as `#{q:pane_current_path}`. tmux-palette itself and its sub-palettes keep their own sizing.
