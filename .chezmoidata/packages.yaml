@@ -31,6 +31,7 @@ packages:
     # terminals (ghostty is the default; no Ubuntu 24.04 package)
     - {name: ghostty, arch: ghostty, cask: ghostty}
     - {name: kitty, arch: kitty, cask: kitty, apt: kitty}
+    - {name: kitty, arch: shader-slang} # slangc: kitty compiles custom_shaders (shaders/gloss) with it at startup
     # tui tools (tmux-palette, television cables, fish functions)
     - {name: yazi, arch: yazi, brew: yazi, mise: yazi}
     - {name: lazygit, arch: lazygit, brew: lazygit, mise: lazygit}
