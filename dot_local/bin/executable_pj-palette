@@ -145,16 +145,17 @@ icon_for() {
 long_running() { [[ $1 =~ (^|:)(dev|start|serve|watch|preview)(:|$) ]]; }
 
 # Item action (a bash line the palette evals) running `pj-palette ARGV…`:
-# in a full-width bottom split (25%) in DIR, or, given TASK, in a background
-# window bg:TASK:N of this session. Argv goes to tmux as is (no shell, so
-# fish re-parses nothing).
+# in a full-width bottom split (25%) in DIR, marked @pane-fixed so tmux.conf's
+# even-out hooks keep its size, or, given TASK, in a background window
+# bg:TASK:N of this session. Argv goes to tmux as is (no shell, so fish
+# re-parses nothing).
 task_action() { # dir task argv…
     local dir=$1 task=$2
     shift 2
     if [ -n "$task" ]; then
         printf '%q ' "$self" --win "$session_id" "$task" "$dir" "$self" "$@"
     else
-        printf '%q ' tmux split-window -v -f -l 25% -c "$dir" "$self" "$@"
+        printf '%q ' tmux split-window -v -f -l 25% -c "$dir" "$self" "$@" \; set -p @pane-fixed 1
     fi
 }
 
