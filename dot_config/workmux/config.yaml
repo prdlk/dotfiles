@@ -1,5 +1,5 @@
 # workmux global config (https://workmux.dev). One tmux session per worktree,
-# laid out like fish's omp-continue: nvim (focused) with omp on its right and
+# laid out like fish's omp-continue: nvim with omp (focused) on its right and
 # the treemux file tree on its left. Start work from the Workmux palette
 # (prefix w, or ctrl+space → Workmux; ~/.local/bin/workmux-palette) or
 # `workmux add <branch>` in a repo. A .workmux.yaml in a repo overrides any
