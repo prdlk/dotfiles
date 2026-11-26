@@ -57,21 +57,22 @@ auto_name:
 # commands into tmux's default-shell, /bin/sh). :OmpContinue reuses an omp
 # pane already in its window and only splits off its own `omp --continue`
 # when there is none, and nvim starts first, so it waits (5 s at most) for
-# the agent pane's omp to come up. tmux.conf's even-out hooks spread the two
+# the agent pane's omp to come up. tmux's even-out hooks spread the two
 # panes evenly while workmux builds the window, so the omp pane is then put
-# back at 45% and marked @treemux-keep-width (as :OmpContinue's own split
-# is), which keeps the hooks off this window. exec keeps nvim the pane's
-# command.
+# back at 30% and marked @treemux-keep-width (as :OmpContinue's own split
+# is), which keeps the hooks off this window; the 20% treemux tree then comes
+# out of nvim's share (tree 20%, nvim 50%, omp 30%). exec keeps nvim the
+# pane's command.
 windows:
   - panes:
       - command: >-
           i=0; until p=$(tmux list-panes -t "$TMUX_PANE" -F '#{pane_id} #{pane_current_command}' | awk '$2 == "omp" { print $1 }') && [ -n "$p" ] || [ $i -ge 50 ]; do sleep 0.1; i=$((i+1)); done;
-          [ -n "$p" ] && tmux set -p -t "$p" @treemux-keep-width 1 \; resize-pane -t "$p" -x 45%;
+          [ -n "$p" ] && tmux set -p -t "$p" @treemux-keep-width 1 \; resize-pane -t "$p" -x 30%;
           exec nvim +OmpContinue
         focus: true
       - command: <agent>
         split: horizontal
-        percentage: 45
+        percentage: 30
 
 # tmux.conf's window-status formats render #{@workmux_status} themselves;
 # workmux's own format would replace the powerline tabs.
