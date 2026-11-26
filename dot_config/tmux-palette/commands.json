@@ -3,12 +3,10 @@
     "icon": "",
     "title": "Lazygit",
     "shortcut": "Ctrl+Shift+G",
-    "description": "full-width popup in the pane's directory",
+    "description": "new window in the pane's directory",
     "category": "Tools",
     "aliases": ["lg"],
-    "action": {
-      "shell": "~/.config/tmux/popup-full.sh -E -d '#{pane_current_path}' lazygit"
-    }
+    "action": { "tmux": "new-window -c '#{pane_current_path}' 'exec lazygit'" }
   },
   {
     "icon": "",

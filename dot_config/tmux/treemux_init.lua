@@ -291,14 +291,33 @@ function editor.focus()
   end
 end
 
+--- Mention `nodes` (files and directories) in omp's input, through the
+--- editor's config.omp_term: the omp pane in this window gets focus, or one
+--- from elsewhere in the session is brought right of the editor (else of the
+--- shell's pane), or `omp --continue` is split off there.
+--- @param nodes NuiTree.Node[]
+local function send_to_omp(nodes)
+  local paths, seen = {}, {}
+  for _, node in ipairs(nodes) do
+    local path = node.path or node:get_id()
+    if (node.type == "file" or node.type == "directory") and not seen[path] then
+      seen[path] = true
+      table.insert(paths, path)
+    end
+  end
+  local target = editor.find()
+  require("config.omp_term").send_paths(paths, target and target.pane or vim.g.nvim_tree_remote_tmux_pane)
+end
+
 --- Normal-mode keys of the editor that are not forwarded: they act on the
 --- text under the editor's cursor (fold, diagnostic jumps, select all, paste,
 --- close buffer), or the tree has its own meaning for them (H/L, <Tab> =
---- <C-i> selects nodes, and the focus/close keys mapped below).
+--- <C-i> selects nodes, <C-a><C-a> sends nodes to omp, and the focus/close
+--- keys mapped below).
 local not_forwarded = {
   F = true, J = true, K = true, T = true, vv = true, ["<C-p>"] = true, ["<C-c>"] = true,
   H = true, L = true, ["<C-i>"] = true,
-  ["<C-e>"] = true, ["<C-q>"] = true, ZZ = true, ["<A-q>"] = true,
+  ["<C-e>"] = true, ["<C-q>"] = true, ZZ = true, ["<A-q>"] = true, ["<C-a><C-a>"] = true,
 }
 
 --- Every key to forward: astrocore.lua's normal-mode mappings (group labels
@@ -403,6 +422,17 @@ local neotree_opts = {
         command.execute { source = "git_status", position = "current", dir = state.path }
       end
     end,
+    -- <C-a><C-a>: the node under the cursor, or the visual selection, or the
+    -- nodes tagged with <Tab> (plus the cursor's) into omp's input as
+    -- `@path` mentions; the tags are cleared once sent
+    send_to_omp = function(state) send_to_omp { (state.tree:get_node()) } end,
+    send_to_omp_visual = function(state, selected_nodes)
+      send_to_omp(selected_nodes)
+      if next(state.selected) then
+        state.selected = {}
+        require("neo-tree.ui.renderer").redraw(state)
+      end
+    end,
   },
   window = {
     auto_expand_width = false,
@@ -421,6 +451,7 @@ local neotree_opts = {
       ["<space>"] = "none",
       -- <C-m> is its own key, apart from <cr>, through tmux's extended-keys
       ["<C-m>"] = "toggle_git_modified",
+      ["<C-a><C-a>"] = "send_to_omp",
       -- the open commands fire file_open_requested, handled below
       ["<cr>"] = "open",
       ["<S-CR>"] = "open",
