@@ -42,6 +42,14 @@ link-previews = true
 # Disable annoying copied to clipboard
 app-notifications = no-clipboard-copy,no-config-reload
 
+# Bell (omp rings it when it needs you; tmux passes a pane's bell on): a sound
+# plus Ghostty's default attention request and 🔔 title. `system` is the
+# macOS alert sound (on Hyprland it plays nothing); `audio` plays the
+# freedesktop bell (sound-theme-freedesktop) on Linux and is silent on macOS,
+# where the file does not exist.
+bell-features = system,audio,attention,title,no-border
+bell-audio-path = /usr/share/sounds/freedesktop/stereo/bell.oga
+
 # Ghostty is only a tmux client: tmux owns tabs (windows), splits (panes),
 # sessions and persistence. `clear` drops every Ghostty default (tabs,
 # splits, alt+N goto_tab, ctrl+alt+arrow goto_split) so those chords reach
@@ -96,7 +104,6 @@ keybind = ctrl+shift+x=text:\x02x
 
 # session picker: tmux-palette's sessions palette (tmux-sessions) on prefix o
 keybind = ctrl+shift+o=text:\x02o
-keybind = super+enter=text:\x02o
 keybind = ctrl+shift+enter=text:\x02z
 keybind = ctrl+shift+z=text:\x02z
 
@@ -113,7 +120,7 @@ keybind = ctrl+shift+n=text:\x02C
 keybind = ctrl+shift+s=text:\x02S
 keybind = ctrl+shift+q=text:\x02d
 
-keybind = super+n=new_window
+keybind = super+enter=new_window
 
 # Tab configuration
 gtk-titlebar = false
