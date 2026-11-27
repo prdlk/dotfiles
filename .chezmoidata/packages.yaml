@@ -30,6 +30,8 @@ packages:
     - {name: tmux, arch: tmux, brew: tmux, mise: tmux} # noble's 3.4 rejects tmux.conf's extended-keys-format (3.5+); mise: static tmux/tmux-builds
     # terminals (ghostty is the default; no Ubuntu 24.04 package)
     - {name: ghostty, arch: ghostty, cask: ghostty}
+    - {name: ghostty, arch: sound-theme-freedesktop} # bell.oga: Ghostty's bell-audio-path
+    - {name: kitty, arch: libcanberra} # kitty plays its audio bell through it
     - {name: kitty, arch: kitty, cask: kitty, apt: kitty}
     - {name: kitty, arch: shader-slang} # slangc: kitty compiles custom_shaders (shaders/gloss) with it at startup
     # tui tools (tmux-palette, television cables, fish functions)
