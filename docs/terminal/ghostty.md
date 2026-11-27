@@ -32,6 +32,7 @@ On Omarchy it is the default terminal: the first entry of `~/.config/xdg-termina
 | `confirm-close-surface` | `false` |
 | `link-url` / `link-previews` | `true` / `true`. Under tmux (`mouse on`) tmux receives the click, so open links with `ctrl+shift+click`; tmux opens OSC 8 links on a plain `ctrl+click` |
 | `app-notifications` | `no-clipboard-copy,no-config-reload` |
+| `bell-features` | `system,audio,attention,title,no-border`: a bell plays a sound, `system` the macOS alert, `audio` `bell-audio-path` (`/usr/share/sounds/freedesktop/stereo/bell.oga`, from `sound-theme-freedesktop`) on Linux. omp rings the bell when it needs you; tmux passes a pane's bell on (`bell-action any`) |
 | `quit-after-last-window-closed` | `false`, delay `5m` |
 | `command` | `shell:$HOME/.local/bin/ghostty-tmux` (see [Sessions](#sessions)) |
 | `shell-integration` | `detect`, features `cursor,sudo,title,no-cursor` |

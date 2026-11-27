@@ -160,9 +160,9 @@ pnpm workspace helpers. `__pnpm_pick_pkg` lists workspace packages with `pnpm m 
 
 ### secrets.fish
 
-Exports credentials as global variables. It is age-encrypted in the repo (`dot_config/fish/conf.d/encrypted_private_secrets.fish.age`) and written, mode 600, only on machines that got the [master password](../chezmoi/config.md#master-password) at `chezmoi init`; elsewhere it is absent and fish starts without it. Edit it with `chezmoi edit ~/.config/fish/conf.d/secrets.fish`. It ships with every variable commented out:
+Exports credentials as global variables. It is age-encrypted in the repo (`dot_config/fish/conf.d/encrypted_private_secrets.fish.age`) and written, mode 600, only on machines that got the [master password](../chezmoi/config.md#master-password) at `chezmoi init`; elsewhere it is absent and fish starts without it. Edit it with `chezmoi edit ~/.config/fish/conf.d/secrets.fish`.
 
-`PGDATABASE` (local Postgres connection string), `GITLAB_TOKEN`, `OPPER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `WEBAWESOME_NPM_TOKEN`, `TAVILY_API_KEY`, `FINANCIAL_DATASETS_API_KEY`, `PIMLICO_API_KEY`, `WAKATIME_API_KEY`, `LINEAR_CLI_PROFILE`, `LINEAR_API_KEY`, `LINEAR_TEAM_ID`.
+Set: `INCEPTION_API_KEY`, `OPENCODE_GO_API_KEY`, `OPENROUTER_API_KEY` (Neovim completion providers), `CEREBRAS_API_KEY`, `TYPESAFE_API_KEY`. Commented out, for machines that need them: `PGDATABASE` (local Postgres connection string), `GITLAB_TOKEN`, `OPPER_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `WEBAWESOME_NPM_TOKEN`, `TAVILY_API_KEY`, `FINANCIAL_DATASETS_API_KEY`, `PIMLICO_API_KEY`, `WAKATIME_API_KEY`, `LINEAR_CLI_PROFILE`, `LINEAR_API_KEY`, `LINEAR_TEAM_ID`.
 
 ## config.fish
 
