@@ -111,3 +111,4 @@ if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init bash
 [ -f "$HOME/.ok/env.sh" ] && . "$HOME/.ok/env.sh"
 # <<< open-knowledge cli <<<
 
+eval "$(mise activate bash)"

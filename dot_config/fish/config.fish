@@ -100,3 +100,4 @@ bind "?" _atuin_ai_question_mark
 set -gx PATH $PATH /home/prad/.lmstudio/bin
 # End of LM Studio CLI section
 
+mise activate fish | source
